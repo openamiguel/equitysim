@@ -6,6 +6,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 
 ## documentation of each file and its methods
 
+### assorted calculators and misc. programs
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
@@ -21,6 +22,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
+    
+### AlphaVantage data download/update suite
 - **single_download.py**
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage. 
   - command prompt options: 
@@ -48,6 +51,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
+    
+### simulator suite
 - **ranking_simulator.py**
   - `asset_ranker` returns two segments of a ticker universe (long positions and short positions) based on ranking metric
   - `portfolio_generator` builds a portfolio around the aforementioned long and short positions
