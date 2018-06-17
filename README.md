@@ -11,8 +11,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
   - command prompt options:
     - *none* (does not need any)
-- **portfolio_calculator.py**
-  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
+- **portfolio_plotter.py**
+  - `plot` plots the performance of a portfolio against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
 - **return_calculator.py**
