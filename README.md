@@ -22,12 +22,13 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - *none* (does not need any)
 - **single_download.py**
-  - `download_symbol` downloads and processes a single symbol from AlphaVantage. 
+  - `fetch_symbol` downloads and processes a single symbol from AlphaVantage. 
   - command prompt options: 
     - `-symbol`: symbol of the asset to download
     - `-folderPath`: location of folder to store file
     - `-apiKey`: AlphaVantage API key to download files from AlphaVantage (user-specific)
     - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **prelim_download.py**
   - `download_separate` pulls data on a ticker universe in the form of separate files, each named after the ticker symbol and the time series function
     - separate files contain as much data as AlphaVantage can offer
@@ -39,7 +40,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-separate`: download files separately
     - `-combined`: download files in a combined fashion
     - `-apiKey`: AlphaVantage API key (user-specific)
-    - `timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **autoupdate.py**
   - `update_separate` updates a collection of separately downloaded files with the latest data from AlphaVantage
   - `update_combined` updates a combined file with the latest data from AlphaVantage
