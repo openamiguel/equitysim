@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.2.0
+## Version: 3.3.0
 
 import datetime
 import pandas as pd
@@ -47,9 +47,7 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", o
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
 		print("Data merged!")
 		# Delay prevents HTTP 503 errors
-		time.sleep(DELAY)		
-	# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
-	combinedData = combinedData.reindex(index=combinedData.index[::-1])
+		time.sleep(DELAY)
 	# Column names are replaced with the ticker names
 	combinedData.columns = tickerUniverse
 	# Saves ticker data to CSV, if requested
@@ -58,7 +56,7 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", o
 		if folderPath == "":
 			raise ValueError("You did not give single_download.py a file path to write your file. Please try again.")
 		else:
-			writePath = folderPath + "/AAAA_" + outputFileName + "_COMBINED_" + function
+			writePath = folderPath + "/" + outputFileName + "_COMBINED_" + function
 			if interval != "": 
 				writePath = writePath + "&" + interval
 			combinedData.to_csv( + ".csv")
