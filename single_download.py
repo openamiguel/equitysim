@@ -1,6 +1,6 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.0.1
+## Version: 3.1.0
 
 import pandas as pd
 import sys
@@ -33,7 +33,10 @@ def fetch_symbol(symbol, apiKey, function="DAILY", outputSize="full", dataType="
 		if folderPath == "":
 			raise ValueError("You did not give single_download.py a file path to write your file. Please try again.")
 		else:
-			tickData.to_csv(folderPath + "/" + symbol + "_" + function + ".csv")
+			writePath = folderPath + "/" + symbol + "_" + function
+			if interval != "": 
+				writePath = writePath + "&" + interval
+			tickData.to_csv(writePath + ".csv")
 			print("Data on " + symbol + " successfully saved!\n")
 	# Returns the data on symbol
 	return tickData
