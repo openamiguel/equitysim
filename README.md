@@ -42,7 +42,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-apiKey`: AlphaVantage API key (user-specific)
     - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
-- **autoupdate.py**
+- **auto_update.py**
   - `update_separate` updates a collection of separately downloaded files with the latest data from AlphaVantage
   - `update_combined` updates a combined file with the latest data from AlphaVantage
   - command prompt options:
