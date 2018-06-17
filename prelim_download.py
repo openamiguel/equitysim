@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.1.0
 
 import datetime
 import pandas as pd
@@ -40,13 +40,9 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", o
 			time interval (for intraday data only)
 		Outputs: combined DataFrame with CLOSING PRICE ONLY prices of all tickers
 	"""
-	# We only need the compact version if the data is not intraday
-	outputSize = "compact"
-	if function == "INTRADAY":
-		outputSize = "full"
 	combinedData = pd.DataFrame()
 	for symbol in tickerUniverse:
-		tickData = single_download.fetch_symbol(symbol, apiKey, function=function, outputSize=outputSize, folderPath=folderPath, interval=interval)
+		tickData = single_download.fetch_symbol(symbol, apiKey, function=function, folderPath=folderPath, interval=interval)
 		# Using an outer join, merges this ticker's data with the rest of combined data
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
 		print("Data merged!")
