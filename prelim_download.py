@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.3.1
+## Version: 3.3.2
 
 import datetime
 import pandas as pd
@@ -30,19 +30,19 @@ def download_separate(tickerUniverse, apiKey, function="DAILY", outputSize="full
 		time.sleep(DELAY)
 	return 0
 
-def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", outputFileName="", writeFile=True, interval=""):
+def download_combined(tickerUniverse, apiKey, function="DAILY", outputSize="full", folderPath="", outputFileName="", writeFile=True, interval=""):
 	""" Downloads data on given tickers as far back as possible, storing CLOSING PRICE ONLY.
 		Downloads AS ONE COMBINED FILE. For separate files, see download_separate(tickers) above. 
 		Includes data on index itself.
 
 		Inputs: symbol, API key (user-specific), time series function (default: daily), 
-			folder path to write files to (default: empty), order to write file (default: yes),
-			time interval (for intraday data only)
+			folder path to write files to (default: empty), output size (default: full)
+			order to write file (default: yes), time interval (for intraday data only)
 		Outputs: combined DataFrame with CLOSING PRICE ONLY prices of all tickers
 	"""
 	combinedData = pd.DataFrame()
 	for symbol in tickerUniverse:
-		tickData = single_download.fetch_symbol(symbol, apiKey, function=function, folderPath=folderPath, interval=interval)
+		tickData = single_download.fetch_symbol(symbol, apiKey, outputSize=outputSize, function=function, folderPath=folderPath, interval=interval)
 		# Using an outer join, merges this ticker's data with the rest of combined data
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
 		print("Data merged!")
