@@ -1,6 +1,6 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.0.1
 
 import pandas as pd
 import sys
@@ -92,4 +92,5 @@ def main():
 	print("Download complete. Have a nice day!")
 	return 0
 
-main()
+if __name__ == "__main__":
+	main()
