@@ -1,6 +1,9 @@
 ## This code computes a few basic metrics of returns and performance. 
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.1.0
+
+import numpy as np
+import pandas as pd
 
 def get_rolling_returns(price):
 	"""	Computes the rolling return (return at each timepoint relative to start) of price. 
@@ -16,6 +19,15 @@ def overall_returns(prices):
 		Outputs: return over the given timespan
 	"""
 	return 100 * (prices[-1] - prices[0]) / abs(prices[0])
+
+def sharpe_ratio(portfolio, risk_free_rate=0.0194):
+	""" Calculates the Sharpe ratio of the given portfolio.
+		Inputs: portfolio dataframe, 
+	"""
+	price = portfolio.close.values.tolist()
+	returns = np.array(get_rolling_returns(price))
+	sharpe = (returns.mean() / 100 - risk_free_rate) / (returns.std() * np.sqrt(len(price)))
+	return sharpe
 
 def portfolio_valuation(portfolio, baseline):
 	"""	Values the aforementioned portfolio in terms of CLOSING PRICE against a baseline. 
