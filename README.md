@@ -51,7 +51,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `portfolio_generator` builds a portfolio around the aforementioned long and short positions
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options:
-    - `-tickerUniverse`: collection of tickers to examine
+    - `-tickerUniverse`: collection of tickers to rank
     - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
     - `-startRankDate`: start date of data to generate ranking with
     - `-endRankDate`: end date of aforementioned
@@ -65,6 +65,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options: 
     - `-symbol`: symbol of the asset to trade
+    - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
     - `-startDate`: start date of trading given stock
     - `-endDate`: end date of aforementioned
     - `-initialValue`: initial value of portfolio (USD)
