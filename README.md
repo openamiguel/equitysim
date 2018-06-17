@@ -13,12 +13,12 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - *none* (does not need any)
 - **portfolio_calculator.py**
   - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
-  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
+  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
 - **single_download.py**
