@@ -19,6 +19,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
+  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
   - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
