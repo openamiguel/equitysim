@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.1.1
+## Version: 3.2.0
 
 import datetime
 import pandas as pd
@@ -58,8 +58,11 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", o
 		if folderPath == "":
 			raise ValueError("You did not give single_download.py a file path to write your file. Please try again.")
 		else:
-			combinedData.to_csv(folderPath + "/AAAA_" + outputFileName + "_COMBINED_" + function + ".csv")
-			print("Data on " + symbol + " successfully saved!\n")
+			writePath = folderPath + "/AAAA_" + outputFileName + "_COMBINED_" + function
+			if interval != "": 
+				writePath = writePath + "&" + interval
+			combinedData.to_csv( + ".csv")
+			print("Combined data successfully saved!\n")
 	# Returns dataset
 	return combinedData
 
