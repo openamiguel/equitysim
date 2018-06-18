@@ -1,6 +1,6 @@
 ## This code gets lists of ticker symbols within one of three universes: S&P500, NASDAQ 100, and Dow 30. 
 ## Author: Miguel Opeña
-## Version: 3.1.0
+## Version: 3.2.0
 
 import pandas as pd
 
@@ -81,4 +81,17 @@ def obtain_parse_mutual_funds():
 	table.columns = ['rank', 'symbol', 'fund']
 	table.drop(table.index[0], inplace=True)
 	allTickers = table.symbol.values.tolist()
+	return allTickers
+
+def obtain_parse_etfs():
+	""" Parses third-party website for the 100 most-traded ETFs. 
+		Website is read as dataframe. 
+
+		Inputs: none
+		Outputs: a list of stock tickers at the given link
+	"""
+	data = pd.read_html(ETF_LINK)
+	# First table on page
+	table = data[0]
+	allTickers = table.Symbol.values.tolist()
 	return allTickers
