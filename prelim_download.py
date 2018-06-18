@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.2.0
+## Version: 3.4.0
 
 import datetime
 import pandas as pd
@@ -12,7 +12,7 @@ import single_download
 import ticker_universe
 
 # Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
-DELAY = 11
+DELAY = 13
 
 def download_separate(tickerUniverse, apiKey, function="DAILY", outputSize="full", folderPath="", interval=""):
 	""" Downloads data on given tickers as far back as possible, including opening price, closing price, and volume.
@@ -30,26 +30,24 @@ def download_separate(tickerUniverse, apiKey, function="DAILY", outputSize="full
 		time.sleep(DELAY)
 	return 0
 
-def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", outputFileName="", writeFile=True, interval=""):
+def download_combined(tickerUniverse, apiKey, function="DAILY", outputSize="full", folderPath="", outputFileName="", writeFile=True, interval=""):
 	""" Downloads data on given tickers as far back as possible, storing CLOSING PRICE ONLY.
 		Downloads AS ONE COMBINED FILE. For separate files, see download_separate(tickers) above. 
 		Includes data on index itself.
 
 		Inputs: symbol, API key (user-specific), time series function (default: daily), 
-			folder path to write files to (default: empty), order to write file (default: yes),
-			time interval (for intraday data only)
+			folder path to write files to (default: empty), output size (default: full)
+			order to write file (default: yes), time interval (for intraday data only)
 		Outputs: combined DataFrame with CLOSING PRICE ONLY prices of all tickers
 	"""
 	combinedData = pd.DataFrame()
 	for symbol in tickerUniverse:
-		tickData = single_download.fetch_symbol(symbol, apiKey, function=function, folderPath=folderPath, interval=interval)
+		tickData = single_download.fetch_symbol(symbol, apiKey, outputSize=outputSize, function=function, folderPath=folderPath, interval=interval)
 		# Using an outer join, merges this ticker's data with the rest of combined data
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
-		print("Data merged!")
+		print("Data merged!\n")
 		# Delay prevents HTTP 503 errors
-		time.sleep(DELAY)		
-	# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
-	combinedData = combinedData.reindex(index=combinedData.index[::-1])
+		time.sleep(DELAY)
 	# Column names are replaced with the ticker names
 	combinedData.columns = tickerUniverse
 	# Saves ticker data to CSV, if requested
@@ -58,10 +56,10 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", folderPath="", o
 		if folderPath == "":
 			raise ValueError("You did not give single_download.py a file path to write your file. Please try again.")
 		else:
-			writePath = folderPath + "/AAAA_" + outputFileName + "_COMBINED_" + function
+			writePath = folderPath + "/" + outputFileName + "_COMBINED_" + function
 			if interval != "": 
 				writePath = writePath + "&" + interval
-			combinedData.to_csv( + ".csv")
+			combinedData.to_csv(writePath + ".csv")
 			print("Combined data successfully saved!\n")
 	# Returns dataset
 	return combinedData
@@ -100,6 +98,14 @@ def main():
 	elif "NASDAQ100" in prompts:
 		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
 		name = "NASDAQ100"
+	# Yields data on the NASDAQ 100
+	elif "ETF100" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_etfs()
+		name = "ETF100"
+	# Yields data on the NASDAQ 100
+	elif "MF25" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_mutual_funds()
+		name = "MF25"
 	# Yields data on user-provided tickers
 	else:
 		tickerPath = prompts[prompts.index("-ticker") + 1]
