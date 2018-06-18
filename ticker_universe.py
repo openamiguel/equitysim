@@ -1,6 +1,6 @@
 ## This code gets lists of ticker symbols within one of three universes: S&P500, NASDAQ 100, and Dow 30. 
 ## Author: Miguel Opeña
-## Version: 3.2.0
+## Version: 3.2.1
 
 import pandas as pd
 
@@ -30,13 +30,11 @@ def obtain_parse_nasdaq(seed="^NDX"):
 	# Ticker information is in the Company column of the table
 	# This line is specialized to the website in NASDAQ_100_LINK
 	tickers = table.Company[0:]
-	allTickers = []
+	allTickers = tickers.values.tolist()
+	allTickers = list(filter(lambda x: x not in BLACKLIST, allTickers))
 	# Plants a seed ticker if given
 	if seed != None:
 		allTickers.append(seed)
-	# Sifts through ticker column and adds to list
-	for tick in tickers: 
-		if tick not in BLACKLIST: allTickers.append(tick)
 	return allTickers
 
 def obtain_parse_wiki(selection, seed=None):
@@ -59,13 +57,11 @@ def obtain_parse_wiki(selection, seed=None):
 	table = data[tableLocation[0]]
 	# Ticker information is first column of table, skipping the header info
 	tickers = table[tableLocation[1]][1:]
-	allTickers = []
+	allTickers = tickers.values.tolist()
+	allTickers = list(filter(lambda x: x not in BLACKLIST, allTickers))
 	# Plants a seed ticker if given
 	if seed != None:
 		allTickers.append(seed)
-	# Sifts through ticker column and adds to list
-	for tick in tickers: 
-		if tick not in BLACKLIST: allTickers.append(tick)
 	return allTickers
 
 def obtain_parse_mutual_funds():
