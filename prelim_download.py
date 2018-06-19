@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.3.2
+## Version: 3.4.2
 
 import datetime
 import pandas as pd
@@ -12,7 +12,7 @@ import single_download
 import ticker_universe
 
 # Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
-DELAY = 11
+DELAY = 15
 
 def download_separate(tickerUniverse, apiKey, function="DAILY", outputSize="full", folderPath="", interval=""):
 	""" Downloads data on given tickers as far back as possible, including opening price, closing price, and volume.
@@ -43,9 +43,12 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", outputSize="full
 	combinedData = pd.DataFrame()
 	for symbol in tickerUniverse:
 		tickData = single_download.fetch_symbol(symbol, apiKey, outputSize=outputSize, function=function, folderPath=folderPath, interval=interval)
+		# Skips invalid symbol names, as determined by single_download.py
+		if tickData is None:
+			continue
 		# Using an outer join, merges this ticker's data with the rest of combined data
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
-		print("Data merged!")
+		print("Data merged!\n")
 		# Delay prevents HTTP 503 errors
 		time.sleep(DELAY)
 	# Column names are replaced with the ticker names
@@ -98,6 +101,14 @@ def main():
 	elif "NASDAQ100" in prompts:
 		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
 		name = "NASDAQ100"
+	# Yields data on the NASDAQ 100
+	elif "ETF100" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_etfs()
+		name = "ETF100"
+	# Yields data on the NASDAQ 100
+	elif "MF25" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_mutual_funds()
+		name = "MF25"
 	# Yields data on user-provided tickers
 	else:
 		tickerPath = prompts[prompts.index("-ticker") + 1]
