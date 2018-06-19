@@ -55,7 +55,6 @@ def update_combined(folderPath, filePath, apiKey, dataType="csv"):
 	newData = newData[(newData.index == lastDate).cumsum() == 0]
 	allData = pd.concat([oldData, newData])
 	print("Data on " + universe + " successfully updated!\n")
-	# Writes data to file
 	allData.to_csv(filePath, index_label='timestamp')
 	return 0
 
