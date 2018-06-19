@@ -1,6 +1,6 @@
 # equitysim
 
-Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on the big players: any member of the S&P 500, Dow 30, or NASDAQ 100 indices. 
+Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on the big players: any member of the S&P 500, Dow 30, or NASDAQ 100 indices, as well as any of the 100 most-traded ETFs and the top 25 most-traded mutual funds. 
 
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
@@ -10,6 +10,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
+  - `obtain_parse_mutual_funds` gets the top 25 mutual funds from marketwatch.com.
+  - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
   - command prompt options:
     - *none* (does not need any)
 - **portfolio_plotter.py**
@@ -27,7 +29,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     
 ### AlphaVantage data download/update suite
 - **single_download.py**
-  - `fetch_symbol` downloads and processes a single symbol from AlphaVantage. 
+  - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
   - command prompt options: 
     - `-symbol`: symbol of the asset to download
     - `-folderPath`: location of folder to store file
@@ -37,7 +39,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **prelim_download.py**
   - `download_separate` pulls data on a ticker universe in the form of separate files, each named after the ticker symbol and the time series function
     - separate files contain as much data as AlphaVantage can offer
-  - `download_combined` pulls data on a ticker universe in the form of one combined file, named after the ticker universe
+  - `download_combined` pulls data on a ticker universe in the form of one combined file, named after the ticker universe and the time series function
     - *combined files contain closing price data only*
   - command prompt options:
     - `-tickerUniverse`: collection of tickers to download (can also be a CSV of ticker symbols) 
