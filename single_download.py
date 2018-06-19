@@ -1,6 +1,6 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.2.1
+## Version: 3.3.1
 
 import pandas as pd
 import sys
@@ -9,7 +9,7 @@ import sys
 MAIN_URL = "https://www.alphavantage.co/query?"
 
 def fetch_symbol(symbol, apiKey, function="DAILY", outputSize="full", dataType="csv", folderPath="", writeFile=False, interval=""):
-	""" Downloads data on a single symbol according to user parameters, as a dataframe and (if prompted) as a file. 
+	""" Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
 		See the AlphaVantage documentation for more details. 
 
 		Inputs: symbol, API key (user-specific), time series function (default: daily), output size (default: full), 
@@ -45,6 +45,26 @@ def fetch_symbol(symbol, apiKey, function="DAILY", outputSize="full", dataType="
 			tickData.to_csv(writePath + ".csv")
 			print("Data on " + symbol + " successfully saved!\n")
 	# Returns the data on symbol
+	return tickData
+
+def fetch_symbol_from_drive(symbol, function="DAILY", interval="", folderPath=""):
+	""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
+
+		Inputs: symbol, time series function (default: daily), time interval (for intraday data only), folder path to look for file (default: empty)
+		Outputs: dataframe with all available data on symbol
+	"""
+	readPath = folderPath + "/" + symbol + "_" + function
+	if interval != "":
+		readPath = readPath + "&" + interval
+	readPath = readPath + ".csv"
+	print("Retrieving " + symbol + " from local drive...")
+	tickData = None
+	try:
+		tickData = pd.read_csv(readPath, index_col='timestamp')
+	except FileNotFoundError:
+		print("Retrieval unsuccessful. File not found at " + readPath + "\n")
+		return None
+	print("Data on " + symbol + " successfully retrieved!")
 	return tickData
 
 def main():

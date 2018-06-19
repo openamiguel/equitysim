@@ -30,6 +30,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 ### AlphaVantage data download/update suite
 - **single_download.py**
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
+  - `fetch_symbol_from_drive` retrieves a single symbol from local drive
   - command prompt options: 
     - `-symbol`: symbol of the asset to download
     - `-folderPath`: location of folder to store file
