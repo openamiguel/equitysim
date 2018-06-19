@@ -1,6 +1,6 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.3.0
+## Version: 3.3.1
 
 import pandas as pd
 import sys
@@ -58,7 +58,12 @@ def fetch_symbol_from_drive(symbol, function="DAILY", interval="", folderPath=""
 		readPath = readPath + "&" + interval
 	readPath = readPath + ".csv"
 	print("Retrieving " + symbol + " from local drive...")
-	tickData = pd.read_csv(readPath, index_col='timestamp')
+	tickData = None
+	try:
+		tickData = pd.read_csv(readPath, index_col='timestamp')
+	except FileNotFoundError:
+		print("Retrieval unsuccessful. File not found at " + readPath + "\n")
+		return None
 	print("Data on " + symbol + " successfully retrieved!")
 	return tickData
 
