@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.4.1
+## Version: 3.4.0
 
 import datetime
 import pandas as pd
@@ -12,7 +12,7 @@ import single_download
 import ticker_universe
 
 # Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
-DELAY = 15
+DELAY = 13
 
 def download_separate(tickerUniverse, apiKey, function="DAILY", outputSize="full", folderPath="", interval=""):
 	""" Downloads data on given tickers as far back as possible, including opening price, closing price, and volume.
