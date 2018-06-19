@@ -1,6 +1,6 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.2.0
+## Version: 3.2.1
 
 import pandas as pd
 import sys
@@ -28,7 +28,7 @@ def fetch_symbol(symbol, apiKey, function="DAILY", outputSize="full", dataType="
 	try:
 		tickData = pd.read_csv(readPath, index_col='timestamp')
 	except ValueError:
-		print(symbol + " not found by AlphaVantage. Download unsuccessful.")
+		print(symbol + " not found by AlphaVantage. Download unsuccessful.\n")
 		return None
 	print(symbol + " successfully downloaded!")
 	# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
