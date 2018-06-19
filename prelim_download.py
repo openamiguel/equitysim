@@ -43,6 +43,9 @@ def download_combined(tickerUniverse, apiKey, function="DAILY", outputSize="full
 	combinedData = pd.DataFrame()
 	for symbol in tickerUniverse:
 		tickData = single_download.fetch_symbol(symbol, apiKey, outputSize=outputSize, function=function, folderPath=folderPath, interval=interval)
+		# Skips invalid symbol names, as determined by single_download.py
+		if tickData == None:
+			continue
 		# Using an outer join, merges this ticker's data with the rest of combined data
 		combinedData = pd.merge(combinedData, tickData[['close']], how='outer', left_index=True, right_index=True)
 		print("Data merged!\n")
