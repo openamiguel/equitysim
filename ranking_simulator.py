@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.0.1
 
 import sys
 import pandas as pd
@@ -166,7 +166,10 @@ def main():
 	## Handles whether one wants to switch the long and short positions
 	switchpos = ("-switchPos" in prompts)
 	## Handles whether one wants to show the plot
-	showplt=("-showPlot" in prompts)
+	showplt = ("-showPlot" in prompts)
+	## Handles the file name of plot
+	plotName = "STRATEGY_01"
+	if "-plotName" in prompts: plotName = prompts[prompts.index("-plotName") + 1]
 	## Handles how many shares to include in the portfolio
 	numShares = 1
 	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
@@ -181,7 +184,7 @@ def main():
 	print("Return on S&P500 index: %f" % baseReturns)
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	portfolio_plotter.plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt)
+	portfolio_plotter.plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt, title=plotName)
 
 if __name__ == "__main__":
 	main()
