@@ -1,11 +1,45 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.1.1
+## Version: 3.2.1
 
 import pandas as pd
 import return_calculator
 
 import matplotlib.pyplot as plt
+
+def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=False):
+	"""	Given a dataframe of price, trend, and baseline data, plots the price against trend and baseline. 
+	Given a stock ticker, this function computes the rolling mean (with two metrics thereof) and saves it to a Pyplot figure.
+		These calculations are all performed with the daily closing price. No other data is needed. 
+		One has the option to show the window live, and to save it locally. 
+		Inputs: symbol of company, the company's English name, start date of given window, end date of given window, 
+			rolling lengths (default: 30-day and 90-day), order to save plot locally (default: yes), 
+			order to show plot on command line (default: no) 
+		Outputs: dataframe of daily closing price, rolling mean over X days, and rolling mean over Y days
+	"""
+	# Titles and labels a plot of ticker data
+	plt.title(symbol + " " + names[0] + " and " + names[1] + " against " + names[2])
+	plt.xlabel("Time [Days]")
+	plt.ylabel("Price [USD]")
+	# Isolates each column from dataframe
+	price = price_with_trends.price.values.tolist()
+	trend = price_with_trends.trend.values.tolist()
+	baseline = price_with_trends.baseline.values.tolist()
+	# Plots the price, trend, and baseline (but only if one is allowed to)
+	if names[0] != "NOPLOT": plt.plot(time, price, label=names[0])
+	if names[0] != "NOPLOT": plt.plot(time, trend, label=names[1])
+	if names[0] != "NOPLOT": plt.plot(time, baseline, label=names[2])
+	# Deletes the x-axis ticks
+	# Buggy feature
+	timeTicks = []
+	plt.xticks(timeTicks)
+	# If requested, save the file (default: do not save)
+	if savePlot:
+		figFilePath = folderPath + "images/{0}_{1}_{2}_{3}.png".format(symbol, names[0].upper(), names[1].upper(), names[2].upper)
+		plt.savefig(figFilePath)
+	# If requested, show the plot
+	if showPlot:
+		plt.show()
 
 def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
