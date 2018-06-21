@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.1
+## Version: 3.0.2
 
 import sys
 import pandas as pd
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import single_download
 import ticker_universe
 import return_calculator
-import portfolio_plotter
+import plotter
 
 def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQuant, switchpos=False):
 	"""	Ranks a universe of stock tickers based on a given metric.
@@ -184,7 +184,7 @@ def main():
 	print("Return on S&P500 index: %f" % baseReturns)
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	portfolio_plotter.plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt, title=plotName)
+	plotter.portfolio_plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt, title=plotName)
 
 if __name__ == "__main__":
 	main()
