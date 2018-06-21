@@ -73,6 +73,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-lowQuant`: lower cutoff for the quantiles
     - `-highQuant`: higher cutoff for the quantiles
     - `-switchPos`: option to swap the long and short portfolios
+    - `-showPlot`: option to show the portfolio plot
+    - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
 - **meanrev_simulator.py**
   - `strategy_vanilla` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
