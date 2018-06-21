@@ -1,13 +1,13 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.1.0
+## Version: 3.1.1
 
 import pandas as pd
 import return_calculator
 
 import matplotlib.pyplot as plt
 
-def plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
+def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
 		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time, 
 			path of folder to store files in
