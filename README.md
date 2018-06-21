@@ -64,12 +64,17 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options:
     - `-tickerUniverse`: collection of tickers to rank
-    - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
+    - `-folderPath`: location of folder to look for files
+    - `-baseline`: asset or index (typically latter) to use as performance baseline
     - `-startRankDate`: start date of data to generate ranking with
     - `-endRankDate`: end date of aforementioned
     - `-startTestDate`: start date of trading the ranking portfolio
     - `-endTestDate`: end date of aforementioned
-    - `-initialValue`: initial value of portfolio (USD)
+    - `-lowQuant`: lower cutoff for the quantiles
+    - `-highQuant`: higher cutoff for the quantiles
+    - `-switchPos`: option to swap the long and short portfolios
+    - `-showPlot`: option to show the portfolio plot
+    - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
 - **meanrev_simulator.py**
   - `strategy_vanilla` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
