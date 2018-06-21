@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 2.2.1
+## Version: 2.2.2
 
 import pandas as pd
 import numpy as np
@@ -11,7 +11,7 @@ import ticker_universe
 import return_calculator
 import portfolio_plotter
 
-def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, highQuant=0.8, switchQuantiles=False):
+def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, highQuant=0.8, switchpos=False):
 	"""	Ranks a universe of stock tickers based on a given metric.
 		By default, the top 20% in this ranking are deemed overvalued, so they are sold short. 
 		Likewise, the bottom 20% are deemed undervalued, so they are bought long. 
@@ -19,7 +19,7 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, h
 			i.e. the top quantile will be bought long, and the bottom quantile will be sold short. 
 		Inputs: ticker universe, start date for price window, end date for price window, folder path, 
 			the lower quantile (default: bottom 20%), the upper quantile (default: top 20%), 
-			order to switch quantiles (default: no)
+			order to switch long and short positions (default: no)
 		Outputs: list of symbols to buy long and sell short
 	"""
 	metric = []
@@ -56,7 +56,7 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, h
 	longpos = ranking.symbol[ranking.metric < low_bound].values.tolist()
 	shortpos = ranking.symbol[ranking.metric > high_bound].values.tolist() 
 	# If you want to switch which quantile goes long or short, then the values of longpos and shortpos are switched
-	if switchQuantiles:
+	if switchpos:
 		temp = longpos
 		longpos = shortpos
 		shortpos = temp
@@ -106,7 +106,7 @@ def main():
 	startTradeDate = "2017-06-06"
 	endTradeDate = "2018-06-06"
 	# Sets up the portfolio
-	longpos, shortpos = asset_ranker(tickers, startRankDate, endRankDate, folderPath=folderPath, switchQuantiles=True)
+	longpos, shortpos = asset_ranker(tickers, startRankDate, endRankDate, folderPath=folderPath, switchpos=True)
 	# Short the high performers, long the low performers
 	# portfolio = rankingPortfolio(longpos, shortpos, startTradeDate, endTradeDate)
 	# Long the high performers, short the low performers
