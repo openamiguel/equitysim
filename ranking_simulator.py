@@ -1,7 +1,8 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 2.2.2
+## Version: 3.0.0
 
+import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,14 +12,14 @@ import ticker_universe
 import return_calculator
 import portfolio_plotter
 
-def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, highQuant=0.8, switchpos=False):
+def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQuant, switchpos=False):
 	"""	Ranks a universe of stock tickers based on a given metric.
 		By default, the top 20% in this ranking are deemed overvalued, so they are sold short. 
 		Likewise, the bottom 20% are deemed undervalued, so they are bought long. 
 		One can also choose to switch the quantiles, 
 			i.e. the top quantile will be bought long, and the bottom quantile will be sold short. 
 		Inputs: ticker universe, start date for price window, end date for price window, folder path, 
-			the lower quantile (default: bottom 20%), the upper quantile (default: top 20%), 
+			the lower quantile, the upper quantile, 
 			order to switch long and short positions (default: no)
 		Outputs: list of symbols to buy long and sell short
 	"""
@@ -42,7 +43,7 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant=0.2, h
 		# In this case, metric determined by overall returns of price
 		val = return_calculator.overall_returns(thisClose)
 		metric.append(val)
-		print(symbol + " successfully processed!\n")
+		# print(symbol + " successfully processed!\n")
 	# Builds dataframe of symbols and metrics
 	ranking = pd.DataFrame({'symbol': tickerUniverse, 'metric': metric})
 	# Sorts and cleans the dataframe
@@ -97,22 +98,81 @@ def portfolio_generator(longpos, shortpos, startdate, enddate, folderPath="", nu
 	return portfolio
 
 def main():
-	tickers = ticker_universe.obtain_parse_wiki("SNP500", seed="^GSPC")
+	prompts = sys.argv
+	## Handles which symbol the user wants to download.
+	tickerUniverse = []
+	name = ""
+	if "-tickerUniverse" not in prompts:
+		raise ValueError("No ticker universe provided. Please try again")
+	# Yields data on the S&P 500
+	elif "SNP500" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
+		name = "SNP500"
+	# Yields data on the Dow 30
+	elif "DOW30" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
+		name = "DOW30"
+	# Yields data on the NASDAQ 100
+	elif "NASDAQ100" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
+		name = "NASDAQ100"
+	## Handles where the user wants to download their files. 
+	# Default folder path is relevant to the author only. 
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	# Rank stock based on one year's data
-	startRankDate = "2016-06-05"
-	endRankDate = "2017-06-05"
-	# And see how it did over the next year
-	startTradeDate = "2017-06-06"
-	endTradeDate = "2018-06-06"
+	if "-folderPath" not in prompts:
+		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
+	else: 
+		folderPath = prompts[prompts.index("-folderPath") + 1]
+	## Handles collection of the four dates
+	# Gets the start date for ranking
+	startRankDate = ""
+	if "-startRankDate" not in prompts:
+		raise ValueError("No start date for ranking provided. Please try again.")
+	else:
+		startRankDate = prompts[prompts.index("-startRankDate") + 1]
+	# Gets the end date for ranking
+	endRankDate = ""
+	if "-endRankDate" not in prompts:
+		raise ValueError("No end date for ranking provided. Please try again.")
+	else:
+		endRankDate = prompts[prompts.index("-endRankDate") + 1]
+	# Gets the start date for portfolio testing
+	startTestDate = ""
+	if "-startTestDate" not in prompts:
+		raise ValueError("No start date for testing provided. Please try again.")
+	else:
+		startTestDate = prompts[prompts.index("-startTestDate") + 1]
+	# Gets the end date for portfolio testing
+	endTestDate = ""
+	if "-endTestDate" not in prompts:
+		raise ValueError("No end date for testing provided. Please try again.")
+	else:
+		endTestDate = prompts[prompts.index("-endTestDate") + 1]
+	## Handles which index/asset should be the baseline 
+	baselineSymbol = "^GSPC"
+	if "-baseline" not in prompts:
+		print("Default baseline: S&P 500 index")
+	else:
+		baselineSymbol = prompts[prompts.index("-baseline") + 1]
+	# Sets up baseline index/asset
+	baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function="DAILY", folderPath=folderPath)
+	baseline = baseline[startTestDate:endTestDate]
+	## Handles the lower bound for quantiles
+	lowQuant = 0.2
+	if "-lowQuant" in prompts: lowQuant = float(prompts[prompts.index("-lowQuant") + 1])
+	## Handles the higher bound for quantiles
+	highQuant = 0.8
+	if "-highQuant" in prompts: highQuant = float(prompts[prompts.index("-highQuant") + 1])
+	## Handles whether one wants to switch the long and short positions
+	switchpos = ("-switchPos" in prompts)
+	## Handles whether one wants to show the plot
+	showplt=("-showPlot" in prompts)
+	## Handles how many shares to include in the portfolio
+	numShares = 1
+	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
 	# Sets up the portfolio
-	longpos, shortpos = asset_ranker(tickers, startRankDate, endRankDate, folderPath=folderPath, switchpos=True)
-	# Short the high performers, long the low performers
-	# portfolio = rankingPortfolio(longpos, shortpos, startTradeDate, endTradeDate)
-	# Long the high performers, short the low performers
-	portfolio = portfolio_generator(longpos, shortpos, startTradeDate, endTradeDate, folderPath=folderPath)
-	baseline = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folderPath)
-	baseline = baseline[startTradeDate:endTradeDate]
+	longpos, shortpos = asset_ranker(tickerUniverse, startRankDate, endRankDate, folderPath, lowQuant, highQuant, switchpos=switchpos)
+	portfolio = portfolio_generator(longpos, shortpos, startTestDate, endTestDate, folderPath=folderPath)
 	startValue, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, baseline)
 	# Spits out some numerical info about the portfolio performance
 	print("\nStarting portfolio value: %f" % startValue)
@@ -121,7 +181,7 @@ def main():
 	print("Return on S&P500 index: %f" % baseReturns)
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	portfolio_plotter.plot(portfolio, baseline, folderPath="C:/Users/Miguel/Documents/EQUITIES", showPlot=True)
+	portfolio_plotter.plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt)
 
 if __name__ == "__main__":
 	main()
