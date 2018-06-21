@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 2.2.0
+## Version: 2.2.1
 
 import pandas as pd
 import numpy as np
@@ -106,7 +106,7 @@ def main():
 	startTradeDate = "2017-06-06"
 	endTradeDate = "2018-06-06"
 	# Sets up the portfolio
-	longpos, shortpos = asset_ranker(tickers, startRankDate, endRankDate, folderPath=folderPath) # , switchQuantiles=True
+	longpos, shortpos = asset_ranker(tickers, startRankDate, endRankDate, folderPath=folderPath, switchQuantiles=True)
 	# Short the high performers, long the low performers
 	# portfolio = rankingPortfolio(longpos, shortpos, startTradeDate, endTradeDate)
 	# Long the high performers, short the low performers
@@ -119,8 +119,9 @@ def main():
 	print("Ending portfolio value: %f" % endValue)
 	print("Return on this strategy: %f" % returns)
 	print("Return on S&P500 index: %f" % baseReturns)
+	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	portfolio_plotter.plot(portfolio, baseline, folderPath="C:/Users/Miguel/Desktop/EQUITIES/images", showPlot=True)
+	portfolio_plotter.plot(portfolio, baseline, folderPath="C:/Users/Miguel/Documents/EQUITIES", showPlot=True)
 
 if __name__ == "__main__":
 	main()
