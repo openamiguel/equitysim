@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.2.1
+## Version: 3.2.2
 
 import pandas as pd
 import return_calculator
@@ -18,7 +18,11 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 		Outputs: dataframe of daily closing price, rolling mean over X days, and rolling mean over Y days
 	"""
 	# Titles and labels a plot of ticker data
-	plt.title(symbol + " " + names[0] + " and " + names[1] + " against " + names[2])
+	plotTitle = symbol
+	for name in names:
+		if name != "NA":
+			plotTitle = plotTitle + " " + name
+	plt.title(plotTitle)
 	plt.xlabel("Time [Days]")
 	plt.ylabel("Price [USD]")
 	# Isolates each column from dataframe
@@ -26,16 +30,16 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	trend = price_with_trends.trend.values.tolist()
 	baseline = price_with_trends.baseline.values.tolist()
 	# Plots the price, trend, and baseline (but only if one is allowed to)
-	if names[0] != "NOPLOT": plt.plot(time, price, label=names[0])
-	if names[0] != "NOPLOT": plt.plot(time, trend, label=names[1])
-	if names[0] != "NOPLOT": plt.plot(time, baseline, label=names[2])
+	if names[0] != "NA": plt.plot(time, price, label=names[0])
+	if names[1] != "NA": plt.plot(time, trend, label=names[1])
+	if names[2] != "NA": plt.plot(time, baseline, label=names[2])
 	# Deletes the x-axis ticks
 	# Buggy feature
 	timeTicks = []
 	plt.xticks(timeTicks)
 	# If requested, save the file (default: do not save)
 	if savePlot:
-		figFilePath = folderPath + "images/{0}_{1}_{2}_{3}.png".format(symbol, names[0].upper(), names[1].upper(), names[2].upper)
+		figFilePath = folderPath + "images/" + "_".join(names) + ".png"
 		plt.savefig(figFilePath)
 	# If requested, show the plot
 	if showPlot:
