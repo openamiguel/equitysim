@@ -22,6 +22,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
+- **technicals_calculator.py**
+  - `SMA` returns the simple moving average of input
 - **plotter.py**
   - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
   - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
