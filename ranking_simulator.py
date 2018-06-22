@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.1
+## Version: 3.0.3
 
 import sys
 import pandas as pd
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import single_download
 import ticker_universe
 import return_calculator
-import portfolio_plotter
+import plotter
 
 def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQuant, switchpos=False):
 	"""	Ranks a universe of stock tickers based on a given metric.
@@ -98,6 +98,15 @@ def portfolio_generator(longpos, shortpos, startdate, enddate, folderPath="", nu
 	return portfolio
 
 def main():
+	""" User interacts with program through command prompt. 
+		Example prompts: 
+
+		python ranking_simulator.py -tickerUniverse SNP500 -folderPath C:/Users/Miguel/Desktop/stockData -baseline ^^GSPC -startRankDate 2016-06-05 -endRankDate 2017-06-05 -startTestDate 2017-06-06 -endTestDate 2018-06-06 -switchPos -showPlot -plotName STRATEGY_02
+			This will simulate a ranking portfolio for the S&P 500 ticker universe using the S&P 500 index as baseline, with the given dates to rank and trade the portfolio. 
+
+		Inputs: implicit through command prompt
+		Outputs: 0 if everything works
+	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
 	tickerUniverse = []
@@ -184,7 +193,7 @@ def main():
 	print("Return on S&P500 index: %f" % baseReturns)
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	portfolio_plotter.plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt, title=plotName)
+	plotter.portfolio_plot(portfolio, baseline, folderPath=folderPath, showPlot=showplt, title=plotName)
 
 if __name__ == "__main__":
 	main()
