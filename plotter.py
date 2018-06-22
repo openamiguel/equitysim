@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.3.1
+## Version: 3.3.2
 
 import sys
 import pandas as pd
@@ -38,7 +38,7 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	plt.xticks(timeTicks)
 	# If requested, save the file (default: do not save)
 	if savePlot:
-		figFilePath = folderPath + "/images/" + symbol + "_".join(names) + ".png"
+		figFilePath = folderPath + "/images/" + symbol + "_" + "_".join(names) + ".png"
 		plt.savefig(figFilePath)
 	# If requested, show the plot
 	if showPlot:
@@ -131,7 +131,7 @@ def main():
 	## Runs the plot code on the lone symbol
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath)
 	tickData = tickData[startDate:endDate]
-		tickData.columns = ['open', 'high', 'low', 'price', 'volume']
+	tickData.columns = ['open', 'high', 'low', 'price', 'volume']
 	price_plot(tickData, symbol, folderPath, names=["price","NA","NA"], savePlot=True, showPlot=True)
 	return 0
 
