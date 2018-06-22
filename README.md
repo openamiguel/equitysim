@@ -14,10 +14,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
   - command prompt options:
     - *none* (does not need any)
-- **portfolio_plotter.py**
-  - `plot` plots the performance of a portfolio against a benchmark (such as an index)
-  - command prompt options:
-    - *none* (does not need any)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
@@ -26,6 +22,17 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
+- **plotter.py**
+  - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
+  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
+  - command prompt options:
+    - `-symbol`: symbol of the asset to plot
+    - `-folderPath`: location of folder to look for files
+    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-startDate`: start date of data to plot
+    - `-endDate`: end date of aforementioned
+    
     
 ### AlphaVantage data download/update suite
 - **single_download.py**
