@@ -99,4 +99,3 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
     - `-startValue`: initial value of portfolio (USD)
-    - `-numShares`: number of shares to trade at each transaction (long or short)
