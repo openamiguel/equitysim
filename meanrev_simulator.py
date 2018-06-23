@@ -1,11 +1,12 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 2.0.0
+## Version: 3.0.0
 
 import pandas as pd
-import numpy as np
+import sys
 
 import plotter
+import return_calculator
 import single_download
 import technicals_calculator
 
@@ -137,20 +138,96 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 	# Return dataframe with timestamp, portfolio price over time
 	return portfolio
 
-startDate = "2014-01-02"
-endDate = "2018-06-01"
-start = 1000
+def main():
+	""" User interacts with program through command prompt. 
+		Example prompts: 
 
-folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+		python meanrev_simulator.py -symbol GS -folderPath C:/Users/Miguel/Desktop/stockData -baseline ^^GSPC -startDate 2016-06-05 -endDate 2017-06-05 -plotName STRATEGY_02 -startVal 1000000 -numShares 10 -crossover -showPlot 
+			This will simulate a mean reversion strategy, based on simple crossover, ranking portfolio for the S&P 500 ticker universe using the S&P 500 index as baseline, with the given dates to rank and trade the portfolio. 
 
-tickData = single_download.fetch_symbol_from_drive("TSLA", folderPath=folderPath)
-price = tickData.close
-trend = technicals_calculator.SMA(price, numPeriods=1)
-baseline = technicals_calculator.SMA(price, numPeriods=90)
-price_with_trends = pd.concat([price, trend, baseline], axis=1)
-price_with_trends.columns = ['price','trend','baseline']
-price_with_trends.dropna(inplace=True)
+		Inputs: implicit through command prompt
+		Outputs: 0 if everything works
+	"""
+	prompts = sys.argv
+	## Handles which symbol the user wants to download.
+	symbol = ""
+	if "-symbol" in prompts:
+		symbol = prompts[prompts.index("-symbol") + 1]
+	else:
+		raise ValueError("No symbol provided. Please try again.")
+	## Handles where the user wants to download their files. 
+	# Default folder path is relevant to the author only. 
+	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+	if "-folderPath" not in prompts:
+		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
+	else: 
+		folderPath = prompts[prompts.index("-folderPath") + 1]
+	## Sets up the price data from local drive
+	tickData = single_download.fetch_symbol_from_drive(symbol, folderPath=folderPath)
+	price = tickData.close
+	trend = technicals_calculator.SMA(price, numPeriods=1)
+	baseline = technicals_calculator.SMA(price, numPeriods=90)
+	# Consolidates the price, trend, and baseline into one dataframe
+	price_with_trends = pd.concat([price, trend, baseline], axis=1)
+	price_with_trends.columns = ['price','trend','baseline']
+	price_with_trends.dropna(inplace=True)
+	## Handles collection of the four dates
+	# Gets the start date for portfolio trading
+	startDate = ""
+	if "-startDate" not in prompts:
+		raise ValueError("No start date provided. Please try again.")
+	else:
+		startDate = prompts[prompts.index("-startDate") + 1]
+	# Gets the end date for portfolio trading
+	endDate = ""
+	if "-endDate" not in prompts:
+		raise ValueError("No end date provided. Please try again.")
+	else:
+		endDate = prompts[prompts.index("-endDate") + 1]
+	## Handles which index/asset should be the baseline 
+	baselineSymbol = "^GSPC"
+	if "-baseline" not in prompts:
+		print("Default baseline: S&P 500 index")
+	else:
+		baselineSymbol = prompts[prompts.index("-baseline") + 1]
+	# Sets up baseline index/asset
+	portfolio_baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function="DAILY", folderPath=folderPath)
+	portfolio_baseline = portfolio_baseline[startDate:endDate]
+	## Handles whether one wants to show the plot
+	showplt = ("-showPlot" in prompts)
+	## Handles the file name of plot
+	plotName = "STRATEGY_01"
+	if "-plotName" in prompts: plotName = prompts[prompts.index("-plotName") + 1]
+	## Handles the initial value of the portfolio
+	startVal = 1000000
+	if "-startValue" in prompts:
+		startVal = float(prompts[prompts.index("-startValue") + 1])
+	else:
+		print("Default of ${0} will be used for portfolio start value.".format(startVal))
+	## Handles how many shares for each trade
+	numShares = 1
+	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
+	## Handles choice between crossover and zscore strategy
+	portfolio = None
+	if "-crossover" in prompts: 
+		portfolio = crossover(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
+		portfolio.columns=['close']
+		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=showplt)
+		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
+	elif "-zscore" in prompts:
+		portfolio = zscore_distance(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
+		portfolio.columns=['close']
+		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=showplt)
+		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
+	else:
+		raise ValueError("No strategy provided. Please try again.")
+	startValue, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, portfolio_baseline)
+	# Spits out some numerical info about the portfolio performance
+	print("\nStarting portfolio value: %f" % startValue)
+	print("Ending portfolio value: %f" % endValue)
+	print("Return on this strategy: %f" % returns)
+	print("Return on S&P500 index: %f" % baseReturns)
+	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 
-zscore_distance(price_with_trends, startDate, endDate, startValue=start, numTrades=1)
-
-plotter.price_plot(price_with_trends[startDate:endDate], "GS", folderPath=folderPath, names=['price', 'SMA01', 'SMA90'], showPlot=True)
+if __name__ == "__main__":
+	main()
