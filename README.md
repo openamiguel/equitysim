@@ -14,10 +14,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
   - command prompt options:
     - *none* (does not need any)
-- **portfolio_plotter.py**
-  - `plot` plots the performance of a portfolio against a benchmark (such as an index)
-  - command prompt options:
-    - *none* (does not need any)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
@@ -26,6 +22,19 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
+- **technicals_calculator.py**
+  - `SMA` returns the simple moving average of input
+- **plotter.py**
+  - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
+  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
+  - command prompt options:
+    - `-symbol`: symbol of the asset to plot
+    - `-folderPath`: location of folder to look for files
+    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-startDate`: start date of data to plot
+    - `-endDate`: end date of aforementioned
+    
     
 ### AlphaVantage data download/update suite
 - **single_download.py**
@@ -64,12 +73,17 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options:
     - `-tickerUniverse`: collection of tickers to rank
-    - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
+    - `-folderPath`: location of folder to look for files
+    - `-baseline`: asset or index (typically latter) to use as performance baseline
     - `-startRankDate`: start date of data to generate ranking with
     - `-endRankDate`: end date of aforementioned
     - `-startTestDate`: start date of trading the ranking portfolio
     - `-endTestDate`: end date of aforementioned
-    - `-initialValue`: initial value of portfolio (USD)
+    - `-lowQuant`: lower cutoff for the quantiles
+    - `-highQuant`: higher cutoff for the quantiles
+    - `-switchPos`: option to swap the long and short portfolios
+    - `-showPlot`: option to show the portfolio plot
+    - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
 - **meanrev_simulator.py**
   - `crossover` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
