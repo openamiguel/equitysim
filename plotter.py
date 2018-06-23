@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.3.2
+## Version: 3.3.3
 
 import sys
 import pandas as pd
@@ -32,6 +32,8 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	if names[0] != "NA": plt.plot(time, price_with_trends.price.values.tolist(), label=names[0])
 	if names[1] != "NA": plt.plot(time, price_with_trends.trend.values.tolist(), label=names[1])
 	if names[2] != "NA": plt.plot(time, price_with_trends.baseline.values.tolist(), label=names[2])
+	# Adds a legend
+	plt.legend()
 	# Deletes the x-axis ticks
 	# Buggy feature
 	timeTicks = []
