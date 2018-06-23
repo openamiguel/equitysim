@@ -86,8 +86,8 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
 - **meanrev_simulator.py**
-  - `strategy_vanilla` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
-  - `strategy_zscore` emulates a strategy where buy/sell signals occur when one trend (ex. asset price) deviates too far from a baseline trend (ex. 90-day moving average), as measured by z-scores
+  - `crossover` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
+  - `zscore_distance` emulates a strategy where buy/sell signals occur when one trend (ex. asset price) deviates too far from a baseline trend (ex. 90-day moving average), as measured by z-scores
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options: 
     - `-symbol`: symbol of the asset to trade
