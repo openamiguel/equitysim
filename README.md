@@ -91,8 +91,12 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
   - command prompt options: 
     - `-symbol`: symbol of the asset to trade
+    - `-folderPath`: location of folder to look for files
     - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
     - `-startDate`: start date of trading given stock
     - `-endDate`: end date of aforementioned
-    - `-initialValue`: initial value of portfolio (USD)
+    - `-showPlot`: option to show the portfolio plot
+    - `-plotName`: name of the plot image file
+    - `-numShares`: number of shares to trade at each transaction (long or short)
+    - `-startValue`: initial value of portfolio (USD)
     - `-numShares`: number of shares to trade at each transaction (long or short)
