@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 1.9.0
+## Version: 2.0.0
 
 import pandas as pd
 import numpy as np
@@ -88,12 +88,11 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 	portfolio = pd.DataFrame(startValue, index=timestamp, columns=['price'])
 	# Initialize portfolio value
 	portfolioVal = startValue
-	# Builds dataframe of z-scores over time
+	# Builds dataframe of z-scores over time using zscore formula: trend minus baseline, all divided by stdev
 	stdev = price_with_trends_window.trend.std()
 	zscores = pd.DataFrame(price_with_trends_window.trend)
 	zscores.columns = ['baseline']
-	zscores = zscores.subtract(price_with_trends_window.baseline, axis=1)
-	print(zscores)
+	zscores = zscores.subtract(price_with_trends_window.baseline, axis=0)
 	zscores = zscores.divide(stdev)
 	zscores.columns = ['zscore']
 	# Iterates through every datte in the window
@@ -152,6 +151,6 @@ price_with_trends = pd.concat([price, trend, baseline], axis=1)
 price_with_trends.columns = ['price','trend','baseline']
 price_with_trends.dropna(inplace=True)
 
-zscore_distance(price_with_trends, startDate, endDate, startValue=start, numTrades=300)
+zscore_distance(price_with_trends, startDate, endDate, startValue=start, numTrades=1)
 
 plotter.price_plot(price_with_trends[startDate:endDate], "GS", folderPath=folderPath, names=['price', 'SMA01', 'SMA90'], showPlot=True)
