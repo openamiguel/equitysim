@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.1.0
+## Version: 3.1.1
 
 import pandas as pd
 import sys
@@ -23,7 +23,8 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 	timestamp = price_with_trends_window.index
 	previous_date = startDate
 	# Iniitalize lists of buy long and sell short dates
-	longDates, shortDates = []
+	longDates = []
+	shortDates = []
 	# Initialize portfolio with zero positions
 	numPositions = 0
 	portfolio = pd.DataFrame(startValue, index=timestamp, columns=['price'])
@@ -89,7 +90,8 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 	timestamp = price_with_trends_window.index
 	previous_date = startDate
 	# Iniitalize lists of buy long and sell short dates
-	longDates, shortDates = []
+	longDates = []
+	shortDates = []
 	# Initialize portfolio with zero positions
 	numPositions = 0
 	portfolio = pd.DataFrame(startValue, index=timestamp, columns=['price'])
@@ -217,15 +219,17 @@ def main():
 	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
 	## Handles choice between crossover and zscore strategy
 	portfolio = None
+	longDates = []
+	shortDates = []
 	if "-crossover" in prompts: 
-		portfolio = crossover(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
+		portfolio, longDates, shortDates = crossover(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
 	elif "-zscore" in prompts:
-		portfolio = zscore_distance(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
+		portfolio, longDates, shortDates = zscore_distance(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
 	else:
 		raise ValueError("No strategy provided. Please try again.")
