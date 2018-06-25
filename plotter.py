@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.3.3
+## Version: 3.3.4
 
 import sys
 import pandas as pd
@@ -45,6 +45,7 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	# If requested, show the plot
 	if showPlot:
 		plt.show()
+	plt.close('all')
 
 def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
@@ -77,6 +78,7 @@ def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=Fals
 	# If requested, show the plot
 	if showPlot:
 		plt.show()
+	plt.close('all')
 
 def main():
 	""" User interacts with program through command prompt. 
