@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.6.0
+## Version: 3.6.1
 
 import sys
 import numpy as np
@@ -35,8 +35,12 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	fig, ax = plt.subplots()
 	# Sets up plot title and labels
 	plt.title(plotTitle)
-	plt.xlabel("Time [Months]")
+	xlab = "Time [Hours]" if intraday else "Time [Months]"
+	plt.xlabel(xlab)
 	plt.ylabel("Price [USD]")
+	# Converts dataframe to regular frequency for plotting purposes
+	price_with_trends.index = pd.to_datetime(price_with_trends.index)
+	price_with_trends = price_with_trends.resample('1T').asfreq()
 	time = pd.to_datetime(price_with_trends.index)
 	# Plots the price, trend, and baseline (but only if one is allowed to)
 	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
@@ -84,6 +88,9 @@ def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", sa
 	plt.title("Portfolio performance over time, from " + startDate + " to " + endDate)
 	plt.xlabel("Time [Days]")
 	plt.ylabel("Returns [Percent]")
+	# Converts dataframe to regular frequency for plotting purposes
+	portfolio.index = pd.to_datetime(portfolio.index)
+	portfolio = portfolio.resample('1T').asfreq()
 	# Plots the closing price and rolling means
 	portList = portfolio.close.values.tolist()
 	baselineList = baseline.close.values.tolist()
