@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.1.0
 
 import pandas as pd
 import sys
@@ -22,6 +22,8 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 	price_with_trends_window = price_with_trends[startDate:endDate]
 	timestamp = price_with_trends_window.index
 	previous_date = startDate
+	# Iniitalize lists of buy long and sell short dates
+	longDates, shortDates = []
 	# Initialize portfolio with zero positions
 	numPositions = 0
 	portfolio = pd.DataFrame(startValue, index=timestamp, columns=['price'])
@@ -51,6 +53,7 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 			# Execute long positions
 			portfolio.price[date] = portfolio.price[previous_date] - numTrades * current_price
 			numPositions += numTrades
+			longDates.append(date)
 			print("Acquired {0} LONG positions in asset.\n".format(numTrades))
 		# Exit longs and go short if trend crosses up above baseline
 		elif current_trend > current_baseline and not isGreater:
@@ -63,6 +66,7 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 			# Execute short positions
 			portfolio.price[date] = portfolio.price[previous_date] + numTrades * current_price
 			numPositions -= numTrades
+			shortDates.append(date)
 			print("Acquired {0} SHORT positions in asset.\n".format(numTrades))
 		# Otherwise, simply hold one's position
 		else: 
@@ -71,7 +75,7 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 		previous_date = date
 		portfolioVal = portfolio.price[date]
 	# Return dataframe with timestamp, portfolio price over time
-	return portfolio
+	return portfolio, longDates, shortDates
 
 def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numTrades=1):
 	"""	Simulates a zscore proximity strategy for a trend and baseline. 
@@ -84,6 +88,8 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 	price_with_trends_window = price_with_trends[startDate:endDate]
 	timestamp = price_with_trends_window.index
 	previous_date = startDate
+	# Iniitalize lists of buy long and sell short dates
+	longDates, shortDates = []
 	# Initialize portfolio with zero positions
 	numPositions = 0
 	portfolio = pd.DataFrame(startValue, index=timestamp, columns=['price'])
@@ -114,11 +120,13 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 		if current_zscore > 1:
 			portfolio.price[date] = portfolio.price[previous_date] + current_price * numTrades
 			numPositions -= numTrades
+			shortDates.append(date)
 			print("Acquired {0} SHORT positions in asset.\n".format(numTrades))
 		# Buy long if z-score < -1
 		elif current_zscore < -1: 
 			portfolio.price[date] = portfolio.price[previous_date] - current_price * numTrades
 			numPositions += numTrades
+			longDates.append(date)
 			print("Acquired {0} LONG positions in asset.\n".format(numTrades))
 		# Clear positions if magnitude of z-score is too low
 		elif abs(current_zscore) < 0.5:
@@ -136,7 +144,7 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 		previous_date = date
 		portfolioVal = portfolio.price[date]
 	# Return dataframe with timestamp, portfolio price over time
-	return portfolio
+	return portfolio, longDates, shortDates
 
 def main():
 	""" User interacts with program through command prompt. 
