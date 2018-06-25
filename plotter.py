@@ -1,8 +1,9 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.5.0
+## Version: 3.6.2
 
 import sys
+import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -12,8 +13,10 @@ import single_download
 
 YEARS = mdates.YearLocator()
 MONTHS = mdates.MonthLocator()
+DATES = mdates.DayLocator()
+HOURS = mdates.HourLocator()
 
-def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=[], shortDates=[], savePlot=True, showPlot=False):
+def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=[], shortDates=[], intraday=False, savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend, and baseline data, plots the price against trend and baseline. 
 	Given a stock ticker, this function computes the rolling mean (with two metrics thereof) and saves it to a Pyplot figure.
 		These calculations are all performed with the daily closing price. No other data is needed. 
@@ -32,8 +35,12 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	fig, ax = plt.subplots()
 	# Sets up plot title and labels
 	plt.title(plotTitle)
-	plt.xlabel("Time [Months]")
+	xlab = "Time [Hours]" if intraday else "Time [Months]"
+	plt.xlabel(xlab)
 	plt.ylabel("Price [USD]")
+	# Converts dataframe to regular frequency for plotting purposes
+	price_with_trends.index = pd.to_datetime(price_with_trends.index)
+	if intraday: price_with_trends = price_with_trends.resample('1T').asfreq()
 	time = pd.to_datetime(price_with_trends.index)
 	# Plots the price, trend, and baseline (but only if one is allowed to)
 	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
@@ -47,9 +54,14 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	# Adds a legend
 	plt.legend()
 	# Formats the x-axis: major ticks are years, minor ticks are months
-	ax.xaxis.set_major_locator(YEARS)
-	ax.xaxis.set_minor_locator(MONTHS)
-	fig.autofmt_xdate()
+	if intraday:
+		ax.xaxis.set_major_locator(DATES)
+		ax.xaxis.set_minor_locator(HOURS)
+		ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+	else:
+		ax.xaxis.set_major_locator(YEARS)
+		ax.xaxis.set_minor_locator(MONTHS)
+		fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
 		figFilePath = folderPath + "/images/" + symbol + "_" + "_".join(names) + ".png"
@@ -76,6 +88,9 @@ def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", sa
 	plt.title("Portfolio performance over time, from " + startDate + " to " + endDate)
 	plt.xlabel("Time [Days]")
 	plt.ylabel("Returns [Percent]")
+	# Converts dataframe to regular frequency for plotting purposes
+	portfolio.index = pd.to_datetime(portfolio.index)
+	portfolio = portfolio.resample('1T').asfreq()
 	# Plots the closing price and rolling means
 	portList = portfolio.close.values.tolist()
 	baselineList = baseline.close.values.tolist()
@@ -131,8 +146,10 @@ def main():
 		raise ValueError("No time series function provided. Please try again.")
 	# Handles the special case: if INTRADAY selected. 
 	interval = ""
+	intraDay = False
 	if function == "INTRADAY" and "-interval" in prompts:
 		interval = prompts[prompts.index("-interval") + 1]
+		intraDay = True
 	elif function == " INTRADAY" and "-interval" not in prompts:
 		raise ValueError("No interval for INTRADAY data provided. Please try again.")
 	## Handles collection of the four dates
@@ -142,18 +159,22 @@ def main():
 		raise ValueError("No start date for ranking provided. Please try again.")
 	else:
 		startDate = prompts[prompts.index("-startDate") + 1]
+		if intraDay:
+			startDate = startDate.replace('_',' ')
 	# Gets the end date for ranking
 	endDate = ""
 	if "-endDate" not in prompts:
 		raise ValueError("No end date for ranking provided. Please try again.")
 	else:
 		endDate = prompts[prompts.index("-endDate") + 1]
+		if intraDay:
+			endDate = endDate.replace('_',' ')
 	# Handles intraday plots properly
 	## Runs the plot code on the lone symbol
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath)
+	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
 	tickData.columns = ['open', 'high', 'low', 'price', 'volume']
-	price_plot(tickData, symbol, folderPath, names=["price","NA","NA"], savePlot=True, showPlot=True)
+	price_plot(tickData, symbol, folderPath, names=["price","NA","NA"], intraday=intraDay, savePlot=True, showPlot=True)
 	return 0
 
 if __name__ == "__main__":
