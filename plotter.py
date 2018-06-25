@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.4.3
+## Version: 3.5.0
 
 import sys
 import pandas as pd
@@ -13,7 +13,7 @@ import single_download
 YEARS = mdates.YearLocator()
 MONTHS = mdates.MonthLocator()
 
-def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=False):
+def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=[], shortDates=[], savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend, and baseline data, plots the price against trend and baseline. 
 	Given a stock ticker, this function computes the rolling mean (with two metrics thereof) and saves it to a Pyplot figure.
 		These calculations are all performed with the daily closing price. No other data is needed. 
@@ -39,6 +39,11 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
 	if names[1] != "NA": ax.plot(time, price_with_trends.trend, label=names[1])
 	if names[2] != "NA": ax.plot(time, price_with_trends.baseline, label=names[2])
+	# Parses the lists of longDates and shortDates
+	for date in (longDates + shortDates):
+		mark = "^" if date in longDates else "v"
+		col = "green" if date in longDates else "red"
+		ax.scatter(date, 0, marker=mark, color=col)
 	# Adds a legend
 	plt.legend()
 	# Formats the x-axis: major ticks are years, minor ticks are months
@@ -143,6 +148,7 @@ def main():
 		raise ValueError("No end date for ranking provided. Please try again.")
 	else:
 		endDate = prompts[prompts.index("-endDate") + 1]
+	# Handles intraday plots properly
 	## Runs the plot code on the lone symbol
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath)
 	tickData = tickData[startDate:endDate]
