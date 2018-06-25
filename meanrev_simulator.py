@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.1.2
+## Version: 3.1.3
 
 import pandas as pd
 import sys
@@ -175,7 +175,7 @@ def main():
 	## Sets up the price data from local drive
 	tickData = single_download.fetch_symbol_from_drive(symbol, folderPath=folderPath)
 	price = tickData.close
-	trend = technicals_calculator.SMA(price, numPeriods=1)
+	trend = technicals_calculator.SMA(price, numPeriods=30)
 	baseline = technicals_calculator.SMA(price, numPeriods=90)
 	# Consolidates the price, trend, and baseline into one dataframe
 	price_with_trends = pd.concat([price, trend, baseline], axis=1)
@@ -224,12 +224,12 @@ def main():
 	if "-crossover" in prompts: 
 		portfolio, longDates, shortDates = crossover(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends[startDate:endDate], symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
 	elif "-zscore" in prompts:
 		portfolio, longDates, shortDates = zscore_distance(price_with_trends, startDate, endDate, startValue=startVal, numTrades=numShares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends[startDate:endDate], symbol, folderPath, names=["price","trend","baseline"], longDates=longDates, shortDates=shortDates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folderPath, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
 	else:
 		raise ValueError("No strategy provided. Please try again.")
