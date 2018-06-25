@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.1.1
+## Version: 3.1.2
 
 import pandas as pd
 import sys
@@ -16,7 +16,7 @@ def crossover(price_with_trends, startDate, endDate, startValue=1000, numTrades=
 		Sells if trend crosses down below baseline, buys if trend crosses up above baseline. 
 		Inputs: price data with trend and baseline, start date for price window, end date for price window,  
 			starting value of portfolio, the number of trades in each order
-		Outputs: dataframe of timestamp index and price
+		Outputs: dataframe of timestamp index and price, dates to go long, dates to go short
 	"""
 	# Saves timestamp to give the portfolio output an index
 	price_with_trends_window = price_with_trends[startDate:endDate]
@@ -83,7 +83,7 @@ def zscore_distance(price_with_trends, startDate, endDate, startValue=1000, numT
 		Sells if trend crosses down below baseline, buys if trend crosses up above baseline, unloads if insufficient distance. 
 		Inputs: price data with trend and baseline, start date for price window, end date for price window,  
 			starting value of portfolio, the number of trades in each order
-		Outputs: dataframe of timestamp index and price
+		Outputs: dataframe of timestamp index and price, dates to go long, dates to go short
 	"""
 	# Saves timestamp to give the portfolio output an index
 	price_with_trends_window = price_with_trends[startDate:endDate]
