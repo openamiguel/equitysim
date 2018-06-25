@@ -1,13 +1,17 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.3.4
+## Version: 3.4.3
 
 import sys
 import pandas as pd
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 import return_calculator
 import single_download
+
+YEARS = mdates.YearLocator()
+MONTHS = mdates.MonthLocator()
 
 def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend, and baseline data, plots the price against trend and baseline. 
@@ -24,20 +28,23 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	for name in names:
 		if name != "NA":
 			plotTitle = plotTitle + " " + name
+	# Initializes plot as variable
+	fig, ax = plt.subplots()
+	# Sets up plot title and labels
 	plt.title(plotTitle)
-	plt.xlabel("Time [Days]")
+	plt.xlabel("Time [Months]")
 	plt.ylabel("Price [USD]")
-	time = price_with_trends.index
+	time = pd.to_datetime(price_with_trends.index)
 	# Plots the price, trend, and baseline (but only if one is allowed to)
-	if names[0] != "NA": plt.plot(time, price_with_trends.price.values.tolist(), label=names[0])
-	if names[1] != "NA": plt.plot(time, price_with_trends.trend.values.tolist(), label=names[1])
-	if names[2] != "NA": plt.plot(time, price_with_trends.baseline.values.tolist(), label=names[2])
+	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
+	if names[1] != "NA": ax.plot(time, price_with_trends.trend, label=names[1])
+	if names[2] != "NA": ax.plot(time, price_with_trends.baseline, label=names[2])
 	# Adds a legend
 	plt.legend()
-	# Deletes the x-axis ticks
-	# Buggy feature
-	timeTicks = []
-	plt.xticks(timeTicks)
+	# Formats the x-axis: major ticks are years, minor ticks are months
+	ax.xaxis.set_major_locator(YEARS)
+	ax.xaxis.set_minor_locator(MONTHS)
+	fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
 		figFilePath = folderPath + "/images/" + symbol + "_" + "_".join(names) + ".png"
@@ -45,12 +52,12 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	# If requested, show the plot
 	if showPlot:
 		plt.show()
-	plt.close('all')
+	plt.close(fig)
 
-def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
+def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
 		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time, 
-			path of folder to store files in
+			path of folder to store files in, label for baseline index, 
 			order to save plot locally (default: yes), 
 			order to show plot on command line (default: no), optional title for plot
 		Outputs: a plot indicating portfolio returns over time
@@ -58,6 +65,8 @@ def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=Fals
 	# Collects start and end date from portfolio
 	startDate = portfolio.index[0]
 	endDate = portfolio.index[-1]
+	# Initializes plot as variable
+	fig, ax = plt.subplots()
 	# Titles and labels a plot of ticker data
 	plt.title("Portfolio performance over time, from " + startDate + " to " + endDate)
 	plt.xlabel("Time [Days]")
@@ -65,12 +74,14 @@ def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=Fals
 	# Plots the closing price and rolling means
 	portList = portfolio.close.values.tolist()
 	baselineList = baseline.close.values.tolist()
-	plt.plot(return_calculator.get_rolling_returns(portList), label="My Portfolio")
-	plt.plot(return_calculator.get_rolling_returns(baselineList), label="S&P500 Index")
+	ax.plot(return_calculator.get_rolling_returns(portList), label="My Portfolio")
+	ax.plot(return_calculator.get_rolling_returns(baselineList), label=baselineLabel)
+	# Adds a legend
 	plt.legend()
-	# Deletes the x-axis ticks
-	timeTicks = []
-	plt.xticks(timeTicks)
+	# Formats the x-axis: major ticks are years, minor ticks are months
+	ax.xaxis.set_major_locator(YEARS)
+	ax.xaxis.set_minor_locator(MONTHS)
+	fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
 		figFilePath = folderPath + "/images/" + title + ".png"
