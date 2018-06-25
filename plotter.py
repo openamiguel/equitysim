@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.6.1
+## Version: 3.6.2
 
 import sys
 import numpy as np
@@ -40,7 +40,7 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 	plt.ylabel("Price [USD]")
 	# Converts dataframe to regular frequency for plotting purposes
 	price_with_trends.index = pd.to_datetime(price_with_trends.index)
-	price_with_trends = price_with_trends.resample('1T').asfreq()
+	if intraday: price_with_trends = price_with_trends.resample('1T').asfreq()
 	time = pd.to_datetime(price_with_trends.index)
 	# Plots the price, trend, and baseline (but only if one is allowed to)
 	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
