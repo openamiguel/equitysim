@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.4.2
+## Version: 3.4.3
 
 import sys
 import pandas as pd
@@ -54,10 +54,10 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 		plt.show()
 	plt.close(fig)
 
-def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=False, title="STRATEGY_01"):
+def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
 		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time, 
-			path of folder to store files in
+			path of folder to store files in, label for baseline index, 
 			order to save plot locally (default: yes), 
 			order to show plot on command line (default: no), optional title for plot
 		Outputs: a plot indicating portfolio returns over time
@@ -75,7 +75,7 @@ def portfolio_plot(portfolio, baseline, folderPath, savePlot=True, showPlot=Fals
 	portList = portfolio.close.values.tolist()
 	baselineList = baseline.close.values.tolist()
 	ax.plot(return_calculator.get_rolling_returns(portList), label="My Portfolio")
-	ax.plot(return_calculator.get_rolling_returns(baselineList), label="Baseline Index")
+	ax.plot(return_calculator.get_rolling_returns(baselineList), label=baselineLabel)
 	# Adds a legend
 	plt.legend()
 	# Formats the x-axis: major ticks are years, minor ticks are months
