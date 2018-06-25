@@ -1,6 +1,6 @@
 ## This code plots a portfolio's performance against a baseline. 
 ## Author: Miguel Opeña
-## Version: 3.6.2
+## Version: 3.6.3
 
 import sys
 import numpy as np
@@ -90,7 +90,6 @@ def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", sa
 	plt.ylabel("Returns [Percent]")
 	# Converts dataframe to regular frequency for plotting purposes
 	portfolio.index = pd.to_datetime(portfolio.index)
-	portfolio = portfolio.resample('1T').asfreq()
 	# Plots the closing price and rolling means
 	portList = portfolio.close.values.tolist()
 	baselineList = baseline.close.values.tolist()
