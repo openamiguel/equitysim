@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.4.1
+## Version: 1.5.0
 
 import pandas as pd
 
@@ -77,7 +77,6 @@ def exponential_moving_average(input_values, num_periods=30):
 		# Iterates through and populates dataframe output
 		for i in range(1, len(input_values.index)):
 			ema.EMA[i] = ema.EMA[i-1] + K * (input_values[i] - ema.EMA[i-1])
-		print(ema)
 		return ema
 	# If input is list, output is list
 	elif isinstance(input_values, list):
@@ -89,6 +88,19 @@ def exponential_moving_average(input_values, num_periods=30):
 	else:
 		raise ValueError("Unsupported data type given as input to exponential_moving_average in technicals_calculator.py")
 		return None
+
+def median_price(tick_data):
+	"""	Computes the median price of an asset over time. 
+		Inputs: dataframe with high and low price over given timespan
+		Outputs: median price over given timespan
+	"""
+	# Assume that input is dataframe
+	med_price = pd.DataFrame(index=tick_data.index, columns=['median_price'])
+	# Adds up the prices into med_price
+	med_price['median_price'] = tick_data.high + tick_data.low
+	# Divides by two
+	med_price = med_price.divide(2)
+	return med_price
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
@@ -109,8 +121,7 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = exponential_moving_average(tickData.close)
-	# print(trend)
+	trend = median_price(tickData)
 	price_with_trends = pd.concat([tickData.close, trend])
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","EMA","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","median_price","NA"], savePlot=True, showPlot=True)
