@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.7.1
+## Version: 1.8.0
 
 import numpy as np
 import pandas as pd
@@ -130,6 +130,26 @@ def exponential_moving_average(input_values, num_periods=30):
 		raise ValueError("Unsupported data type given as input to exponential_moving_average in technicals_calculator.py")
 		return None
 
+def general_stochastic(tick_data, num_periods):
+	"""	Computes the General Stochastic calculation of an asset over time (assumes use of closing price).
+		Inputs: dataframe with closing price over given timespan
+		Outputs: General Stochastic over given timespan
+	"""
+	# Assume that input is dataframe
+	general_stoch = pd.DataFrame(index=tick_data.index, columns=['general_stochastic'])
+	# Iterates through all datewindows
+	for i in range(0, len(tick_data.index) + 1 - num_periods):
+		# Gets the proper tick date window
+		start_date = tick_data.index[i]
+		end_date = tick_data.index[i + num_periods - 1]
+		tick_data_window = tick_data[start_date:end_date]
+		# Gets the recent maximum and minimum relative to the date window
+		max_price = tick_data_window.close.max()
+		min_price = tick_data_window.close.min()
+		# Populates the output dataframes
+		general_stoch.general_stochastic[end_date] = (tick_data.close[end_date] - min_price) / (max_price - min_price)
+	return general_stoch
+
 def median_price(tick_data):
 	"""	Computes the median price of an asset over time. 
 		Inputs: dataframe with high and low price over given timespan
@@ -158,14 +178,12 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2018-01-02"
+	startDate = "2016-01-02"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = ease_of_movt(tickData)
+	trend = general_stochastic(tickData, num_periods=30)
 	# print(trend)
-	baseline = exponential_moving_average(trend.EMV, num_periods=14)
-	print(baseline)
-	price_with_trends = pd.concat([tickData.close, trend, baseline])
-	price_with_trends.columns = ["price","trend","baseline"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","EMV","14 period EMA of EMV"], savePlot=True, showPlot=True)
+	price_with_trends = pd.concat([tickData.close, trend])
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","general_stochastic","NA"], savePlot=True, showPlot=True)
