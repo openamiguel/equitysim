@@ -4,37 +4,7 @@ Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on 
 
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
-## documentation of each file and its methods
-
-### assorted calculators and misc. programs
-- **ticker_universe.py**
-  - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
-  - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
-  - `obtain_parse_mutual_funds` gets the top 25 mutual funds from marketwatch.com.
-  - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
-  - command prompt options:
-    - *none* (does not need any)
-- **return_calculator.py**
-  - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
-  - `overall_returns` calculates the overall return from start to finish
-  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
-    - proxy for risk-free rate is the 3-month US T-bill
-  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
-  - command prompt options:
-    - *none* (does not need any)
-- **technicals_calculator.py**
-  - `SMA` returns the simple moving average of input
-- **plotter.py**
-  - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
-  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
-  - command prompt options:
-    - `-symbol`: symbol of the asset to plot
-    - `-folderPath`: location of folder to look for files
-    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
-    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
-    - `-startDate`: start date of data to plot
-    - `-endDate`: end date of aforementioned
-    
+## documentation of each file and its functions
     
 ### AlphaVantage data download/update suite
 - **single_download.py**
@@ -99,3 +69,39 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
     - `-startValue`: initial value of portfolio (USD)
+
+### assorted calculators and misc. programs
+- **ticker_universe.py**
+  - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
+  - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
+  - `obtain_parse_mutual_funds` gets the top 25 mutual funds from marketwatch.com.
+  - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
+  - command prompt options:
+    - *none* (does not need any)
+- **return_calculator.py**
+  - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
+  - `overall_returns` calculates the overall return from start to finish
+  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
+  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
+  - command prompt options:
+    - *none* (does not need any)
+- **plotter.py**
+  - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
+  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
+  - command prompt options:
+    - `-symbol`: symbol of the asset to plot
+    - `-folderPath`: location of folder to look for files
+    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-startDate`: start date of data to plot
+    - `-endDate`: end date of aforementioned
+- **technicals_calculator.py**
+  - `aroon` returns the Aroon indicator of asset data
+  - `aroon_oscillator` returns the Aroon oscillator of asset data
+  - `average_price` returns the average price of asset data
+  - `dema` returns the "double" exponential moving average of input
+  - `ease_of_movt` returns the ease of movement of asset data
+  - `exponential_moving_average` returns the "double" exponential moving average of input
+  - `median_price` returns the median price of asset data
+  - `simple_moving_average` returns the simple moving average of input
