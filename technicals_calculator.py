@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.6.0
+## Version: 1.7.1
 
 import numpy as np
 import pandas as pd
@@ -89,6 +89,20 @@ def dema(input_values, num_periods=30):
 		raise ValueError("Unsupported data type given as input to dema in technicals_calculator.py")
 		return None
 
+def ease_of_movt(tick_data, constant=1000000000):
+	"""	Computes the ease of movement indicator (EMV). The constant is set to 1e+9 for plotting purposes. 
+		Inputs: dataframe with high price, low price, and volume over given timespan; constant in the box ratio calculation
+		Outputs: EMV over given timespan
+	"""
+	# Initializes empty dataframe to hold EMV values
+	emv = pd.DataFrame(index=tick_data.index, columns=['EMV'])
+	for i in range(1, len(tick_data.index)):
+		# Calculates the midpoint move and box ratio at current time
+		midpoint_move = (tick_data.high[i] - tick_data.low[i] - (tick_data.high[i-1] - tick_data.low[i-1])) / 2
+		box_ratio = (tick_data.volume[i] / constant) / (tick_data.high[i] - tick_data.low[i])
+		# Calculates EMV from the previous variables
+		emv.EMV[i] = midpoint_move / box_ratio
+	return emv
 def exponential_moving_average(input_values, num_periods=30):
 	"""	Computes the exponential moving average (EMA) of a time series over certain timespan.
 		Inputs: input values, number of periods in EMA
@@ -98,7 +112,8 @@ def exponential_moving_average(input_values, num_periods=30):
 	# If input is Series, output is Dataframe
 	if isinstance(input_values, pd.Series):
 		ema = pd.DataFrame(index=input_values.index, columns=['EMA'])
-		input_values.rename('EMA')
+		input_values.dropna(axis=0, inplace=True)
+		input_values.rename('EMA', inplace=True)
 		ema.EMA = input_values[0]
 		# Iterates through and populates dataframe output
 		for i in range(1, len(input_values.index)):
@@ -147,8 +162,10 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = dema(tickData.close)
-	print(trend)
-	price_with_trends = pd.concat([tickData.close, trend])
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","DEMA","NA"], savePlot=True, showPlot=True)
+	trend = ease_of_movt(tickData)
+	# print(trend)
+	baseline = exponential_moving_average(trend.EMV, num_periods=14)
+	print(baseline)
+	price_with_trends = pd.concat([tickData.close, trend, baseline])
+	price_with_trends.columns = ["price","trend","baseline"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","EMV","14 period EMA of EMV"], savePlot=True, showPlot=True)
