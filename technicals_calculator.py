@@ -1,7 +1,8 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.5.0
+## Version: 1.6.0
 
+import numpy as np
 import pandas as pd
 
 import plotter
@@ -63,13 +64,38 @@ def average_price(tick_data):
 	avg_price = avg_price.divide(4)
 	return avg_price
 
+def dema(input_values, num_periods=30):
+	"""	Computes the so-called double exponential moving average (DEMA) of a time series over certain timespan.
+		Inputs: input values, number of periods in DEMA
+		Outputs: DEMA over given timespan
+	"""
+	# If input is Series, output is Dataframe
+	if isinstance(input_values, pd.Series):
+		ema = exponential_moving_average(input_values, num_periods=num_periods)
+		ema2 = exponential_moving_average(ema.EMA, num_periods=num_periods)
+		dema = pd.DataFrame(index=input_values.index, columns=['DEMA'])
+		# This is the formula for DEMA
+		for i in range(0, len(input_values.index)):
+			dema.DEMA[i] = 2 * ema.EMA[i] - ema2.EMA[i]
+		return dema
+	# If input is list, output is list
+	elif isinstance(input_values, list):
+		ema = np.array(exponential_moving_average(input_values, num_periods=num_periods))
+		ema2 = np.array(exponential_moving_average(exponential_moving_average(input_values, num_periods=num_periods), num_periods=num_periods))
+		# This is the formula for DEMA
+		dema = 2 * ema - ema2
+		return dema.tolist()
+	else:
+		raise ValueError("Unsupported data type given as input to dema in technicals_calculator.py")
+		return None
+
 def exponential_moving_average(input_values, num_periods=30):
 	"""	Computes the exponential moving average (EMA) of a time series over certain timespan.
 		Inputs: input values, number of periods in EMA
 		Outputs: EMA over given timespan
 	"""
 	K = 2 / (num_periods + 1)
-	# If input is Series, output is Series
+	# If input is Series, output is Dataframe
 	if isinstance(input_values, pd.Series):
 		ema = pd.DataFrame(index=input_values.index, columns=['EMA'])
 		input_values.rename('EMA')
@@ -121,7 +147,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = median_price(tickData)
+	trend = dema(tickData.close)
+	print(trend)
 	price_with_trends = pd.concat([tickData.close, trend])
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","median_price","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","DEMA","NA"], savePlot=True, showPlot=True)
