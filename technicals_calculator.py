@@ -1,26 +1,23 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.2.0
+## Version: 1.2.1
 
 import pandas as pd
 
-def average_price(open_price, close_price, high_price, low_price, asNumeric=False):
+import plotter
+import single_download
+
+def average_price(tick_data):
 	"""	Computes the average price of an asset over time. 
 		Inputs: dataframes of opening price, closing price, high price, low price over given timespan
-			These can be taken as lists, dataframes, or numbers
 		Outputs: average price over given timespan
 	"""
-	# If inputs are designated numeric:
-	if asNumeric: return (open_price + close_price + high_price + low_price) / 4.0
-	# Otherwise, assume that inputs are dataframes, and that all four dataframes have same index
-	avg_price = pd.DataFrame(index=close_price.index, columns=['average_price'])
+	#Assume that input is dataframe
+	avg_price = pd.DataFrame(index=tick_data.index, columns=['average_price'])
 	# Adds up the prices into avg_price
-	prices = [open_price, close_price, high_price, low_price]
-	for price in prices:
-		price.columns = ['average_price']
-		avg_price = outDf.add(price, fill_value=0)
+	avg_price['average_price'] = tick_data.open + tick_data.close + tick_data.high + tick_data.low
 	# Divides by four
-	avg_price = avg_price.divide(4, fill_value=0)
+	avg_price = avg_price.divide(4)
 	return avg_price
 
 def simple_moving_average(inputValues, numPeriods=30):
@@ -32,3 +29,17 @@ def simple_moving_average(inputValues, numPeriods=30):
 	sma = inputValues.rolling(numPeriods).mean()
 	sma.columns = ['SMA' + str(numPeriods)]
 	return sma
+
+if __name__ == "__main__":
+	symbol = "MSFT"
+	function = "DAILY"
+	interval = ""
+	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+	startDate = "2018-01-01"
+	endDate = "2018-06-01"
+	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+	tickData = tickData[startDate:endDate]
+	trend = average_price(tickData)
+	price_with_trends = pd.concat([tickData.close, trend])
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","average_price","NA"], savePlot=True, showPlot=True)
