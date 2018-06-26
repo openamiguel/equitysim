@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.4.0
+## Version: 1.4.1
 
 import pandas as pd
 
@@ -73,10 +73,11 @@ def exponential_moving_average(input_values, num_periods=30):
 	if isinstance(input_values, pd.Series):
 		ema = pd.DataFrame(index=input_values.index, columns=['EMA'])
 		input_values.rename('EMA')
-		ema[ema.index[0]] = input_values[input_values.index[0]]
+		ema.EMA = input_values[0]
 		# Iterates through and populates dataframe output
 		for i in range(1, len(input_values.index)):
 			ema.EMA[i] = ema.EMA[i-1] + K * (input_values[i] - ema.EMA[i-1])
+		print(ema)
 		return ema
 	# If input is list, output is list
 	elif isinstance(input_values, list):
@@ -109,7 +110,7 @@ if __name__ == "__main__":
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
 	trend = exponential_moving_average(tickData.close)
-	print(trend)
+	# print(trend)
 	price_with_trends = pd.concat([tickData.close, trend])
 	price_with_trends.columns = ["price","trend"]
 	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","EMA","NA"], savePlot=True, showPlot=True)
