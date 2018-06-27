@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.9.1
+## Version: 1.10.1
 
 import numpy as np
 import pandas as pd
@@ -173,6 +173,18 @@ def simple_moving_average(input_values, num_periods=30):
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
 
+def triangular_moving_average(input_values, num_periods=30):
+	"""	Computes the triangular moving average (TMA) of a time series over certain timespan, which weighs the middle values more.
+		Inputs: input values, number of periods in TMA
+		Outputs: TMA over given timespan
+	"""
+	periods = num_periods if num_periods % 2 == 0 else num_periods + 1
+	per1 = int(periods / 2 + 1)
+	tma = simple_moving_average(input_values, num_periods=per1)
+	per2 = per1 - 1
+	tma = simple_moving_average(tma, num_periods=per2)
+	return tma
+
 def typical_price(tick_data):
 	"""	Computes the typical price of an asset over time. 
 		Inputs: dataframe with closing price, high price, low price over given timespan
@@ -191,12 +203,12 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2018-01-02"
+	startDate = "2014-01-02"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = typical_price(tickData)
-	# print(trend)
-	price_with_trends = pd.concat([tickData.close, trend])
+	trend = triangular_moving_average(tickData.close)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","typical_price","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","TMA","NA"], savePlot=True, showPlot=True)
