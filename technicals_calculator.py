@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.10.1
+## Version: 1.11.1
 
 import numpy as np
 import pandas as pd
@@ -163,6 +163,28 @@ def median_price(tick_data):
 	med_price = med_price.divide(2)
 	return med_price
 
+def price_channel(price, num_periods):
+	"""	Computes the price channels (recent maximum and minimum) of an asset over time.
+		Inputs: Series of price over given timespan
+		Outputs: high channel and low channel over given timespan
+	"""
+	# Assume that input is dataframe
+	hichannel = pd.DataFrame(index=price.index, columns=['high_channel'])
+	lochannel = pd.DataFrame(index=price.index, columns=['low_channel'])
+	# Iterates through all datewindows
+	for i in range(0, len(price.index) + 1 - num_periods):
+		# Gets the proper tick date window
+		start_date = price.index[i]
+		end_date = price.index[i + num_periods - 1]
+		price_window = price[start_date:end_date]
+		# Gets the recent maximum and minimum relative to the date window
+		max_price = price_window.max()
+		min_price = price_window.min()
+		# Populates the output dataframes
+		hichannel.high_channel[end_date] = max_price
+		lochannel.low_channel[end_date] = min_price
+	return hichannel, lochannel
+
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
 		Inputs: input values, number of periods in SMA
@@ -207,8 +229,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = triangular_moving_average(tickData.close)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	hichannel, lochannel = price_channel(tickData.close, num_periods=14)
+	price_with_trends = pd.concat([tickData.close, hichannel.high_channel, lochannel.low_channel], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","TMA","NA"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend", "baseline"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","hichannel","lochannel"], savePlot=True, showPlot=True)
