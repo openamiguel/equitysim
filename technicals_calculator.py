@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.8.0
+## Version: 1.9.1
 
 import numpy as np
 import pandas as pd
@@ -173,17 +173,30 @@ def simple_moving_average(input_values, num_periods=30):
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
 
+def typical_price(tick_data):
+	"""	Computes the typical price of an asset over time. 
+		Inputs: dataframe with closing price, high price, low price over given timespan
+		Outputs: average price over given timespan
+	"""
+	# Assume that input is dataframe
+	typ_price = pd.DataFrame(index=tick_data.index, columns=['typical_price'])
+	# Adds up the prices into typ_price
+	typ_price['typical_price'] = tick_data.close + tick_data.high + tick_data.low
+	# Divides by four
+	typ_price = typ_price.divide(3)
+	return typ_price
+
 if __name__ == "__main__":
 	symbol = "MSFT"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2016-01-02"
+	startDate = "2018-01-02"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = general_stochastic(tickData, num_periods=30)
+	trend = typical_price(tickData)
 	# print(trend)
 	price_with_trends = pd.concat([tickData.close, trend])
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","general_stochastic","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","typical_price","NA"], savePlot=True, showPlot=True)
