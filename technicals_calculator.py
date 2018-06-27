@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.12.3
+## Version: 1.13.1
 
 import numpy as np
 import pandas as pd
@@ -103,6 +103,7 @@ def ease_of_movt(tick_data, constant=1000000000):
 		# Calculates EMV from the previous variables
 		emv.EMV[i] = midpoint_move / box_ratio
 	return emv
+
 def exponential_moving_average(input_values, num_periods=30):
 	"""	Computes the exponential moving average (EMA) of a time series over certain timespan.
 		Inputs: input values, number of periods in EMA
@@ -201,6 +202,12 @@ def price_oscillator(moving_avg_function, price, num_periods_slow, num_periods_f
 	price_osc_percent = 100 * price_osc / moving_avg_function(price, num_periods_fast)
 	return price_osc, price_osc_percent
 
+def qstick(moving_avg_function, tick_data):
+	"""	Computes the Q-stick indicator of asset data over certain timespan, which depends on a choice of moving average function.
+		Inputs: choice of function, dataframe with close and open price over time
+		Outputs: price oscillator over given timespan
+	"""
+	return moving_avg_function(tick_data.close - tick_data.open)
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
@@ -246,8 +253,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	price_osc, price_osc_percent = price_oscillator(exponential_moving_average, tickData.close, num_periods_slow=26, num_periods_fast=12)
-	price_with_trends = pd.concat([tickData.close, price_osc_percent], axis=1)
+	trend = qstick(exponential_moving_average, tickData)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","price_oscillator_pct","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","q-stick","NA"], savePlot=True, showPlot=True)
