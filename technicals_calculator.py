@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.12.2
+## Version: 1.12.3
 
 import numpy as np
 import pandas as pd
@@ -197,7 +197,9 @@ def price_oscillator(moving_avg_function, price, num_periods_slow, num_periods_f
 		Inputs: choice of function, price input, number of periods for slow MA, number of periods for fast MA
 		Outputs: price oscillator over given timespan
 	"""
-	return moving_avg_function(price, num_periods_slow) - moving_avg_function(price, num_periods_fast)
+	price_osc = moving_avg_function(price, num_periods_slow) - moving_avg_function(price, num_periods_fast)
+	price_osc_percent = 100 * price_osc / moving_avg_function(price, num_periods_fast)
+	return price_osc, price_osc_percent
 
 
 def simple_moving_average(input_values, num_periods=30):
@@ -244,8 +246,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = price_oscillator(exponential_moving_average, tickData.close, num_periods_slow=26, num_periods_fast=12)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
-	print(price_with_trends)
+	price_osc, price_osc_percent = price_oscillator(exponential_moving_average, tickData.close, num_periods_slow=26, num_periods_fast=12)
+	price_with_trends = pd.concat([tickData.close, price_osc_percent], axis=1)
+	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","price_oscillator","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","price_oscillator_pct","NA"], savePlot=True, showPlot=True)
