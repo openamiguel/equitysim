@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.13.1
+## Version: 1.14.1
 
 import numpy as np
 import pandas as pd
@@ -240,21 +240,34 @@ def typical_price(tick_data):
 	typ_price = pd.DataFrame(index=tick_data.index, columns=['typical_price'])
 	# Adds up the prices into typ_price
 	typ_price['typical_price'] = tick_data.close + tick_data.high + tick_data.low
-	# Divides by four
+	# Divides by three
 	typ_price = typ_price.divide(3)
 	return typ_price
+
+def weighted_close(tick_data):
+	"""	Computes the weighted closing price of an asset over time. 
+		Inputs: dataframe with closing price, high price, low price over given timespan
+		Outputs: weighted closing price over given timespan
+	"""
+	# Assume that input is dataframe
+	weighted_close_price = pd.DataFrame(index=tick_data.index, columns=['weighted_close_price'])
+	# Adds up the prices into weighted_close_price
+	weighted_close_price['weighted_close_price'] = tick_data.close + tick_data.close + tick_data.high + tick_data.low
+	# Divides by four
+	weighted_close_price = weighted_close_price.divide(4)
+	return weighted_close_price
 
 if __name__ == "__main__":
 	symbol = "MSFT"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2014-01-02"
+	startDate = "2018-01-02"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = qstick(exponential_moving_average, tickData)
+	trend = weighted_close(tickData)
 	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","q-stick","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","weighted_close","NA"], savePlot=True, showPlot=True)
