@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.11.1
+## Version: 1.12.2
 
 import numpy as np
 import pandas as pd
@@ -150,6 +150,13 @@ def general_stochastic(tick_data, num_periods):
 		general_stoch.general_stochastic[end_date] = (tick_data.close[end_date] - min_price) / (max_price - min_price)
 	return general_stoch
 
+def macd(price):
+	"""	Computes the MACD of a time series over certain timespan, which is essentially price oscillator for 26 and 12 periods, with EMA. 
+		Inputs: price input
+		Outputs: MACD over given timespan
+	"""
+	return price_oscillator(exponential_moving_average, price, num_periods_slow=26, num_periods_fast=12)
+
 def median_price(tick_data):
 	"""	Computes the median price of an asset over time. 
 		Inputs: dataframe with high and low price over given timespan
@@ -184,6 +191,14 @@ def price_channel(price, num_periods):
 		hichannel.high_channel[end_date] = max_price
 		lochannel.low_channel[end_date] = min_price
 	return hichannel, lochannel
+
+def price_oscillator(moving_avg_function, price, num_periods_slow, num_periods_fast):
+	"""	Computes the price oscillator of a time series over certain timespan, which depends on a choice of moving average function.
+		Inputs: choice of function, price input, number of periods for slow MA, number of periods for fast MA
+		Outputs: price oscillator over given timespan
+	"""
+	return moving_avg_function(price, num_periods_slow) - moving_avg_function(price, num_periods_fast)
+
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
@@ -229,8 +244,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	hichannel, lochannel = price_channel(tickData.close, num_periods=14)
-	price_with_trends = pd.concat([tickData.close, hichannel.high_channel, lochannel.low_channel], axis=1)
-	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend", "baseline"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","hichannel","lochannel"], savePlot=True, showPlot=True)
+	trend = price_oscillator(exponential_moving_average, tickData.close, num_periods_slow=26, num_periods_fast=12)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	print(price_with_trends)
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","price_oscillator","NA"], savePlot=True, showPlot=True)
