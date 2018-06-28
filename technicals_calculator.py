@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.16.1
+## Version: 1.17.1
 
 import numpy as np
 import pandas as pd
@@ -180,6 +180,18 @@ def normalized_price(price, baseline):
 	norm_price.columns = ['normalized_price']
 	return norm_price
 
+def percent_volume_oscillator(volume, num_periods_slow, num_periods_fast):
+	"""	Computes the percent volume oscillator of an asset over time
+		Inputs: choice of function, price input, number of periods for slow MA, number of periods for fast MA
+		Outputs: price oscillator over given timespan
+	"""
+	# Gets the fast EMA of volume
+	fast_ema = exponential_moving_average(volume, num_periods=num_periods_fast)
+	# Gets the slow EMA of volume
+	slow_ema = exponential_moving_average(volume, num_periods=num_periods_slow)
+	pct_vol_osc = 100 * (fast_ema - slow_ema) / fast_ema
+	return pct_vol_osc
+
 def price_channel(price, num_periods):
 	"""	Computes the price channels (recent maximum and minimum) of an asset over time.
 		Inputs: Series of price over given timespan
@@ -282,14 +294,12 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2018-01-03"
+	startDate = "2016-01-03"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	baseline = baseline[startDate:endDate]
-	norm_price = normalized_price(tickData.close, baseline.close)
+	norm_price = percent_volume_oscillator(tickData.volume, num_periods_fast=12, num_periods_slow=26)
 	price_with_trends = pd.concat([tickData.close, norm_price], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","normalized_price","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","pct_vol_osc","NA"], savePlot=True, showPlot=True)
