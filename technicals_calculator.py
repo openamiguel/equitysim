@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.17.1
+## Version: 1.18.1
 
 import numpy as np
 import pandas as pd
@@ -180,6 +180,13 @@ def normalized_price(price, baseline):
 	norm_price.columns = ['normalized_price']
 	return norm_price
 
+"""
+def parabolic_sar(tick_data, portfolio_signals):
+	step = 1
+	acceleration = 0
+	extreme_point = 0
+"""
+
 def percent_volume_oscillator(volume, num_periods_slow, num_periods_fast):
 	"""	Computes the percent volume oscillator of an asset over time
 		Inputs: choice of function, price input, number of periods for slow MA, number of periods for fast MA
@@ -263,6 +270,25 @@ def triangular_moving_average(input_values, num_periods=30):
 	tma = simple_moving_average(tma, num_periods=per2)
 	return tma
 
+def true_range(tick_data):
+	"""	Computes the true range of an asset over time.
+		Inputs: dataframe wtih closing price, high price, and low price
+		Outputs: true range over given timespan
+	"""
+	# Initializes output as empty dataframe
+	trange = pd.DataFrame(index=tick_data.index, columns=['true_range'])
+	for i in range(1, len(tick_data.index)):
+		# Gets the current and previous date
+		this_date = tick_data.index[i]
+		last_date = tick_data.index[i-1]
+		# Gets the three possibilities for true range
+		option1 = abs(tick_data.high[this_date] - tick_data.low[this_date])
+		option2 = abs(tick_data.high[this_date] - tick_data.close[last_date])
+		option3 = abs(tick_data.low[this_date] - tick_data.close[last_date])
+		# Filters based on which is largest
+		trange.true_range[this_date] = max(option1,option2,option3)
+	return trange
+
 def typical_price(tick_data):
 	"""	Computes the typical price of an asset over time. 
 		Inputs: dataframe with closing price, high price, low price over given timespan
@@ -298,8 +324,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	norm_price = percent_volume_oscillator(tickData.volume, num_periods_fast=12, num_periods_slow=26)
-	price_with_trends = pd.concat([tickData.close, norm_price], axis=1)
+	true_range = true_range(tickData)
+	price_with_trends = pd.concat([tickData.close, true_range], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","pct_vol_osc","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","true_range","NA"], savePlot=True, showPlot=True)
