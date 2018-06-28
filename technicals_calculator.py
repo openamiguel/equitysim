@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.15.1
+## Version: 1.16.1
 
 import numpy as np
 import pandas as pd
@@ -171,6 +171,15 @@ def median_price(tick_data):
 	med_price = med_price.divide(2)
 	return med_price
 
+def normalized_price(price, baseline):
+	"""	Computes the normalized price (aka performance indicator) against a baseline.
+		Inputs: price series and baseline series
+		Outputs: normalized price over given timespan
+	"""
+	norm_price = 100 * (price - baseline) / baseline
+	norm_price.columns = ['normalized_price']
+	return norm_price
+
 def price_channel(price, num_periods):
 	"""	Computes the price channels (recent maximum and minimum) of an asset over time.
 		Inputs: Series of price over given timespan
@@ -202,12 +211,12 @@ def price_oscillator(moving_avg_function, price, num_periods_slow, num_periods_f
 	price_osc_percent = 100 * price_osc / moving_avg_function(price, num_periods_fast)
 	return price_osc, price_osc_percent
 
-def qstick(moving_avg_function, tick_data):
+def qstick(moving_avg_function, num_periods, tick_data):
 	"""	Computes the Q-stick indicator of asset data over certain timespan, which depends on a choice of moving average function.
 		Inputs: choice of function, dataframe with close and open price over time
 		Outputs: price oscillator over given timespan
 	"""
-	return moving_avg_function(tick_data.close - tick_data.open)
+	return moving_avg_function(tick_data.close - tick_data.open, num_periods)
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
@@ -225,9 +234,9 @@ def stochastic_oscillator(tick_data, num_periods, moving_avg_function):
 		Outputs: Stochastic oscillator over given timespan
 	"""
 	percent_k = 100 * general_stochastic(tick_data, num_periods=num_periods)
-	percent_k_smoothed = moving_avg_function(percent_k)
-	fast_d = moving_avg_function(percent_k)
-	slow_d = moving_avg_function(percent_k_smoothed)
+	percent_k_smoothed = moving_avg_function(percent_k, num_periods)
+	fast_d = moving_avg_function(percent_k, num_periods)
+	slow_d = moving_avg_function(percent_k_smoothed, num_periods)
 	return fast_d, slow_d
 
 def triangular_moving_average(input_values, num_periods=30):
@@ -269,16 +278,18 @@ def weighted_close(tick_data):
 	return weighted_close_price
 
 if __name__ == "__main__":
-	symbol = "MSFT"
+	symbol = "AAPL"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2014-01-03"
+	startDate = "2018-01-03"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	fast_d, slow_d = stochastic_oscillator(tickData.close, num_periods=30, moving_avg_function=simple_moving_average)
-	price_with_trends = pd.concat([tickData.close, fast_d, slow_d], axis=1)
+	baseline = baseline[startDate:endDate]
+	norm_price = normalized_price(tickData.close, baseline.close)
+	price_with_trends = pd.concat([tickData.close, norm_price], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend","baseline"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","fast_D","slow_D"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","normalized_price","NA"], savePlot=True, showPlot=True)
