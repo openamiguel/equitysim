@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.22.1
+## Version: 1.23.1
 
 import numpy as np
 import pandas as pd
@@ -135,6 +135,38 @@ def dema(input_values, num_periods=30):
 	else:
 		raise ValueError("Unsupported data type given as input to dema in technicals_calculator.py")
 		return None
+
+def directional_index(tick_data, num_periods):
+	"""	Computes the directional indices (+DI and -DI).
+		Inputs: close, high, and low data on asset; number of periods
+		Outputs: +DI and -DI on asset over given timespan
+	"""
+	# Initializes starting variables
+	di_positive = pd.DataFrame(index=tick_data.index, columns=['DI_PLUS'])
+	di_negative = pd.DataFrame(index=tick_data.index, columns=['DI_MINUS'])
+	# Initializes running sums
+	plus_dm_sum = 0
+	minus_dm_sum = 0
+	tr_sum = 0
+	# Walks through the price dataframe
+	for i in range(1, len(tick_data.index)):
+		now_date = tick_data.index[i]
+		last_date = tick_data.index[i-1]
+		# Gets starting variables
+		delta_high = tick_data.high[last_date] - tick_data.high[now_date]
+		delta_low = tick_data.low[now_date] - tick_data.low[last_date]
+		plus_dm = delta_high if delta_high > delta_low else 0
+		minus_dm = delta_low if delta_high < delta_low else 0
+		tr = max(tick_data.high[now_date], tick_data.close[last_date]) - max(tick_data.low[now_date], tick_data.close[last_date])
+		# Updates running sums
+		plus_dm_sum = plus_dm_sum - (plus_dm_sum / num_periods) + plus_dm
+		minus_dm_sum = minus_dm_sum - (minus_dm_sum / num_periods) + minus_dm
+		tr_sum = tr_sum - (tr_sum / num_periods) + tr
+		# Updates output dataframe
+		di_positive.DI_PLUS[now_date] = 100 * plus_dm_sum / tr_sum
+		di_negative.DI_MINUS[now_date] = 100 * minus_dm_sum / tr_sum
+	# Return output
+	return di_positive, di_negative
 
 def ease_of_movt(tick_data, constant=1000000000):
 	"""	Computes the ease of movement indicator (EMV). The constant is set to 1e+9 for plotting purposes. 
@@ -421,8 +453,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = chande_momentum_oscillator(tickData.close, num_periods=30)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	trend, baseline = directional_index(tickData, num_periods=30)
+	price_with_trends = pd.concat([tickData.close, trend, baseline], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","CMO","NA"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend","baseline"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","DI_plus","DI_minus"], savePlot=True, showPlot=True)
