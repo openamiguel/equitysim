@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.14.2
+## Version: 1.15.1
 
 import numpy as np
 import pandas as pd
@@ -148,7 +148,7 @@ def general_stochastic(price, num_periods):
 		max_price = price_window.max()
 		min_price = price_window.min()
 		# Populates the output dataframes
-		general_stoch.general_stochastic[end_date] = (tick_data.price[end_date] - min_price) / (max_price - min_price)
+		general_stoch.general_stochastic[end_date] = (price[end_date] - min_price) / (max_price - min_price)
 	return general_stoch
 
 def macd(price):
@@ -219,6 +219,16 @@ def simple_moving_average(input_values, num_periods=30):
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
 
+def stochastic_oscillator(tick_data, num_periods, moving_avg_function):
+	"""	Computes the Stochastic oscillator of an asset over time. 
+		Inputs: series with price over given timespan, number of periods to look back, type of moving average to apply
+		Outputs: Stochastic oscillator over given timespan
+	"""
+	percent_k = 100 * general_stochastic(tick_data, num_periods=num_periods)
+	percent_k_smoothed = moving_avg_function(percent_k)
+	fast_d = moving_avg_function(percent_k)
+	slow_d = moving_avg_function(percent_k_smoothed)
+	return fast_d, slow_d
 
 def triangular_moving_average(input_values, num_periods=30):
 	"""	Computes the triangular moving average (TMA) of a time series over certain timespan, which weighs the middle values more.
@@ -263,12 +273,12 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2018-01-02"
+	startDate = "2014-01-03"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = weighted_close(tickData)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	fast_d, slow_d = stochastic_oscillator(tickData.close, num_periods=30, moving_avg_function=simple_moving_average)
+	price_with_trends = pd.concat([tickData.close, fast_d, slow_d], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","weighted_close","NA"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend","baseline"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","fast_D","slow_D"], savePlot=True, showPlot=True)
