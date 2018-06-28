@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.19.1
+## Version: 1.20.1
 
 import numpy as np
 import pandas as pd
@@ -63,6 +63,23 @@ def average_price(tick_data):
 	# Divides by four
 	avg_price = avg_price.divide(4)
 	return avg_price
+
+def bollinger(tick_data, num_periods=20, num_deviations=2):
+	"""	Computes the Bollinger bands and width of an asset over time. 
+		Inputs: dataframe with closing price, high price, low price over given timespan
+		Outputs: Bollinger bands and width over given timespan
+	"""
+	# Calculates typical price and standard deviation thereof
+	typ_price = typical_price(tick_data)
+	stdev = typ_price['typical_price'].std()
+	# Calculates the three Bollinger bands
+	midband = simple_moving_average(typ_price, num_periods=num_periods)
+	lowband = midband - num_deviations * stdev
+	hiband = midband + num_deviations * stdev
+	# Calculates the width of said bands
+	width = 2 * num_deviations * stdev
+	# Returns all the needed information
+	return lowband, midband, hiband, width
 
 def dema(input_values, num_periods=30):
 	"""	Computes the so-called double exponential moving average (DEMA) of a time series over certain timespan.
@@ -257,12 +274,8 @@ def rel_momentum_index(price, num_periods):
 		dn = 0
 		if price[end_date] > price[start_date]: 
 			up = price[end_date] - price[start_date]
-			print("Click")
 		else: 
 			dn = price[start_date] - price[end_date]
-			print(price[start_date])
-			print(price[end_date])
-			print("Clack")
 		# Updates upavg and dnavg
 		upavg = (upavg * (num_periods - 1) + up) / num_periods
 		dnavg = (dnavg * (num_periods - 1) + dn) / num_periods
@@ -356,12 +369,12 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2016-01-03"
+	startDate = "2018-01-03"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	rmi = rel_strength_index(tickData.close)
-	price_with_trends = pd.concat([tickData.close, rmi], axis=1)
+	lowband, midband, hiband, width = bollinger(tickData)
+	price_with_trends = pd.concat([tickData.close, lowband, hiband], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","RMI","NA"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend","baseline"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","lowband","highband"], savePlot=True, showPlot=True)
