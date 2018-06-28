@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.23.1
+## Version: 1.23.2
 
 import numpy as np
 import pandas as pd
@@ -167,6 +167,16 @@ def directional_index(tick_data, num_periods):
 		di_negative.DI_MINUS[now_date] = 100 * minus_dm_sum / tr_sum
 	# Return output
 	return di_positive, di_negative
+
+def directional_movt_index(tick_data, num_periods):
+	"""	Computes the directional movement index (DX), which is derived directly from +DI and -DI.
+		Inputs: close, high, and low data on asset; number of periods
+		Outputs: DX on asset over given timespan
+	"""
+	di_positive, di_negative = directional_index(tick_data, num_periods)
+	di_positive.columns = ['DX']
+	di_negative.columns = ['DX']
+	return (di_positive - di_negative) / (di_positive + di_negative)
 
 def ease_of_movt(tick_data, constant=1000000000):
 	"""	Computes the ease of movement indicator (EMV). The constant is set to 1e+9 for plotting purposes. 
@@ -445,7 +455,7 @@ def zero_lag_ema(price, num_periods):
 	return zlema
 
 if __name__ == "__main__":
-	symbol = "GILD"
+	symbol = "MSFT"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -453,8 +463,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend, baseline = directional_index(tickData, num_periods=30)
-	price_with_trends = pd.concat([tickData.close, trend, baseline], axis=1)
+	trend = directional_movt_index(tickData, num_periods=30)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend","baseline"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","DI_plus","DI_minus"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","DX","NA"], savePlot=True, showPlot=True)
