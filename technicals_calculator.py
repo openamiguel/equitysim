@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.18.1
+## Version: 1.19.1
 
 import numpy as np
 import pandas as pd
@@ -19,10 +19,10 @@ def aroon(tick_data, num_periods=25):
 	aroon_up = pd.DataFrame(index=tick_data.index, columns=['aroon_up'])
 	aroon_down = pd.DataFrame(index=tick_data.index, columns=['aroon_down'])
 	# Iterates through all datewindows
-	for i in range(0, len(tick_data.index) + 1 - num_periods):
+	for i in range(0, len(tick_data.index) - num_periods):
 		# Gets the proper tick date window
 		start_date = tick_data.index[i]
-		end_date = tick_data.index[i + num_periods - 1]
+		end_date = tick_data.index[i + num_periods]
 		tick_data_window = tick_data[start_date:end_date]
 		# Gets the recent maximum and minimum relative to the date window
 		max_index = tick_data_window.close.idxmax()
@@ -139,10 +139,10 @@ def general_stochastic(price, num_periods):
 	# Assume that input is dataframe
 	general_stoch = pd.DataFrame(index=price.index, columns=['general_stochastic'])
 	# Iterates through all datewindows
-	for i in range(0, len(price.index) + 1 - num_periods):
+	for i in range(0, len(price.index) - num_periods):
 		# Gets the proper tick date window
 		start_date = price.index[i]
-		end_date = price.index[i + num_periods - 1]
+		end_date = price.index[i + num_periods]
 		price_window = price[start_date:end_date]
 		# Gets the recent maximum and minimum relative to the date window
 		max_price = price_window.max()
@@ -208,10 +208,10 @@ def price_channel(price, num_periods):
 	hichannel = pd.DataFrame(index=price.index, columns=['high_channel'])
 	lochannel = pd.DataFrame(index=price.index, columns=['low_channel'])
 	# Iterates through all datewindows
-	for i in range(0, len(price.index) + 1 - num_periods):
+	for i in range(0, len(price.index) - num_periods):
 		# Gets the proper tick date window
 		start_date = price.index[i]
-		end_date = price.index[i + num_periods - 1]
+		end_date = price.index[i + num_periods]
 		price_window = price[start_date:end_date]
 		# Gets the recent maximum and minimum relative to the date window
 		max_price = price_window.max()
@@ -236,6 +236,42 @@ def qstick(moving_avg_function, num_periods, tick_data):
 		Outputs: price oscillator over given timespan
 	"""
 	return moving_avg_function(tick_data.close - tick_data.open, num_periods)
+
+def rel_momentum_index(price, num_periods):
+	"""	Computes the relative momentum index of a (closing) price dataset given the number of periods.
+		Inputs: price Series (close), number of periods
+		Outputs: RMI of closing price
+	"""
+	# Assume that input is dataframe/Series
+	rmi = pd.DataFrame(index=price.index, columns=['RMI'])
+	# Gets the variables used in computing at all time points
+	upavg = 0
+	dnavg = 0
+	for i in range(0, len(price.index) - num_periods):
+		# Gets the proper tick date window
+		start_date = price.index[i]
+		end_date = price.index[i + num_periods]
+		price_window = price[start_date:end_date]
+		# Gets some more variables
+		up = 0
+		dn = 0
+		if price[end_date] > price[start_date]: 
+			up = price[end_date] - price[start_date]
+			print("Click")
+		else: 
+			dn = price[start_date] - price[end_date]
+			print(price[start_date])
+			print(price[end_date])
+			print("Clack")
+		# Updates upavg and dnavg
+		upavg = (upavg * (num_periods - 1) + up) / num_periods
+		dnavg = (dnavg * (num_periods - 1) + dn) / num_periods
+		# Computes the RMI
+		rmi.RMI[end_date] = 100 * upavg / (upavg + dnavg)
+	return rmi
+
+def rel_strength_index(price):
+	return rel_momentum_index(price, num_periods=1)
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
@@ -316,7 +352,7 @@ def weighted_close(tick_data):
 	return weighted_close_price
 
 if __name__ == "__main__":
-	symbol = "AAPL"
+	symbol = "GILD"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -324,8 +360,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	true_range = true_range(tickData)
-	price_with_trends = pd.concat([tickData.close, true_range], axis=1)
+	rmi = rel_strength_index(tickData.close)
+	price_with_trends = pd.concat([tickData.close, rmi], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","true_range","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","RMI","NA"], savePlot=True, showPlot=True)
