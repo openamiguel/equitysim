@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.20.1
+## Version: 1.21.1
 
 import numpy as np
 import pandas as pd
@@ -364,17 +364,35 @@ def weighted_close(tick_data):
 	weighted_close_price = weighted_close_price.divide(4)
 	return weighted_close_price
 
+def zero_lag_ema(price, num_periods):
+	"""	Computes the so-called zero lag exponential moving average, which substracts older data to minimize cumulative effect.
+		Inputs: price Series, number of periods to run calculation on
+		Outputs: zero-lag EMA
+	"""
+	lag = int((num_periods - 1) / 2)
+	ema = pd.DataFrame(index=price.index, columns=["EMA"])
+	# Iterates through all datewindows
+	for i in range(0, len(price.index) - lag):
+		# Computes the de-lagged data
+		lag_date = price.index[i]
+		now_date = price.index[i + lag]
+		price_window = price[lag_date:now_date]
+		ema.EMA[now_date] = 2 * price_window[now_date] - price_window[lag_date]
+	zlema = exponential_moving_average(ema.EMA, num_periods)
+	zlema.columns = ['ZLEMA']
+	return zlema
+
 if __name__ == "__main__":
 	symbol = "GILD"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2018-01-03"
+	startDate = "2016-01-03"
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	lowband, midband, hiband, width = bollinger(tickData)
-	price_with_trends = pd.concat([tickData.close, lowband, hiband], axis=1)
+	trend = zero_lag_ema(tickData.close, num_periods=30)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend","baseline"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","lowband","highband"], savePlot=True, showPlot=True)
+	price_with_trends.columns = ["price","trend"]
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","ZLEMA","NA"], savePlot=True, showPlot=True)
