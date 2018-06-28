@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.14.1
+## Version: 1.14.2
 
 import numpy as np
 import pandas as pd
@@ -131,24 +131,24 @@ def exponential_moving_average(input_values, num_periods=30):
 		raise ValueError("Unsupported data type given as input to exponential_moving_average in technicals_calculator.py")
 		return None
 
-def general_stochastic(tick_data, num_periods):
-	"""	Computes the General Stochastic calculation of an asset over time (assumes use of closing price).
-		Inputs: dataframe with closing price over given timespan
+def general_stochastic(price, num_periods):
+	"""	Computes the General Stochastic calculation of an asset over time. 
+		Inputs: series with price over given timespan
 		Outputs: General Stochastic over given timespan
 	"""
 	# Assume that input is dataframe
-	general_stoch = pd.DataFrame(index=tick_data.index, columns=['general_stochastic'])
+	general_stoch = pd.DataFrame(index=price.index, columns=['general_stochastic'])
 	# Iterates through all datewindows
-	for i in range(0, len(tick_data.index) + 1 - num_periods):
+	for i in range(0, len(price.index) + 1 - num_periods):
 		# Gets the proper tick date window
-		start_date = tick_data.index[i]
-		end_date = tick_data.index[i + num_periods - 1]
-		tick_data_window = tick_data[start_date:end_date]
+		start_date = price.index[i]
+		end_date = price.index[i + num_periods - 1]
+		price_window = price[start_date:end_date]
 		# Gets the recent maximum and minimum relative to the date window
-		max_price = tick_data_window.close.max()
-		min_price = tick_data_window.close.min()
+		max_price = price_window.max()
+		min_price = price_window.min()
 		# Populates the output dataframes
-		general_stoch.general_stochastic[end_date] = (tick_data.close[end_date] - min_price) / (max_price - min_price)
+		general_stoch.general_stochastic[end_date] = (tick_data.price[end_date] - min_price) / (max_price - min_price)
 	return general_stoch
 
 def macd(price):
@@ -218,6 +218,7 @@ def simple_moving_average(input_values, num_periods=30):
 	sma = input_values.rolling(num_periods).mean()
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
+
 
 def triangular_moving_average(input_values, num_periods=30):
 	"""	Computes the triangular moving average (TMA) of a time series over certain timespan, which weighs the middle values more.
