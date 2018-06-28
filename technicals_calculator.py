@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.21.1
+## Version: 1.22.1
 
 import numpy as np
 import pandas as pd
@@ -80,6 +80,36 @@ def bollinger(tick_data, num_periods=20, num_deviations=2):
 	width = 2 * num_deviations * stdev
 	# Returns all the needed information
 	return lowband, midband, hiband, width
+
+def chande_momentum_oscillator(price, num_periods):
+	up_df = pd.DataFrame(index=price.index, columns=['upp'])
+	dn_df = pd.DataFrame(index=price.index, columns=['down']) 
+	cmo = pd.DataFrame(index=price.index, columns=['CMO'])
+	# Walks through the dates and gets up/down indices at each interval
+	for i in range(0, len(price.index) - 1):
+		# Gets the proper tick date window
+		start_date = price.index[i]
+		end_date = price.index[i+1]
+		# Gets some more variables
+		up = 0
+		dn = 0
+		if price[end_date] > price[start_date]: 
+			up = price[end_date] - price[start_date]
+		else: 
+			dn = price[start_date] - price[end_date]
+		# Saves up and down accordingly
+		up_df.upp[end_date] = up
+		dn_df.down[end_date] = dn
+	# Walks through up and down to get cmo
+	for i in range(0, len(price.index) - num_periods):
+		start_date = price.index[i]
+		end_date = price.index[i + num_periods]
+		# Walks backward by num_periods to get sum
+		ups = up_df.upp[start_date:end_date].sum()
+		downs = dn_df.down[start_date:end_date].sum()
+		# Saves CMO
+		cmo.CMO[end_date] = 100 * (ups - downs) / (ups + downs)
+	return cmo
 
 def dema(input_values, num_periods=30):
 	"""	Computes the so-called double exponential moving average (DEMA) of a time series over certain timespan.
@@ -391,8 +421,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = zero_lag_ema(tickData.close, num_periods=30)
+	trend = chande_momentum_oscillator(tickData.close, num_periods=30)
 	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","ZLEMA","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","CMO","NA"], savePlot=True, showPlot=True)
