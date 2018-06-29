@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.23.2
+## Version: 1.24.1
 
 import numpy as np
 import pandas as pd
@@ -63,6 +63,21 @@ def average_price(tick_data):
 	# Divides by four
 	avg_price = avg_price.divide(4)
 	return avg_price
+
+def average_true_range(tick_data, num_periods=14):
+	tr = pd.DataFrame(index=tick_data.index, columns=["true_range"])
+	for i in range(1, len(tick_data.index)):
+		now_date = tick_data.index[i]
+		last_date = tick_data.index[i-1]
+		tr.true_range[now_date] = max(tick_data.high[now_date], tick_data.close[last_date]) - max(tick_data.low[now_date], tick_data.close[last_date])
+	atr = pd.DataFrame(index=tick_data.index, columns=["ATR"])
+	atr.ATR[atr.index[0]] = tr.true_range.mean()
+	for i in range(1, len(tr.index)):
+		now_date = tr.index[i]
+		last_date = tr.index[i-1]
+		print("{0}\t{1}".format(now_date, last_date))
+		atr.ATR[now_date] = (atr.ATR[last_date] * (num_periods - 1) + tr.true_range[now_date]) / num_periods
+	return atr
 
 def bollinger(tick_data, num_periods=20, num_deviations=2):
 	"""	Computes the Bollinger bands and width of an asset over time. 
@@ -455,7 +470,7 @@ def zero_lag_ema(price, num_periods):
 	return zlema
 
 if __name__ == "__main__":
-	symbol = "MSFT"
+	symbol = "AAPL"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -463,8 +478,9 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = directional_movt_index(tickData, num_periods=30)
+	trend = average_true_range(tickData, num_periods=14)
+	print(trend)
 	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","DX","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","ATR","NA"], savePlot=True, showPlot=True)
