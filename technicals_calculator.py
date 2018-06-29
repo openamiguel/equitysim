@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.0.3
+## Version: 2.0.4
 
 import numpy as np
 import pandas as pd
@@ -533,6 +533,7 @@ if __name__ == "__main__":
 	tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
 	tick_data = tick_data[startDate:endDate]
+	price = tick_data.close
 	aroon_up, aroon_down = aroon(tick_data)
 	price_with_trends = tick_data
 	price_with_trends['aroonUp25'] = aroon_up
@@ -544,23 +545,25 @@ if __name__ == "__main__":
 	price_with_trends['BollingerLow'] = lowband
 	price_with_trends['BollingerMid'] = midband
 	price_with_trends['BollingerHigh'] = hiband
-	price_with_trends['CMO30'] = chande_momentum_oscillator(tick_data.close, num_periods=30)
-	price_with_trends['DEMA30'] = dema(tick_data.close)
+	price_with_trends['CMO30'] = chande_momentum_oscillator(price, num_periods=30)
+	price_with_trends['DEMA30'] = dema(price)
 	di_positive, di_negative = directional_index(tick_data, num_periods=30)
 	price_with_trends['DIPLUS_30'] = di_positive
 	price_with_trends['DIMINUS_30'] = di_negative
 	price_with_trends['DX30'] = directional_movt_index(tick_data, num_periods=30)
 	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
-	price_with_trends['EMA30'] = exponential_moving_average(tick_data.close)
-	price_with_trends['generalStoch30'] = general_stochastic(tick_data.close, num_periods=30)
-	# price_with_trends['MACD'] = macd(tick_data.close)
+	price_with_trends['EMA30'] = exponential_moving_average(price)
+	price_with_trends['generalStoch30'] = general_stochastic(price, num_periods=30)
+	print(macd(price))
+	# price_with_trends['MACD'] = macd(price)
 	price_with_trends['medianPrice'] = median_price(tick_data)
-	price_with_trends['normalizedPrice'] = normalized_price(tick_data.close, baseline.close)
+	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = on_balance_volume(tick_data)
 	price_with_trends['PVO_30_14'] = percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
-	hichannel, lochannel = price_channel(tick_data.close, num_periods=30)
+	hichannel, lochannel = price_channel(price, num_periods=30)
 	price_with_trends['PriceChannelHigh'] = hichannel
 	price_with_trends['PriceChannelLow'] = lochannel
+	"""
 	price_with_trends['PriceOscVMA_30_14'] = price_oscillator(price, variable_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscSMA_30_14'] = price_oscillator(price, simple_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscEMA_30_14'] = price_oscillator(price, exponential_moving_average, num_periods_slow=30, num_periods_fast=14)
@@ -569,6 +572,6 @@ if __name__ == "__main__":
 	price_with_trends
 	price_with_trends
 	price_with_trends
-	"""
+	
 	price_with_trends['VMA60'] = variable_moving_average(price_with_trends.close, num_periods=60)
 	print(price_with_trends)
