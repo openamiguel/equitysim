@@ -100,8 +100,30 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `aroon` returns the Aroon indicator of asset data
   - `aroon_oscillator` returns the Aroon oscillator of asset data
   - `average_price` returns the average price of asset data
+  - `average_true_range` returns the average true range of asset data
+  - `bollinger` returns the Bollinger bands and width thereof, for asset data
+  - `chande_momentum_oscillator` returns the Chande momentum oscillator of a price input
   - `dema` returns the "double" exponential moving average of input
+  - `directional_index` returns the directional indices (+DI and -DI) of asset data
+  - `directional_movt_index` returns the directional movement index (based directly on +DI and -DI) of asset data
   - `ease_of_movt` returns the ease of movement of asset data
-  - `exponential_moving_average` returns the "double" exponential moving average of input
+  - `exponential_moving_average` returns the exponential moving average of input
+  - `general_stochastic` returns the general Stochastic indicator of a price input
+  - `macd` returns the MACD of a price input (same as price oscillator with 26-period slow EMA and 12-period fast EMA)
   - `median_price` returns the median price of asset data
+  - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
+  - `on_balance_volume` returns the on balance volume of asset data
+  - `percent_volume_oscillator` returns the percent volume oscillator of volume data
+  - `price_channel` returns the high and low price channels of a price input
+  - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
+  - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
+  - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
+  - `rel_strength_index` returns the one-day relative momentum index of a price input
   - `simple_moving_average` returns the simple moving average of input
+  - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
+  - `triangular_moving_average` returns the triangular moving average of input
+  - `true_range` returns the true range of asset data
+  - `typical_price` returns the typical price of asset data
+  - `variable_moving_average` returns the variable moving average of a price input
+  - `weighted_close` returns the weighted close of asset data
+  - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
