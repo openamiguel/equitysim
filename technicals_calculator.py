@@ -1,9 +1,12 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.1.0
+## Version: 2.2.0
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import time
+from random import sample
 
 import plotter
 import single_download
@@ -523,17 +526,9 @@ def zero_lag_ema(price, num_periods):
 	zlema.name = 'ZLEMA'
 	return zlema
 
-if __name__ == "__main__":
-	symbol = "AAPL"
-	function = "DAILY"
-	interval = ""
-	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2014-01-01"
-	endDate = "2018-06-28"
-	tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
-	tick_data = tick_data[startDate:endDate]
-	price = tick_data.close
+def all_indicators(tick_data, price, baseline):
+	"""	Compiled function with 
+	"""
 	price_with_trends = tick_data
 	aroon_up, aroon_down = aroon(tick_data)
 	price_with_trends['aroonUp25'] = aroon_up
@@ -556,8 +551,8 @@ if __name__ == "__main__":
 	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
 	price_with_trends['EMA30'] = exponential_moving_average(price)
 	price_with_trends['generalStoch30'] = general_stochastic(price, num_periods=30)
-	macd, macdPct = macd(price)
-	price_with_trends['MACD'] = macd
+	mcd, macdPct = macd(price)
+	price_with_trends['MACD'] = mcd
 	price_with_trends['Pct'] = macdPct
 	price_with_trends['medianPrice'] = median_price(tick_data)
 	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
@@ -615,5 +610,26 @@ if __name__ == "__main__":
 	price_with_trends['VMA30'] = variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = weighted_close(tick_data)
 	price_with_trends['ZLEMA30'] = zero_lag_ema(price, num_periods=30)
-	print(price_with_trends.head())
-	price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
+	return price_with_trends
+
+if __name__ == "__main__":
+	function = "DAILY"
+	interval = ""
+	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+	startDate = "2014-01-01"
+	endDate = "2018-06-28"
+	# Gets the baseline symbol (S&P 500 index)
+	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
+	# Gets all the companies from the S&P 500
+	symbols = ticker_universe.obtain_parse_wiki("SNP500")
+	# Gets the feature data for each one
+	for symbol in symbols:
+		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+		tick_data = tick_data[startDate:endDate]
+		print("Processing {0} features...".format(symbol))
+		time0 = time.time()
+		price_with_trends = all_indicators(tick_data, tick_data.close, baseline)
+		time1 = time.time()
+		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+		price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
+		break
