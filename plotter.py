@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.7.1
+## Version: 3.8.2
 
 import sys
 import numpy as np
@@ -16,7 +16,7 @@ MONTHS = mdates.MonthLocator()
 DATES = mdates.DayLocator()
 HOURS = mdates.HourLocator()
 
-def price_plot(price_with_trends, symbol, longdates, shortdates, folderpath="", savePlot=True, showPlot=False):
+def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], folderpath="", savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend(s), and baseline(s) data, plots the price against trend(s) and baseline(s). 
 		One has the option to show the window live, and to save it locally. 
 		Inputs: price with trends, symbol of company, dates with long positions, dates with short positions, 
@@ -24,50 +24,45 @@ def price_plot(price_with_trends, symbol, longdates, shortdates, folderpath="", 
 			on command line (default: no) 
 		Outputs: dataframe of daily closing price, rolling mean over X days, and rolling mean over Y days
 	"""
-	# Titles and labels a plot of ticker data
-	plotTitle = symbol + " " + "-".join(price_with_trends.columns.values.tolist())
-	num_subplots = len(price_with_trends.columns.values.tolist())
-	# Initializes plot as variable
-	fig, axes = plt.subplots(num_subplots, 1, sharex=True)
-	# Sets up plot title and labels
-	plt.title(plotTitle)
+	# Every true element corresponds to command to plot list
+	num_subplots = subplot.count(False) + 1
 	# Converts dataframe to regular frequency for plotting purposes
+	intraday = ":" in price_with_trends.index[0]
 	price_with_trends.index = pd.to_datetime(price_with_trends.index)
 	if intraday: price_with_trends = price_with_trends.resample('1T').asfreq()
 	time = pd.to_datetime(price_with_trends.index)
+	# Initializes plot as variable
+	fig, axes = plt.subplots(num_subplots, 1, sharex=True)
 	# Loops through each column of the dataframe and plots it
 	i = 0
-	for ax in axes:	
-		ax.title(price_with_trends[price_with_trends.columns[i]])
-		ax.plot(time, price_with_trends.price)
-		if i == 0:
-			# Parses the lists of longdates and shortdates
-			for date in (longdates + shortdates):
-				mark = "^" if date in longdates else "v"
-				col = "green" if date in longdates else "red"
-				ax.scatter(date, 0, marker=mark, color=col)
+	j = 1
+	ax_main = axes[0] if len(subplot) > 1 else axes
+	plotTitle = symbol + " " + "-".join(price_with_trends.columns.values.tolist())
+	for column in price_with_trends:
+		lab = column
+		if subplot[i]:
+			ax_main.set_title(plotTitle)
+			ax_main.plot(time, price_with_trends[column], label=lab)
+			ax_main.legend(loc="upper right")
+		else:
+			axes[j].set_title(lab)
+			axes[j].plot(time, price_with_trends[column], label=lab)
+			axes[j].legend(loc="upper right")
+			j = j + 1
 		i = i + 1
-	
-	
-	xlab = "Time [Hours]" if intraday else "Time [Months]"
+	# Parses the lists of longdates and shortdates for buy and sell signals
+	for date in (longdates + shortdates):
+		mark = "^" if date in longdates else "v"
+		col = "green" if date in longdates else "red"
+		ax_main.scatter(date, 0, marker=mark, color=col)
+	# Sets up plot title and x-axis labels
+	xlab = "Time [Minutes]" if intraday else "Time [Days]"
 	plt.xlabel(xlab)
-	plt.ylabel("Price [USD]")
-	
-	
 	# Adds a legend
 	plt.legend()
-	# Formats the x-axis: major ticks are years, minor ticks are months
-	if intraday:
-		ax.xaxis.set_major_locator(DATES)
-		ax.xaxis.set_minor_locator(HOURS)
-		ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-	else:
-		ax.xaxis.set_major_locator(YEARS)
-		ax.xaxis.set_minor_locator(MONTHS)
-		fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
-		figFilePath = folderpath + "/images/" + symbol + "_" + "_".join(names) + ".png"
+		figFilePath = folderpath + "/images/" + symbol + "_" + "_".join(list(price_with_trends.columns.values)) + ".png"
 		plt.savefig(figFilePath)
 	# If requested, show the plot
 	if showPlot:
@@ -180,11 +175,10 @@ def main():
 	else:
 		columnChoice = prompts[prompts.index("-column") + 1]
 	## Runs the plot code on the lone symbol
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderpath=folderPath, interval=interval)
+	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
 	tickData.columns = [x if x != columnChoice else "price" for x in tickData.columns.values.tolist()]
-	['open', 'high', 'low', 'price', 'volume']
-	price_plot(tickData, symbol, folderPath, names=[columnChoice,"NA","NA"], intraday=intraDay, savePlot=True, showPlot=True)
+	price_plot(pd.DataFrame(tickData.price, columns=['price']), symbol, subplot=[True], folderpath=folderPath, savePlot=True, showPlot=True)
 	return 0
 
 if __name__ == "__main__":
