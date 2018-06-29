@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.2.4
+## Version: 3.2.5
 
 import pandas as pd
 import sys
@@ -192,9 +192,10 @@ def main():
 	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
 	trend = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=30)
 	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
+	cmo = technicals_calculator.chande_momentum_oscillator(tick_data.close, num_periods=14)
 	# Consolidates the price, trend, and baseline into one dataframe
-	price_with_trends = pd.concat([tick_data.close, trend, baseline], axis=1)
-	price_with_trends.columns = ['price','trend','baseline']
+	price_with_trends = pd.concat([tick_data.close, trend, baseline, cmo], axis=1)
+	price_with_trends.columns = ['price','trend','baseline','CMO']
 	price_with_trends.dropna(inplace=True)
 	## Handles collection of the four dates
 	# Gets the start date for portfolio trading
@@ -241,12 +242,12 @@ def main():
 	if "-crossover" in prompts: 
 		portfolio, long_dates, short_dates = crossover(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, names=["price","EMA30","EMA90"], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, subplot=[True,True,True,False], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
 	elif "-zscore" in prompts:
 		portfolio, long_dates, short_dates = zscore_distance(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares, zscorevalues=[-0.5,0.25,0.5])
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, names=["price","EMA30","EMA90"], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
+		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, subplot=[True,True,True], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
 		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
 	else:
 		raise ValueError("No strategy provided. Please try again.")
