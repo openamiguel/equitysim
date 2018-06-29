@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.26.3
+## Version: 2.0.0
 
 import numpy as np
 import pandas as pd
@@ -524,12 +524,13 @@ if __name__ == "__main__":
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2016-01-03"
-	endDate = "2018-06-01"
+	startDate = "2014-01-01"
+	endDate = "2018-06-28"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = variable_moving_average(tickData.close, num_periods=60)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
-	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, subplot=[True,True], returns=[False,False], folderpath=folderPath, showPlot=True)
+	aroon_up, aroon_down = aroon(tickData)
+	price_with_trends = tickData
+	price_with_trends['aroon_up'] = aroon_up
+	price_with_trends['aroon_down'] = aroon_down
+	price_with_trends['VMA60'] = variable_moving_average(price_with_trends.close, num_periods=60)
+	print(price_with_trends)
