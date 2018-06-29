@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.24.1
+## Version: 1.24.2
 
 import numpy as np
 import pandas as pd
@@ -65,18 +65,29 @@ def average_price(tick_data):
 	return avg_price
 
 def average_true_range(tick_data, num_periods=14):
+	"""	Uses the true range to compute the average true range (ATR) of an asset over time.
+		Inputs: data on high, low, and close of asset over given timespan
+		Outputs: ATR indicator
+	"""
+	# Sets up dataframe for true range
 	tr = pd.DataFrame(index=tick_data.index, columns=["true_range"])
 	for i in range(1, len(tick_data.index)):
+		# Gets the date window (not dependent on num_periods)
 		now_date = tick_data.index[i]
 		last_date = tick_data.index[i-1]
+		# Adds this true range to the dataframe
 		tr.true_range[now_date] = max(tick_data.high[now_date], tick_data.close[last_date]) - max(tick_data.low[now_date], tick_data.close[last_date])
+	# Sets up dataframe for average true range
 	atr = pd.DataFrame(index=tick_data.index, columns=["ATR"])
+	# The seed value is NOT zero
 	atr.ATR[atr.index[0]] = tr.true_range.mean()
 	for i in range(1, len(tr.index)):
+		# Gets the date window (not dependent on num_periods)
 		now_date = tr.index[i]
 		last_date = tr.index[i-1]
-		print("{0}\t{1}".format(now_date, last_date))
+		# Adds this true range to the dataframe
 		atr.ATR[now_date] = (atr.ATR[last_date] * (num_periods - 1) + tr.true_range[now_date]) / num_periods
+	# Returns ATR
 	return atr
 
 def bollinger(tick_data, num_periods=20, num_deviations=2):
@@ -283,6 +294,10 @@ def normalized_price(price, baseline):
 	norm_price = 100 * (price - baseline) / baseline
 	norm_price.columns = ['normalized_price']
 	return norm_price
+
+def on_balance_volume(volume):
+	"""
+	"""
 
 """
 def parabolic_sar(tick_data, portfolio_signals):
