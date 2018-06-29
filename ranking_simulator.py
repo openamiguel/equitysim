@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.5
+## Version: 3.0.7
 
 import sys
 import pandas as pd
@@ -27,6 +27,10 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQ
 	for symbol in tickerUniverse:
 		# Reads file from given filepath
 		tick_data = single_download.fetch_symbol_from_drive(symbol, function="DAILY", folderPath=folderPath)
+		if tick_data is None:
+			metric.append(np.NaN)
+			print(symbol + " not found. Continuing...")
+			continue
 		# Checks if the date window spills over available data
 		if startdate < tick_data.index[0] or enddate > tick_data.index[-1]:
 			metric.append(np.NaN)
@@ -64,14 +68,14 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQ
 	# Returns the long and short position symbols
 	return longpos, shortpos
 
-def portfolio_generator(longpos, shortpos, startdate, enddate, folderPath="", numshares=1):
+def portfolio_generator(longpos, shortpos, startdate, enddate, folderPath="", numshares=1, baseline="^GSPC"):
 	"""	Given a pool of stocks to buy long and sell short, this function simulates their value over time. 
 		Inputs: list of stocks to buy long, list of stocks to sell short, start date to open positions, 
 			end date to open positions, folder path to read files from, 
 		Outputs: portfolio value (high, low, open, close) over time
 	"""
 	# Uses the S&P 500 to get index for portfolio
-	seed = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folderPath)
+	seed = single_download.fetch_symbol_from_drive(baseline, function="DAILY", folderPath=folderPath)
 	timestamps = seed[startdate:enddate].index
 	# Initializes an empty portfolio-over-time dataframe
 	portfolio = pd.DataFrame(index=timestamps, columns=['open','high','low','close'])
@@ -125,6 +129,13 @@ def main():
 	elif "NASDAQ100" in prompts:
 		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
 		name = "NASDAQ100"
+	# Yields data on the ETF100
+	elif "ETF100" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_etfs()
+		name = "ETF100"
+	elif "MF25" in prompts:
+		tickerUniverse = ticker_universe.obtain_parse_mutual_funds()
+		name = "MF25"
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -184,7 +195,7 @@ def main():
 	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
 	# Sets up the portfolio
 	longpos, shortpos = asset_ranker(tickerUniverse, startRankDate, endRankDate, folderPath, lowQuant, highQuant, switchpos=switchpos)
-	portfolio = portfolio_generator(longpos, shortpos, startTestDate, endTestDate, folderPath=folderPath)
+	portfolio = portfolio_generator(longpos, shortpos, startTestDate, endTestDate, folderPath=folderPath, baseline=baselineSymbol)
 	startValue, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, baseline)
 	# Spits out some numerical info about the portfolio performance
 	print("\nStarting portfolio value: %f" % startValue)
@@ -193,7 +204,8 @@ def main():
 	print("Return on {0} baseline: {1}".format(baselineSymbol, baseReturns))
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	plotter.portfolio_plot(portfolio, baseline, baselineLabel=baselineSymbol+" baseline", folderpath=folderPath, showPlot=showplt, title=plotName)
-
+	port_price = pd.concat([portfolio.close, baseline.close], axis=1)
+	port_price.columns = ['portfolio', 'baseline']
+	plotter.price_plot(port_price, symbol=plotName, folderpath=folderPath, subplot=[True,True], returns=[True,True], showPlot=showplt)
 if __name__ == "__main__":
 	main()
