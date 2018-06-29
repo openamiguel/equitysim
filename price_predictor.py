@@ -20,7 +20,11 @@ class Past_Sampler():
         M = self.N + self.K # Number of samples per prelim_download
         #indexes
         if self.sliding_window:
-            I = np.arange(M) + np.arange(A.shape[0] - M + 1).reshape(-1,2)
+            I = np.arange(M) + np.arange(A.shape[0] - M + 1).reshape(-1,1)
         else:
             if A.shape[0]%M == 0:
                 I = np.arange(M)+np.arange(0,A.shape[0],M).reshape(-1,1)
+            else:
+                I = np.arange(M)+np.arange(0,A.shape[0]-M,M).reshape(-1,1)
+
+        B = A[I].reshape(-1)
