@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.8.2
+## Version: 3.8.3
 
 import sys
 import numpy as np
@@ -33,12 +33,16 @@ def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], 
 	time = pd.to_datetime(price_with_trends.index)
 	# Initializes plot as variable
 	fig, axes = plt.subplots(num_subplots, 1, sharex=True)
+	# Saves the first subplot as variable
+	ax_main = axes[0] if len(subplot) > 1 else axes
 	# Loops through each column of the dataframe and plots it
 	i = 0
 	j = 1
-	ax_main = axes[0] if len(subplot) > 1 else axes
+	# Gets the plot title
 	plotTitle = symbol + " " + "-".join(price_with_trends.columns.values.tolist())
+	min_price = 0
 	for column in price_with_trends:
+		if i == 0: min_price = price_with_trends[column].min()
 		lab = column
 		if subplot[i]:
 			ax_main.set_title(plotTitle)
@@ -54,7 +58,7 @@ def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], 
 	for date in (longdates + shortdates):
 		mark = "^" if date in longdates else "v"
 		col = "green" if date in longdates else "red"
-		ax_main.scatter(date, 0, marker=mark, color=col)
+		ax_main.scatter(date, min_price, marker=mark, color=col)
 	# Sets up plot title and x-axis labels
 	xlab = "Time [Minutes]" if intraday else "Time [Days]"
 	plt.xlabel(xlab)
