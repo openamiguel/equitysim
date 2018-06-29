@@ -5,7 +5,7 @@ Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on 
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
 ## documentation of each file and its functions
-    
+
 ### AlphaVantage data download/update suite
 - **single_download.py**
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
@@ -96,6 +96,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
+    - `-column`: choice of price or volume to plot
 - **technicals_calculator.py**
   - `aroon` returns the Aroon indicator of asset data
   - `aroon_oscillator` returns the Aroon oscillator of asset data
