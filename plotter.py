@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.8.3
+## Version: 3.8.5
 
 import sys
 import numpy as np
@@ -16,7 +16,7 @@ MONTHS = mdates.MonthLocator()
 DATES = mdates.DayLocator()
 HOURS = mdates.HourLocator()
 
-def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], folderpath="", savePlot=True, showPlot=False):
+def price_plot(price_with_trends, symbol, subplot, returns, longdates=[], shortdates=[], folderpath="", savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend(s), and baseline(s) data, plots the price against trend(s) and baseline(s). 
 		One has the option to show the window live, and to save it locally. 
 		Inputs: price with trends, symbol of company, dates with long positions, dates with short positions, 
@@ -34,7 +34,7 @@ def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], 
 	# Initializes plot as variable
 	fig, axes = plt.subplots(num_subplots, 1, sharex=True)
 	# Saves the first subplot as variable
-	ax_main = axes[0] if len(subplot) > 1 else axes
+	ax_main = axes[0] if num_subplots > 1 else axes
 	# Loops through each column of the dataframe and plots it
 	i = 0
 	j = 1
@@ -42,15 +42,18 @@ def price_plot(price_with_trends, symbol, subplot, longdates=[], shortdates=[], 
 	plotTitle = symbol + " " + "-".join(price_with_trends.columns.values.tolist())
 	min_price = 0
 	for column in price_with_trends:
+		# Used to clean up the plots for buy and sell signals
 		if i == 0: min_price = price_with_trends[column].min()
 		lab = column
+		# Checks if the column should be plotted as returns
+		ypoints = return_calculator.get_rolling_returns(price_with_trends[column].values.tolist()) if returns[i] else price_with_trends[column]
 		if subplot[i]:
 			ax_main.set_title(plotTitle)
-			ax_main.plot(time, price_with_trends[column], label=lab)
+			ax_main.plot(time, ypoints, label=lab)
 			ax_main.legend(loc="upper right")
 		else:
 			axes[j].set_title(lab)
-			axes[j].plot(time, price_with_trends[column], label=lab)
+			axes[j].plot(time, ypoints, label=lab)
 			axes[j].legend(loc="upper right")
 			j = j + 1
 		i = i + 1
