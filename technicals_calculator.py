@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.24.2
+## Version: 1.25.1
 
 import numpy as np
 import pandas as pd
@@ -295,9 +295,25 @@ def normalized_price(price, baseline):
 	norm_price.columns = ['normalized_price']
 	return norm_price
 
-def on_balance_volume(volume):
+def on_balance_volume(tick_data):
+	"""	Computes the on-balance volume (OBV) of an asset over time
+		Inputs: volume series
+		Outputs: OBV indicator
 	"""
-	"""
+	obv = pd.DataFrame(0, index=tick_data.index, columns=['OBV'])
+	for i in range(1, len(tick_data.index)):
+		# Gets current window of time
+		now_date = tick_data.index[i]
+		last_date = tick_data.index[i-1]
+		# Three conditions to consider when updating OBV
+		if tick_data.close[now_date] > tick_data.close[last_date]:
+			obv.OBV[now_date] = obv.OBV[last_date] + tick_data.volume[now_date]
+		elif tick_data.close[now_date] > tick_data.close[last_date]:
+			obv.OBV[now_date] = obv.OBV[last_date] - tick_data.volume[now_date]
+		else:
+			obv.OBV[now_date] = obv.OBV[last_date]
+	return obv
+		
 
 """
 def parabolic_sar(tick_data, portfolio_signals):
@@ -493,9 +509,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = average_true_range(tickData, num_periods=14)
-	print(trend)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
+	trend = on_balance_volume(tickData)
+	price_with_trends = pd.concat([tickData.volume, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["NA","ATR","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["volume","OBV","NA"], savePlot=True, showPlot=True)
