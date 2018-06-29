@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.2.5
+## Version: 3.2.6
 
 import pandas as pd
 import sys
@@ -239,18 +239,21 @@ def main():
 	portfolio = None
 	long_dates = []
 	short_dates = []
+	title = ""
 	if "-crossover" in prompts: 
 		portfolio, long_dates, short_dates = crossover(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, subplot=[True,True,True,False], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
-		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
+		title = "PORTFOLIO STRATEGY CROSSOVER"
 	elif "-zscore" in prompts:
 		portfolio, long_dates, short_dates = zscore_distance(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares, zscorevalues=[-0.5,0.25,0.5])
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, subplot=[True,True,True], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
-		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
+		title = "PORTFOLIO STRATEGY ZSCORE"
 	else:
 		raise ValueError("No strategy provided. Please try again.")
+	port_price = pd.concat([portfolio.close, portfolio_baseline.close], axis=1)
+	port_price.columns = ['portfolio', 'baseline']
+	# plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, subplot=[True,True,True,False], returns=[False,False,False,False], longdates=long_dates, shortdates=short_dates, showPlot=showplt)
+	plotter.price_plot(port_price, symbol=title, folderpath=folder_path, subplot=[True,True], returns=[True,True], showPlot=showplt)
 	start_value, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, portfolio_baseline)
 	# Spits out some numerical info about the portfolio performance
 	print("\nStarting portfolio value: %f" % start_value)
