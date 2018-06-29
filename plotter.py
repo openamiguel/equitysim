@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.7.0
+## Version: 3.7.1
 
 import sys
 import numpy as np
@@ -16,41 +16,44 @@ MONTHS = mdates.MonthLocator()
 DATES = mdates.DayLocator()
 HOURS = mdates.HourLocator()
 
-def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","baseline"], longDates=[], shortDates=[], intraday=False, savePlot=True, showPlot=False):
-	"""	Given a dataframe of price, trend, and baseline data, plots the price against trend and baseline. 
-	Given a stock ticker, this function computes the rolling mean (with two metrics thereof) and saves it to a Pyplot figure.
-		These calculations are all performed with the daily closing price. No other data is needed. 
+def price_plot(price_with_trends, symbol, longdates, shortdates, folderpath="", savePlot=True, showPlot=False):
+	"""	Given a dataframe of price, trend(s), and baseline(s) data, plots the price against trend(s) and baseline(s). 
 		One has the option to show the window live, and to save it locally. 
-		Inputs: symbol of company, the company's English name, start date of given window, end date of given window, 
-			rolling lengths (default: 30-day and 90-day), order to save plot locally (default: yes), 
-			order to show plot on command line (default: no) 
+		Inputs: price with trends, symbol of company, dates with long positions, dates with short positions, 
+			folder path to write plot to, order to save plot to folder path (default: yes), order to show plot 
+			on command line (default: no) 
 		Outputs: dataframe of daily closing price, rolling mean over X days, and rolling mean over Y days
 	"""
 	# Titles and labels a plot of ticker data
-	plotTitle = symbol
-	for name in names:
-		if name != "NA":
-			plotTitle = plotTitle + " " + name
+	plotTitle = symbol + " " + "-".join(price_with_trends.columns.values.tolist())
+	num_subplots = len(price_with_trends.columns.values.tolist())
 	# Initializes plot as variable
-	fig, ax = plt.subplots()
+	fig, axes = plt.subplots(num_subplots, 1, sharex=True)
 	# Sets up plot title and labels
 	plt.title(plotTitle)
-	xlab = "Time [Hours]" if intraday else "Time [Months]"
-	plt.xlabel(xlab)
-	plt.ylabel("Price [USD]")
 	# Converts dataframe to regular frequency for plotting purposes
 	price_with_trends.index = pd.to_datetime(price_with_trends.index)
 	if intraday: price_with_trends = price_with_trends.resample('1T').asfreq()
 	time = pd.to_datetime(price_with_trends.index)
-	# Plots the price, trend, and baseline (but only if one is allowed to)
-	if names[0] != "NA": ax.plot(time, price_with_trends.price, label=names[0])
-	if names[1] != "NA": ax.plot(time, price_with_trends.trend, label=names[1])
-	if names[2] != "NA": ax.plot(time, price_with_trends.baseline, label=names[2])
-	# Parses the lists of longDates and shortDates
-	for date in (longDates + shortDates):
-		mark = "^" if date in longDates else "v"
-		col = "green" if date in longDates else "red"
-		ax.scatter(date, 0, marker=mark, color=col)
+	# Loops through each column of the dataframe and plots it
+	i = 0
+	for ax in axes:	
+		ax.title(price_with_trends[price_with_trends.columns[i]])
+		ax.plot(time, price_with_trends.price)
+		if i == 0:
+			# Parses the lists of longdates and shortdates
+			for date in (longdates + shortdates):
+				mark = "^" if date in longdates else "v"
+				col = "green" if date in longdates else "red"
+				ax.scatter(date, 0, marker=mark, color=col)
+		i = i + 1
+	
+	
+	xlab = "Time [Hours]" if intraday else "Time [Months]"
+	plt.xlabel(xlab)
+	plt.ylabel("Price [USD]")
+	
+	
 	# Adds a legend
 	plt.legend()
 	# Formats the x-axis: major ticks are years, minor ticks are months
@@ -64,14 +67,14 @@ def price_plot(price_with_trends, symbol, folderPath, names=["price","trend","ba
 		fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
-		figFilePath = folderPath + "/images/" + symbol + "_" + "_".join(names) + ".png"
+		figFilePath = folderpath + "/images/" + symbol + "_" + "_".join(names) + ".png"
 		plt.savefig(figFilePath)
 	# If requested, show the plot
 	if showPlot:
 		plt.show()
 	plt.close(fig)
 
-def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", savePlot=True, showPlot=False, title="STRATEGY_01"):
+def portfolio_plot(portfolio, baseline, folderpath, baselineLabel="Baseline", savePlot=True, showPlot=False, title="STRATEGY_01"):
 	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
 		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time, 
 			path of folder to store files in, label for baseline index, 
@@ -103,7 +106,7 @@ def portfolio_plot(portfolio, baseline, folderPath, baselineLabel="Baseline", sa
 	fig.autofmt_xdate()
 	# If requested, save the file (default: do not save)
 	if savePlot:
-		figFilePath = folderPath + "/images/" + title + ".png"
+		figFilePath = folderpath + "/images/" + title + ".png"
 		plt.savefig(figFilePath)
 	# If requested, show the plot
 	if showPlot:
@@ -177,7 +180,7 @@ def main():
 	else:
 		columnChoice = prompts[prompts.index("-column") + 1]
 	## Runs the plot code on the lone symbol
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderpath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
 	tickData.columns = [x if x != columnChoice else "price" for x in tickData.columns.values.tolist()]
 	['open', 'high', 'low', 'price', 'volume']
