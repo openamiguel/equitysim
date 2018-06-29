@@ -1,6 +1,6 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.4
+## Version: 3.0.5
 
 import sys
 import pandas as pd
@@ -193,7 +193,7 @@ def main():
 	print("Return on {0} baseline: {1}".format(baselineSymbol, baseReturns))
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
-	plotter.portfolio_plot(portfolio, baseline, baselineLabel=baselineSymbol+" baseline", folderPath=folderPath, showPlot=showplt, title=plotName)
+	plotter.portfolio_plot(portfolio, baseline, baselineLabel=baselineSymbol+" baseline", folderpath=folderPath, showPlot=showplt, title=plotName)
 
 if __name__ == "__main__":
 	main()
