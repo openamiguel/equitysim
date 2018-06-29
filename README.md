@@ -27,13 +27,14 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **plotter.py**
   - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
   - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
-  - command prompt options:
+  - command prompt options (for `price_plot` only):
     - `-symbol`: symbol of the asset to plot
     - `-folderPath`: location of folder to look for files
     - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
+    - `-column`: choice of price or volume to plot
     
     
 ### AlphaVantage data download/update suite
