@@ -1,6 +1,6 @@
 ## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
 ## Author: Miguel Opeña
-## Version: 3.2.3
+## Version: 3.2.4
 
 import pandas as pd
 import sys
@@ -241,13 +241,13 @@ def main():
 	if "-crossover" in prompts: 
 		portfolio, long_dates, short_dates = crossover(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares)
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folder_path, names=["price","EMA30","EMA90"], longDates=long_dates, shortDates=short_dates, savePlot=True, showPlot=showplt)
-		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folder_path, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
+		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, names=["price","EMA30","EMA90"], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
+		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_CROSSOVER", showPlot=showplt)
 	elif "-zscore" in prompts:
 		portfolio, long_dates, short_dates = zscore_distance(price_with_trends, start_date, end_date, startvalue=start_value, switch=to_switch, numtrades=num_shares, zscorevalues=[-0.5,0.25,0.5])
 		portfolio.columns=['close']
-		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folder_path, names=["price","EMA30","EMA90"], longDates=long_dates, shortDates=short_dates, savePlot=True, showPlot=showplt)
-		plotter.portfolio_plot(portfolio, portfolio_baseline, folderPath=folder_path, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
+		plotter.price_plot(price_with_trends[start_date:end_date], symbol, folderpath=folder_path, names=["price","EMA30","EMA90"], longdates=long_dates, shortdates=short_dates, savePlot=True, showPlot=showplt)
+		plotter.portfolio_plot(portfolio, portfolio_baseline, folderpath=folder_path, title=symbol+"_MEAN_ZSCORE", showPlot=showplt)
 	else:
 		raise ValueError("No strategy provided. Please try again.")
 	start_value, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, portfolio_baseline)
