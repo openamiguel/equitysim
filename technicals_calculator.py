@@ -1,12 +1,13 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.0.7
+## Version: 2.1.0
 
 import numpy as np
 import pandas as pd
 
 import plotter
 import single_download
+import ticker_universe
 
 def aroon(tick_data, num_periods=25):
 	"""	Computes the Aroon indicator of an asset over time. 
@@ -149,11 +150,11 @@ def dema(input_values, num_periods=30):
 	# If input is Series, output is Dataframe
 	if isinstance(input_values, pd.Series):
 		ema = exponential_moving_average(input_values, num_periods=num_periods)
-		ema2 = exponential_moving_average(ema.EMA, num_periods=num_periods)
+		ema2 = exponential_moving_average(ema, num_periods=num_periods)
 		dema = pd.DataFrame(index=input_values.index, columns=['DEMA'])
 		# This is the formula for DEMA
 		for i in range(0, len(input_values.index)):
-			dema.DEMA[i] = 2 * ema.EMA[i] - ema2.EMA[i]
+			dema.DEMA[i] = 2 * ema[i] - ema2[i]
 		return dema
 	# If input is list, output is list
 	elif isinstance(input_values, list):
@@ -229,19 +230,20 @@ def exponential_moving_average(input_values, num_periods=30):
 		Outputs: EMA over given timespan
 	"""
 	K = 2 / (num_periods + 1)
+	inputs_refined = input_values.fillna(0)
 	# If input is Series, output is Dataframe
-	if isinstance(input_values, pd.Series):
-		ema = pd.Series(input_values[0], index=input_values.index)
+	if isinstance(inputs_refined, pd.Series):
+		ema = pd.Series(inputs_refined[0], index=inputs_refined.index)
 		# Iterates through and populates dataframe output
-		for i in range(1, len(input_values.index)):
-			ema[i] = ema[i-1] + K * (input_values[i] - ema[i-1])
+		for i in range(1, len(inputs_refined.index)):
+			ema[i] = ema[i-1] + K * (inputs_refined[i] - ema[i-1])
 		return ema
 	# If input is list, output is list
-	elif isinstance(input_values, list):
-		ema = [input_values[0]]
+	elif isinstance(inputs_refined, list):
+		ema = [inputs_refined[0]]
 		# Iterates through and populates list output
-		for i in range(1, len(input_values)):
-			ema.append(ema[i-1] + K * (input_values[i] - ema[i-1]))
+		for i in range(1, len(inputs_refined)):
+			ema.append(ema[i-1] + K * (inputs_refined[i] - ema[i-1]))
 		return ema
 	else:
 		raise ValueError("Unsupported data type given as input to exponential_moving_average in technicals_calculator.py")
@@ -518,7 +520,6 @@ def zero_lag_ema(price, num_periods):
 		price_window = price[lag_date:now_date]
 		ema[now_date] = 2 * price_window[now_date] - price_window[lag_date]
 	zlema = exponential_moving_average(ema, num_periods=num_periods)
-	print(zlema)
 	zlema.name = 'ZLEMA'
 	return zlema
 
@@ -534,12 +535,11 @@ if __name__ == "__main__":
 	tick_data = tick_data[startDate:endDate]
 	price = tick_data.close
 	price_with_trends = tick_data
-	"""
 	aroon_up, aroon_down = aroon(tick_data)
 	price_with_trends['aroonUp25'] = aroon_up
 	price_with_trends['aroonDown25'] = aroon_down
 	price_with_trends['aroonOsc25'] = aroon_oscillator(tick_data)
-	print(list(price_with_trends.columns.values))
+	# print(list(price_with_trends.columns.values))
 	price_with_trends['averagePrice'] = average_price(tick_data)
 	price_with_trends['ATR14'] = average_true_range(tick_data)
 	lowband, midband, hiband, width = bollinger(tick_data)
@@ -551,7 +551,7 @@ if __name__ == "__main__":
 	di_positive, di_negative = directional_index(tick_data, num_periods=30)
 	price_with_trends['DIPLUS_30'] = di_positive
 	price_with_trends['DIMINUS_30'] = di_negative
-	print(list(price_with_trends.columns.values))
+	# print(list(price_with_trends.columns.values))
 	price_with_trends['DX30'] = directional_movt_index(tick_data, num_periods=30)
 	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
 	price_with_trends['EMA30'] = exponential_moving_average(price)
@@ -566,7 +566,7 @@ if __name__ == "__main__":
 	hichannel, lochannel = price_channel(price, num_periods=30)
 	price_with_trends['PriceChannelHigh'] = hichannel
 	price_with_trends['PriceChannelLow'] = lochannel
-	print(list(price_with_trends.columns.values))
+	# print(list(price_with_trends.columns.values))
 	priceOscVMA, priceOscVMAPct = price_oscillator(price, variable_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscVMA_30_14'] = priceOscVMA
 	price_with_trends['PriceOscVMAPct_30_14'] = priceOscVMAPct
@@ -582,7 +582,7 @@ if __name__ == "__main__":
 	priceOscZLEMA, priceOscZLEMAPct = price_oscillator(price, zero_lag_ema, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
 	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
-	print(list(price_with_trends.columns.values))
+	# print(list(price_with_trends.columns.values))
 	price_with_trends['QstickVMA_30'] = qstick(tick_data, variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = qstick(tick_data, simple_moving_average, num_periods=30)
 	price_with_trends['QstickEMA_30'] = qstick(tick_data, exponential_moving_average, num_periods=30)
@@ -591,13 +591,11 @@ if __name__ == "__main__":
 	price_with_trends['RMI30'] = rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = rel_strength_index(price)
 	price_with_trends['SMA30'] = simple_moving_average(price)
-	print(list(price_with_trends.columns.values))
-	"""
+	# print(list(price_with_trends.columns.values))
 	"""
 	fastDVMA, slowDVMA = stochastic_oscillator(price, variable_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscVMA_30'] = fastDVMA
 	price_with_trends['FastDStochasticOscVMA_30'] = slowDVMA
-	"""
 	"""
 	fastDSMA, slowDSMA = stochastic_oscillator(price, simple_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscSMA_30'] = fastDSMA
@@ -616,6 +614,6 @@ if __name__ == "__main__":
 	price_with_trends['TypicalPrice'] = typical_price(tick_data)
 	price_with_trends['VMA30'] = variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = weighted_close(tick_data)
-	"""
 	price_with_trends['ZLEMA30'] = zero_lag_ema(price, num_periods=30)
-	print(price_with_trends.tail())
+	print(price_with_trends.head())
+	price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
