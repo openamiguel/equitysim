@@ -1,6 +1,6 @@
-## This code plots a portfolio's performance against a baseline. 
+## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.6.3
+## Version: 3.7.0
 
 import sys
 import numpy as np
@@ -158,6 +158,7 @@ def main():
 		raise ValueError("No start date for ranking provided. Please try again.")
 	else:
 		startDate = prompts[prompts.index("-startDate") + 1]
+		# Handles intraday plots properly
 		if intraDay:
 			startDate = startDate.replace('_',' ')
 	# Gets the end date for ranking
@@ -166,14 +167,21 @@ def main():
 		raise ValueError("No end date for ranking provided. Please try again.")
 	else:
 		endDate = prompts[prompts.index("-endDate") + 1]
+		# Handles intraday plots properly
 		if intraDay:
 			endDate = endDate.replace('_',' ')
-	# Handles intraday plots properly
+	## Handles command line option for which column of dataframe to plot
+	columnChoice = "close"
+	if "-column" not in prompts:
+		print("By default, this will plot the closing price.")
+	else:
+		columnChoice = prompts[prompts.index("-column") + 1]
 	## Runs the plot code on the lone symbol
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	tickData.columns = ['open', 'high', 'low', 'price', 'volume']
-	price_plot(tickData, symbol, folderPath, names=["price","NA","NA"], intraday=intraDay, savePlot=True, showPlot=True)
+	tickData.columns = [x if x != columnChoice else "price" for x in tickData.columns.values.tolist()]
+	['open', 'high', 'low', 'price', 'volume']
+	price_plot(tickData, symbol, folderPath, names=[columnChoice,"NA","NA"], intraday=intraDay, savePlot=True, showPlot=True)
 	return 0
 
 if __name__ == "__main__":
