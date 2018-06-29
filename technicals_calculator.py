@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.0.6
+## Version: 2.0.7
 
 import numpy as np
 import pandas as pd
@@ -231,13 +231,10 @@ def exponential_moving_average(input_values, num_periods=30):
 	K = 2 / (num_periods + 1)
 	# If input is Series, output is Dataframe
 	if isinstance(input_values, pd.Series):
-		ema = pd.DataFrame(index=input_values.index, columns=['EMA'])
-		input_values.dropna(axis=0, inplace=True)
-		input_values.rename('EMA', inplace=True)
-		ema.EMA = input_values[0]
+		ema = pd.Series(input_values[0], index=input_values.index)
 		# Iterates through and populates dataframe output
 		for i in range(1, len(input_values.index)):
-			ema.EMA[i] = ema.EMA[i-1] + K * (input_values[i] - ema.EMA[i-1])
+			ema[i] = ema[i-1] + K * (input_values[i] - ema[i-1])
 		return ema
 	# If input is list, output is list
 	elif isinstance(input_values, list):
@@ -424,8 +421,9 @@ def stochastic_oscillator(tick_data, moving_avg, num_periods):
 		Outputs: Stochastic oscillator over given timespan
 	"""
 	percent_k = 100 * general_stochastic(tick_data, num_periods=num_periods)
-	percent_k_smoothed = moving_avg(percent_k, num_periods)
-	fast_d = moving_avg(percent_k, num_periods)
+	percent_k.columns = ['PctK']
+	percent_k_smoothed = moving_avg(percent_k.PctK, num_periods)
+	fast_d = moving_avg(percent_k.PctK, num_periods)
 	slow_d = moving_avg(percent_k_smoothed, num_periods)
 	return fast_d, slow_d
 
@@ -511,16 +509,17 @@ def zero_lag_ema(price, num_periods):
 		Outputs: zero-lag EMA
 	"""
 	lag = int((num_periods - 1) / 2)
-	ema = pd.DataFrame(index=price.index, columns=["EMA"])
+	ema = pd.Series(index=price.index)
 	# Iterates through all datewindows
 	for i in range(0, len(price.index) - lag):
 		# Computes the de-lagged data
 		lag_date = price.index[i]
 		now_date = price.index[i + lag]
 		price_window = price[lag_date:now_date]
-		ema.EMA[now_date] = 2 * price_window[now_date] - price_window[lag_date]
-	zlema = exponential_moving_average(ema.EMA, num_periods)
-	zlema.columns = ['ZLEMA']
+		ema[now_date] = 2 * price_window[now_date] - price_window[lag_date]
+	zlema = exponential_moving_average(ema, num_periods=num_periods)
+	print(zlema)
+	zlema.name = 'ZLEMA'
 	return zlema
 
 if __name__ == "__main__":
@@ -535,6 +534,7 @@ if __name__ == "__main__":
 	tick_data = tick_data[startDate:endDate]
 	price = tick_data.close
 	price_with_trends = tick_data
+	"""
 	aroon_up, aroon_down = aroon(tick_data)
 	price_with_trends['aroonUp25'] = aroon_up
 	price_with_trends['aroonDown25'] = aroon_down
@@ -593,9 +593,11 @@ if __name__ == "__main__":
 	price_with_trends['SMA30'] = simple_moving_average(price)
 	print(list(price_with_trends.columns.values))
 	"""
+	"""
 	fastDVMA, slowDVMA = stochastic_oscillator(price, variable_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscVMA_30'] = fastDVMA
 	price_with_trends['FastDStochasticOscVMA_30'] = slowDVMA
+	"""
 	"""
 	fastDSMA, slowDSMA = stochastic_oscillator(price, simple_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscSMA_30'] = fastDSMA
@@ -614,5 +616,6 @@ if __name__ == "__main__":
 	price_with_trends['TypicalPrice'] = typical_price(tick_data)
 	price_with_trends['VMA30'] = variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = weighted_close(tick_data)
+	"""
 	price_with_trends['ZLEMA30'] = zero_lag_ema(price, num_periods=30)
-	print(list(price_with_trends.columns.values))
+	print(price_with_trends.tail())
