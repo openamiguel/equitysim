@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.26.2
+## Version: 1.26.3
 
 import numpy as np
 import pandas as pd
@@ -520,7 +520,7 @@ def zero_lag_ema(price, num_periods):
 	return zlema
 
 if __name__ == "__main__":
-	symbol = "AKAM"
+	symbol = "AAPL"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -532,4 +532,4 @@ if __name__ == "__main__":
 	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","VMA_60","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, subplot=[True,True], returns=[False,False], folderpath=folderPath, showPlot=True)
