@@ -88,8 +88,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - *none* (does not need any)
 - **plotter.py**
-  - `price_plot` plots the performance of an asset price against a price-related trend and a (possibly price-related) baseline
-  - `portfolio_plot` plots the performance of a portfolio against a benchmark (such as an index)
+  - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
     - `-folderPath`: location of folder to look for files
