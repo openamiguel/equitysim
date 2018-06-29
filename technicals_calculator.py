@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.25.1
+## Version: 1.26.1
 
 import numpy as np
 import pandas as pd
@@ -469,6 +469,25 @@ def typical_price(tick_data):
 	typ_price = typ_price.divide(3)
 	return typ_price
 
+def variable_moving_average(price, num_periods=30):
+	"""	Computes the variable moving average, weights based on volatility, in this case CMO
+		Inputs: price series and number of periods (default: 30)
+		Outputs: VMA indicator
+	"""
+	# Initializes smoothing constant
+	smoothing_constant = 2 / (num_periods + 1)
+	# Volatility is the 9-period CMO
+	cmo = chande_momentum_oscillator(price, num_periods=9)
+	vma = pd.DataFrame(index=price.index, columns=['VMA'])
+	for i in range(1, len(price.index)):
+		# Gets the current and previous date
+		now_date = price.index[i]
+		last_date = price.index[i-1]
+		# Fills the output dataframe
+		vma.VMA[now_date] = smoothing_constant * cmo.CMO[now_date] * price[now_date] + (1 - smoothing_constant * cmo.CMO[now_date]) * price[last_date]
+	# Returns output dataframe
+	return vma
+
 def weighted_close(tick_data):
 	"""	Computes the weighted closing price of an asset over time. 
 		Inputs: dataframe with closing price, high price, low price over given timespan
@@ -501,7 +520,7 @@ def zero_lag_ema(price, num_periods):
 	return zlema
 
 if __name__ == "__main__":
-	symbol = "AAPL"
+	symbol = "AKAM"
 	function = "DAILY"
 	interval = ""
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
@@ -509,8 +528,8 @@ if __name__ == "__main__":
 	endDate = "2018-06-01"
 	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
 	tickData = tickData[startDate:endDate]
-	trend = on_balance_volume(tickData)
-	price_with_trends = pd.concat([tickData.volume, trend], axis=1)
+	trend = variable_moving_average(tickData.close, num_periods=60)
+	price_with_trends = pd.concat([tickData.close, trend], axis=1)
 	# print(price_with_trends)
 	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, folderPath, names=["volume","OBV","NA"], savePlot=True, showPlot=True)
+	plotter.price_plot(price_with_trends, symbol, folderPath, names=["price","VMA_60","NA"], savePlot=True, showPlot=True)
