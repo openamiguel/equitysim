@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 3.8.5
+## Version: 4.0.0
 
 import sys
 import numpy as np
@@ -75,45 +75,6 @@ def price_plot(price_with_trends, symbol, subplot, returns, longdates=[], shortd
 	if showPlot:
 		plt.show()
 	plt.close(fig)
-
-def portfolio_plot(portfolio, baseline, folderpath, baselineLabel="Baseline", savePlot=True, showPlot=False, title="STRATEGY_01"):
-	"""	Plots portfolio returns against baseline returns. The plot shows rolling returns (obviously).
-		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time, 
-			path of folder to store files in, label for baseline index, 
-			order to save plot locally (default: yes), 
-			order to show plot on command line (default: no), optional title for plot
-		Outputs: a plot indicating portfolio returns over time
-	"""
-	# Collects start and end date from portfolio
-	startDate = portfolio.index[0]
-	endDate = portfolio.index[-1]
-	# Initializes plot as variable
-	fig, ax = plt.subplots()
-	# Titles and labels a plot of ticker data
-	plt.title("Portfolio performance over time, from " + startDate + " to " + endDate)
-	plt.xlabel("Time [Days]")
-	plt.ylabel("Returns [Percent]")
-	# Converts dataframe to regular frequency for plotting purposes
-	portfolio.index = pd.to_datetime(portfolio.index)
-	# Plots the closing price and rolling means
-	portList = portfolio.close.values.tolist()
-	baselineList = baseline.close.values.tolist()
-	ax.plot(return_calculator.get_rolling_returns(portList), label="My Portfolio")
-	ax.plot(return_calculator.get_rolling_returns(baselineList), label=baselineLabel)
-	# Adds a legend
-	plt.legend()
-	# Formats the x-axis: major ticks are years, minor ticks are months
-	ax.xaxis.set_major_locator(YEARS)
-	ax.xaxis.set_minor_locator(MONTHS)
-	fig.autofmt_xdate()
-	# If requested, save the file (default: do not save)
-	if savePlot:
-		figFilePath = folderpath + "/images/" + title + ".png"
-		plt.savefig(figFilePath)
-	# If requested, show the plot
-	if showPlot:
-		plt.show()
-	plt.close('all')
 
 def main():
 	""" User interacts with program through command prompt. 
