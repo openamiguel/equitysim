@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.0.0
+## Version: 2.0.3
 
 import numpy as np
 import pandas as pd
@@ -108,6 +108,10 @@ def bollinger(tick_data, num_periods=20, num_deviations=2):
 	return lowband, midband, hiband, width
 
 def chande_momentum_oscillator(price, num_periods):
+	"""	Computes the Chande momentum oscillator of a price input over time.
+		Inputs: price of asset, number of periods in CMO
+		Outputs: CMO of price
+	"""
 	up_df = pd.DataFrame(index=price.index, columns=['upp'])
 	dn_df = pd.DataFrame(index=price.index, columns=['down']) 
 	cmo = pd.DataFrame(index=price.index, columns=['CMO'])
@@ -271,7 +275,7 @@ def macd(price):
 		Inputs: price input
 		Outputs: MACD over given timespan
 	"""
-	return price_oscillator(exponential_moving_average, price, num_periods_slow=26, num_periods_fast=12)
+	return price_oscillator(price, exponential_moving_average, num_periods_slow=26, num_periods_fast=12)
 
 def median_price(tick_data):
 	"""	Computes the median price of an asset over time. 
@@ -526,11 +530,45 @@ if __name__ == "__main__":
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
 	startDate = "2014-01-01"
 	endDate = "2018-06-28"
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-	tickData = tickData[startDate:endDate]
-	aroon_up, aroon_down = aroon(tickData)
-	price_with_trends = tickData
-	price_with_trends['aroon_up'] = aroon_up
-	price_with_trends['aroon_down'] = aroon_down
+	tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
+	tick_data = tick_data[startDate:endDate]
+	aroon_up, aroon_down = aroon(tick_data)
+	price_with_trends = tick_data
+	price_with_trends['aroonUp25'] = aroon_up
+	price_with_trends['aroonDown25'] = aroon_down
+	price_with_trends['aroonOsc25'] = aroon_oscillator(tick_data)
+	price_with_trends['averagePrice'] = average_price(tick_data)
+	price_with_trends['ATR14'] = average_true_range(tick_data)
+	lowband, midband, hiband, width = bollinger(tick_data)
+	price_with_trends['BollingerLow'] = lowband
+	price_with_trends['BollingerMid'] = midband
+	price_with_trends['BollingerHigh'] = hiband
+	price_with_trends['CMO30'] = chande_momentum_oscillator(tick_data.close, num_periods=30)
+	price_with_trends['DEMA30'] = dema(tick_data.close)
+	di_positive, di_negative = directional_index(tick_data, num_periods=30)
+	price_with_trends['DIPLUS_30'] = di_positive
+	price_with_trends['DIMINUS_30'] = di_negative
+	price_with_trends['DX30'] = directional_movt_index(tick_data, num_periods=30)
+	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
+	price_with_trends['EMA30'] = exponential_moving_average(tick_data.close)
+	price_with_trends['generalStoch30'] = general_stochastic(tick_data.close, num_periods=30)
+	# price_with_trends['MACD'] = macd(tick_data.close)
+	price_with_trends['medianPrice'] = median_price(tick_data)
+	price_with_trends['normalizedPrice'] = normalized_price(tick_data.close, baseline.close)
+	price_with_trends['OBV'] = on_balance_volume(tick_data)
+	price_with_trends['PVO_30_14'] = percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
+	hichannel, lochannel = price_channel(tick_data.close, num_periods=30)
+	price_with_trends['PriceChannelHigh'] = hichannel
+	price_with_trends['PriceChannelLow'] = lochannel
+	price_with_trends['PriceOscVMA_30_14'] = price_oscillator(price, variable_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscSMA_30_14'] = price_oscillator(price, simple_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscEMA_30_14'] = price_oscillator(price, exponential_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscTMA_30_14'] = price_oscillator(price, triangular_moving_average, num_periods_slow=30, num_periods_fast=14)
+	"""
+	price_with_trends
+	price_with_trends
+	price_with_trends
+	"""
 	price_with_trends['VMA60'] = variable_moving_average(price_with_trends.close, num_periods=60)
 	print(price_with_trends)
