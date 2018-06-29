@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.26.1
+## Version: 1.26.2
 
 import numpy as np
 import pandas as pd
@@ -356,21 +356,21 @@ def price_channel(price, num_periods):
 		lochannel.low_channel[end_date] = min_price
 	return hichannel, lochannel
 
-def price_oscillator(moving_avg_function, price, num_periods_slow, num_periods_fast):
+def price_oscillator(price, moving_avg, num_periods_slow, num_periods_fast):
 	"""	Computes the price oscillator of a time series over certain timespan, which depends on a choice of moving average function.
 		Inputs: choice of function, price input, number of periods for slow MA, number of periods for fast MA
 		Outputs: price oscillator over given timespan
 	"""
-	price_osc = moving_avg_function(price, num_periods_slow) - moving_avg_function(price, num_periods_fast)
-	price_osc_percent = 100 * price_osc / moving_avg_function(price, num_periods_fast)
+	price_osc = moving_avg(price, num_periods_slow) - moving_avg(price, num_periods_fast)
+	price_osc_percent = 100 * price_osc / moving_avg(price, num_periods_fast)
 	return price_osc, price_osc_percent
 
-def qstick(moving_avg_function, num_periods, tick_data):
+def qstick(tick_data, moving_avg, num_periods):
 	"""	Computes the Q-stick indicator of asset data over certain timespan, which depends on a choice of moving average function.
 		Inputs: choice of function, dataframe with close and open price over time
 		Outputs: price oscillator over given timespan
 	"""
-	return moving_avg_function(tick_data.close - tick_data.open, num_periods)
+	return moving_avg(tick_data.close - tick_data.open, num_periods)
 
 def rel_momentum_index(price, num_periods):
 	"""	Computes the relative momentum index of a (closing) price dataset given the number of periods.
@@ -414,15 +414,15 @@ def simple_moving_average(input_values, num_periods=30):
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
 
-def stochastic_oscillator(tick_data, num_periods, moving_avg_function):
+def stochastic_oscillator(tick_data, moving_avg, num_periods):
 	"""	Computes the Stochastic oscillator of an asset over time. 
 		Inputs: series with price over given timespan, number of periods to look back, type of moving average to apply
 		Outputs: Stochastic oscillator over given timespan
 	"""
 	percent_k = 100 * general_stochastic(tick_data, num_periods=num_periods)
-	percent_k_smoothed = moving_avg_function(percent_k, num_periods)
-	fast_d = moving_avg_function(percent_k, num_periods)
-	slow_d = moving_avg_function(percent_k_smoothed, num_periods)
+	percent_k_smoothed = moving_avg(percent_k, num_periods)
+	fast_d = moving_avg(percent_k, num_periods)
+	slow_d = moving_avg(percent_k_smoothed, num_periods)
 	return fast_d, slow_d
 
 def triangular_moving_average(input_values, num_periods=30):
