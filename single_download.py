@@ -1,9 +1,11 @@
 ## This code can download any one stock/ETF/fund/index symbol from AlphaVantage's API. 
 ## Author: Miguel Opeña
-## Version: 3.3.1
+## Version: 3.4.0
 
 import pandas as pd
 import sys
+
+import command_parser
 
 # Start of the URL for AlphaVantage queries
 MAIN_URL = "https://www.alphavantage.co/query?"
@@ -64,7 +66,8 @@ def fetch_symbol_from_drive(symbol, function="DAILY", interval="", folderPath=""
 	except FileNotFoundError:
 		print("Retrieval unsuccessful. File not found at " + readPath + "\n")
 		return None
-	print("Data on " + symbol + " successfully retrieved!")
+	tickData = tickData[~tickData.index.duplicated(keep='first')]
+	print("Data on " + symbol + " successfully retrieved!\n")
 	return tickData
 
 def main():
@@ -85,38 +88,21 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	symbol = ""
-	if "-symbol" in prompts:
-		symbol = prompts[prompts.index("-symbol") + 1]
-	else:
-		raise ValueError("No symbol provided. Please try again.")
+	symbol = command_parser.get_generic_from_prompts(prompts, "-symbol")
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folderPath = "C:/Users/Miguel/Documents/stockData"
-	if "-folderPath" not in prompts:
-		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
-	else: 
-		folderPath = prompts[prompts.index("-folderPath") + 1]
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles the user's API key. 
-	apiKey = ""
-	if "-apiKey" in prompts:
-		apiKey = prompts[prompts.index("-apiKey") + 1]
-	else:
-		raise ValueError("No API key provided. Please try again.")
+	apiKey = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
 	## Handles the desired time series function. 
-	function = ""
-	if "-timeSeriesFunction" in prompts:
-		function = prompts[prompts.index("-timeSeriesFunction") + 1]
-	else:
-		raise ValueError("No time series function provided. Please try again.")
-	# Handles the special case: if INTRADAY selected. 
+	function = command_parser.get_generic_from_prompts(prompts, query="-function")
+	## Handles the special case: if INTRADAY selected. 
 	interval = ""
-	if function == "INTRADAY" and "-interval" in prompts:
-		interval = prompts[prompts.index("-interval") + 1]
-	elif function == " INTRADAY" and "-interval" not in prompts:
-		raise ValueError("No interval for INTRADAY data provided. Please try again.")
+	intraday = function == "INTRADAY"
+	if intraday:
+		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")## Handles user choice of separate or combined
 	# Runs the code
-	fetch_symbol(symbol, apiKey, function=function, folderPath=folderPath, writeFile=True, interval=interval)
+	fetch_symbol(symbol, apiKey, function=function, folderPath=folder_path, writeFile=True, interval=interval)
 	# Closing output
 	print("Download complete. Have a nice day!")
 	return 0
