@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.1.1
+## Version: 4.2.0
 
 import seaborn as sns
 import sys
@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
+import command_parser
 import return_calculator
 import single_download
 
@@ -112,65 +113,30 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	symbol = ""
-	if "-symbol" in prompts:
-		symbol = prompts[prompts.index("-symbol") + 1]
-	else:
-		raise ValueError("No symbol provided. Please try again.")
+	symbol = command_parser.get_generic_from_prompts(prompts, "-symbol")
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	if "-folderPath" not in prompts:
-		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
-	else: 
-		folderPath = prompts[prompts.index("-folderPath") + 1]
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+	## Handles collection of the start and end dates for trading
+	start_date = command_parser.get_generic_from_prompts(prompts, query="-startDate")
+	end_date = command_parser.get_generic_from_prompts(prompts, query="-endDate")
 	## Handles the desired time series function. 
-	function = ""
-	if "-timeSeriesFunction" in prompts:
-		function = prompts[prompts.index("-timeSeriesFunction") + 1]
-	else:
-		raise ValueError("No time series function provided. Please try again.")
-	# Handles the special case: if INTRADAY selected. 
+	function = command_parser.get_generic_from_prompts(prompts, query="-function")
+	## Handles the special case: if INTRADAY selected. 
 	interval = ""
-	intraDay = False
-	if function == "INTRADAY" and "-interval" in prompts:
-		interval = prompts[prompts.index("-interval") + 1]
-		intraDay = True
-	elif function == " INTRADAY" and "-interval" not in prompts:
-		raise ValueError("No interval for INTRADAY data provided. Please try again.")
-	## Handles collection of the four dates
-	# Gets the start date for ranking
-	startDate = ""
-	if "-startDate" not in prompts:
-		raise ValueError("No start date for ranking provided. Please try again.")
-	else:
-		startDate = prompts[prompts.index("-startDate") + 1]
-		# Handles intraday plots properly
-		if intraDay:
-			startDate = startDate.replace('_',' ')
-	# Gets the end date for ranking
-	endDate = ""
-	if "-endDate" not in prompts:
-		raise ValueError("No end date for ranking provided. Please try again.")
-	else:
-		endDate = prompts[prompts.index("-endDate") + 1]
-		# Handles intraday plots properly
-		if intraDay:
-			endDate = endDate.replace('_',' ')
+	intraday = function == "INTRADAY"
+	if intraday:
+		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")
+		start_date = start_date.replace("_"," ")
+		end_date = end_date.replace("_"," ")
 	## Handles command line option for which column of dataframe to plot
-	columnChoice = "close"
-	if "-column" not in prompts:
-		print("By default, this will plot the closing price.")
-	else:
-		columnChoice = prompts[prompts.index("-column") + 1]
+	column_choice = command_parser.get_generic_from_prompts(prompts, query="-column", default="close", req=False)
 	## Runs the plot code on the lone symbol
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-	tickData = tickData[startDate:endDate]
-	tickData.columns = [x if x != columnChoice else "price" for x in tickData.columns.values.tolist()]
-	price_plot(pd.DataFrame(tickData.price, columns=['price']), symbol, subplot=[True], folderpath=folderPath, savePlot=True, showPlot=True)
+	tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
+	tick_data = tick_data[start_date:end_date]
+	tick_data.columns = [x if x != column_choice else "price" for x in tick_data.columns.values.tolist()]
+	price_plot(pd.DataFrame(tick_data.price, columns=['price']), symbol, subplot=[True], returns=[False],folderpath=folder_path, savePlot=True, showPlot=True)
 	return 0
-
-feature_plot("AAPL", folderpath="C:/Users/Miguel/Documents/EQUITIES/stockDaily", showPlot=True)
 
 if __name__ == "__main__":
 	main()
