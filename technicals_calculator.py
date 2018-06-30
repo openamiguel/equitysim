@@ -1,12 +1,18 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 1.26.3
+## Version: 3.0.1
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import sys
+import time
+from random import sample
 
 import plotter
 import single_download
+import ticker_universe
 
 def aroon(tick_data, num_periods=25):
 	"""	Computes the Aroon indicator of an asset over time. 
@@ -108,6 +114,10 @@ def bollinger(tick_data, num_periods=20, num_deviations=2):
 	return lowband, midband, hiband, width
 
 def chande_momentum_oscillator(price, num_periods):
+	"""	Computes the Chande momentum oscillator of a price input over time.
+		Inputs: price of asset, number of periods in CMO
+		Outputs: CMO of price
+	"""
 	up_df = pd.DataFrame(index=price.index, columns=['upp'])
 	dn_df = pd.DataFrame(index=price.index, columns=['down']) 
 	cmo = pd.DataFrame(index=price.index, columns=['CMO'])
@@ -145,11 +155,11 @@ def dema(input_values, num_periods=30):
 	# If input is Series, output is Dataframe
 	if isinstance(input_values, pd.Series):
 		ema = exponential_moving_average(input_values, num_periods=num_periods)
-		ema2 = exponential_moving_average(ema.EMA, num_periods=num_periods)
+		ema2 = exponential_moving_average(ema, num_periods=num_periods)
 		dema = pd.DataFrame(index=input_values.index, columns=['DEMA'])
 		# This is the formula for DEMA
 		for i in range(0, len(input_values.index)):
-			dema.DEMA[i] = 2 * ema.EMA[i] - ema2.EMA[i]
+			dema.DEMA[i] = 2 * ema[i] - ema2[i]
 		return dema
 	# If input is list, output is list
 	elif isinstance(input_values, list):
@@ -225,22 +235,20 @@ def exponential_moving_average(input_values, num_periods=30):
 		Outputs: EMA over given timespan
 	"""
 	K = 2 / (num_periods + 1)
+	inputs_refined = input_values.fillna(0)
 	# If input is Series, output is Dataframe
-	if isinstance(input_values, pd.Series):
-		ema = pd.DataFrame(index=input_values.index, columns=['EMA'])
-		input_values.dropna(axis=0, inplace=True)
-		input_values.rename('EMA', inplace=True)
-		ema.EMA = input_values[0]
+	if isinstance(inputs_refined, pd.Series):
+		ema = pd.Series(inputs_refined[0], index=inputs_refined.index)
 		# Iterates through and populates dataframe output
-		for i in range(1, len(input_values.index)):
-			ema.EMA[i] = ema.EMA[i-1] + K * (input_values[i] - ema.EMA[i-1])
+		for i in range(1, len(inputs_refined.index)):
+			ema[i] = ema[i-1] + K * (inputs_refined[i] - ema[i-1])
 		return ema
 	# If input is list, output is list
-	elif isinstance(input_values, list):
-		ema = [input_values[0]]
+	elif isinstance(inputs_refined, list):
+		ema = [inputs_refined[0]]
 		# Iterates through and populates list output
-		for i in range(1, len(input_values)):
-			ema.append(ema[i-1] + K * (input_values[i] - ema[i-1]))
+		for i in range(1, len(inputs_refined)):
+			ema.append(ema[i-1] + K * (inputs_refined[i] - ema[i-1]))
 		return ema
 	else:
 		raise ValueError("Unsupported data type given as input to exponential_moving_average in technicals_calculator.py")
@@ -271,7 +279,7 @@ def macd(price):
 		Inputs: price input
 		Outputs: MACD over given timespan
 	"""
-	return price_oscillator(exponential_moving_average, price, num_periods_slow=26, num_periods_fast=12)
+	return price_oscillator(price, exponential_moving_average, num_periods_slow=26, num_periods_fast=12)
 
 def median_price(tick_data):
 	"""	Computes the median price of an asset over time. 
@@ -420,8 +428,9 @@ def stochastic_oscillator(tick_data, moving_avg, num_periods):
 		Outputs: Stochastic oscillator over given timespan
 	"""
 	percent_k = 100 * general_stochastic(tick_data, num_periods=num_periods)
-	percent_k_smoothed = moving_avg(percent_k, num_periods)
-	fast_d = moving_avg(percent_k, num_periods)
+	percent_k.columns = ['PctK']
+	percent_k_smoothed = moving_avg(percent_k.PctK, num_periods)
+	fast_d = moving_avg(percent_k.PctK, num_periods)
 	slow_d = moving_avg(percent_k_smoothed, num_periods)
 	return fast_d, slow_d
 
@@ -507,29 +516,191 @@ def zero_lag_ema(price, num_periods):
 		Outputs: zero-lag EMA
 	"""
 	lag = int((num_periods - 1) / 2)
-	ema = pd.DataFrame(index=price.index, columns=["EMA"])
+	ema = pd.Series(index=price.index)
 	# Iterates through all datewindows
 	for i in range(0, len(price.index) - lag):
 		# Computes the de-lagged data
 		lag_date = price.index[i]
 		now_date = price.index[i + lag]
 		price_window = price[lag_date:now_date]
-		ema.EMA[now_date] = 2 * price_window[now_date] - price_window[lag_date]
-	zlema = exponential_moving_average(ema.EMA, num_periods)
-	zlema.columns = ['ZLEMA']
+		ema[now_date] = 2 * price_window[now_date] - price_window[lag_date]
+	zlema = exponential_moving_average(ema, num_periods=num_periods)
+	zlema.name = 'ZLEMA'
 	return zlema
 
-if __name__ == "__main__":
-	symbol = "AAPL"
-	function = "DAILY"
+def get_features(tick_data, price, baseline):
+	"""	Compiled function with all indicators in the file added to it.
+		Inputs: asset data, column to use as price, baseline asset/index
+		Outputs: dataframe of features
+	"""
+	price_with_trends = tick_data
+	aroon_up, aroon_down = aroon(tick_data)
+	price_with_trends['aroonUp25'] = aroon_up
+	price_with_trends['aroonDown25'] = aroon_down
+	price_with_trends['aroonOsc25'] = aroon_oscillator(tick_data)
+	# print(list(price_with_trends.columns.values))
+	price_with_trends['averagePrice'] = average_price(tick_data)
+	price_with_trends['ATR14'] = average_true_range(tick_data)
+	lowband, midband, hiband, width = bollinger(tick_data)
+	price_with_trends['BollingerLow'] = lowband
+	price_with_trends['BollingerMid'] = midband
+	price_with_trends['BollingerHigh'] = hiband
+	price_with_trends['CMO30'] = chande_momentum_oscillator(price, num_periods=30)
+	price_with_trends['DEMA30'] = dema(price)
+	di_positive, di_negative = directional_index(tick_data, num_periods=30)
+	price_with_trends['DIPLUS_30'] = di_positive
+	price_with_trends['DIMINUS_30'] = di_negative
+	# print(list(price_with_trends.columns.values))
+	price_with_trends['DX30'] = directional_movt_index(tick_data, num_periods=30)
+	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
+	price_with_trends['EMA30'] = exponential_moving_average(price)
+	price_with_trends['generalStoch30'] = general_stochastic(price, num_periods=30)
+	mcd, macdPct = macd(price)
+	price_with_trends['MACD'] = mcd
+	price_with_trends['Pct'] = macdPct
+	price_with_trends['medianPrice'] = median_price(tick_data)
+	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
+	price_with_trends['OBV'] = on_balance_volume(tick_data)
+	price_with_trends['PVO_30_14'] = percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
+	hichannel, lochannel = price_channel(price, num_periods=30)
+	price_with_trends['PriceChannelHigh'] = hichannel
+	price_with_trends['PriceChannelLow'] = lochannel
+	# print(list(price_with_trends.columns.values))
+	priceOscVMA, priceOscVMAPct = price_oscillator(price, variable_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscVMA_30_14'] = priceOscVMA
+	price_with_trends['PriceOscVMAPct_30_14'] = priceOscVMAPct
+	priceOscSMA, priceOscSMAPct = price_oscillator(price, simple_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscSMA_30_14'] = priceOscSMA
+	price_with_trends['PriceOscSMAPct_30_14'] = priceOscSMAPct
+	priceOscTMA, priceOscTMAPct = price_oscillator(price, triangular_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscTMA_30_14'] = priceOscTMA
+	price_with_trends['PriceOscTMAPct_30_14'] = priceOscTMAPct
+	priceOscEMA, priceOscEMAPct = price_oscillator(price, exponential_moving_average, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscEMA_30_14'] = priceOscEMA
+	price_with_trends['PriceOscEMAPct_30_14'] = priceOscEMAPct
+	priceOscZLEMA, priceOscZLEMAPct = price_oscillator(price, zero_lag_ema, num_periods_slow=30, num_periods_fast=14)
+	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
+	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
+	# print(list(price_with_trends.columns.values))
+	price_with_trends['QstickVMA_30'] = qstick(tick_data, variable_moving_average, num_periods=30)
+	price_with_trends['QstickSMA_30'] = qstick(tick_data, simple_moving_average, num_periods=30)
+	price_with_trends['QstickEMA_30'] = qstick(tick_data, exponential_moving_average, num_periods=30)
+	price_with_trends['QstickZLEMA_30'] = qstick(tick_data, zero_lag_ema, num_periods=30)
+	price_with_trends['QstickTMA_30'] = qstick(tick_data, triangular_moving_average, num_periods=30)
+	price_with_trends['RMI30'] = rel_momentum_index(price, num_periods=30)
+	price_with_trends['RSI'] = rel_strength_index(price)
+	price_with_trends['SMA30'] = simple_moving_average(price)
+	# print(list(price_with_trends.columns.values))
+	"""
+	fastDVMA, slowDVMA = stochastic_oscillator(price, variable_moving_average, num_periods=30)
+	price_with_trends['FastDStochasticOscVMA_30'] = fastDVMA
+	price_with_trends['FastDStochasticOscVMA_30'] = slowDVMA
+	"""
+	fastDSMA, slowDSMA = stochastic_oscillator(price, simple_moving_average, num_periods=30)
+	price_with_trends['FastDStochasticOscSMA_30'] = fastDSMA
+	price_with_trends['FastDStochasticOscSMA_30'] = slowDSMA
+	fastDEMA, slowDEMA = stochastic_oscillator(price, exponential_moving_average, num_periods=30)
+	price_with_trends['FastDStochasticOscEMA_30'] = fastDEMA
+	price_with_trends['FastDStochasticOscEMA_30'] = slowDEMA
+	fastDZLEMA, slowDZLEMA = stochastic_oscillator(price, zero_lag_ema, num_periods=30)
+	price_with_trends['FastDStochasticOscZLEMA_30'] = fastDZLEMA
+	price_with_trends['FastDStochasticOscZLEMA_30'] = slowDZLEMA
+	fastDTMA, slowDTMA = stochastic_oscillator(price, triangular_moving_average, num_periods=30)
+	price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
+	price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
+	price_with_trends['TMA30'] = triangular_moving_average(price)
+	price_with_trends['TR'] = true_range(tick_data)
+	price_with_trends['TypicalPrice'] = typical_price(tick_data)
+	price_with_trends['VMA30'] = variable_moving_average(price, num_periods=30)
+	price_with_trends['WeightedClose'] = weighted_close(tick_data)
+	price_with_trends['ZLEMA30'] = zero_lag_ema(price, num_periods=30)
+	return price_with_trends
+
+def main():
+	""" User interacts with program through command prompt. 
+		Example prompts: 
+		
+			python technicals_calculator.py -tickerUniverse AAPL,MSFT,GS,F,GOOG,AMZN -baseline ^^GSPC -startDate 2014-01-01 -endDate 2018-06-28 -timeSeriesFunction DAILY -folderPath C:/Users/Miguel/Documents/EQUITIES/stockDaily
+		
+		Inputs: implicit through command prompt
+		Outputs: 0 if everything works
+	"""
+	prompts = sys.argv
+	## Handles which symbol(s) the user wants to process.
+	symbols = []
+	name = ""
+	if "-tickerUniverse" not in prompts:
+		raise ValueError("No ticker universe provided. Please try again")
+	# Yields data on the S&P 500
+	elif "SNP500" in prompts:
+		symbols = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
+	# Yields data on the Dow 30
+	elif "DOW30" in prompts:
+		symbols = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
+	# Yields data on the NASDAQ 100
+	elif "NASDAQ100" in prompts:
+		symbols = ticker_universe.obtain_parse_nasdaq()
+	# Yields data on the NASDAQ 100
+	elif "ETF100" in prompts:
+		symbols = ticker_universe.obtain_parse_etfs()
+	# Yields data on the NASDAQ 100
+	elif "MF25" in prompts:
+		symbols = ticker_universe.obtain_parse_mutual_funds()
+	# Yields data on user-provided tickers
+	else:
+		symbols = prompts[prompts.index("-tickerUniverse") + 1].split(",")
+	## Handles which index/asset should be the baseline 
+	baselineSymbol = "^GSPC"
+	if "-baseline" not in prompts:
+		print("Default baseline: S&P 500 index")
+	else:
+		baselineSymbol = prompts[prompts.index("-baseline") + 1]
+	## Handles collection of the four dates
+	# Gets the start date for portfolio trading
+	start_date = ""
+	if "-startDate" not in prompts:
+		raise ValueError("No start date provided. Please try again.")
+	else:
+		start_date = prompts[prompts.index("-startDate") + 1]
+	# Gets the end date for portfolio trading
+	end_date = ""
+	if "-endDate" not in prompts:
+		raise ValueError("No end date provided. Please try again.")
+	else:
+		end_date = prompts[prompts.index("-endDate") + 1]
+	## Handles the desired time series function. 
+	function = ""
+	if "-timeSeriesFunction" in prompts:
+		function = prompts[prompts.index("-timeSeriesFunction") + 1]
+	else:
+		raise ValueError("No time series function provided. Please try again.")
+	# Handles the special case: if INTRADAY selected. 
 	interval = ""
+	if function == "INTRADAY" and "-interval" in prompts:
+		interval = prompts[prompts.index("-interval") + 1]
+	elif function == " INTRADAY" and "-interval" not in prompts:
+		raise ValueError("No interval for INTRADAY data provided. Please try again.")
+	## Handles where the user wants to download their files. 
+	# Default folder path is relevant to the author only. 
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2016-01-03"
-	endDate = "2018-06-01"
-	tickData = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-	tickData = tickData[startDate:endDate]
-	trend = variable_moving_average(tickData.close, num_periods=60)
-	price_with_trends = pd.concat([tickData.close, trend], axis=1)
-	# print(price_with_trends)
-	price_with_trends.columns = ["price","trend"]
-	plotter.price_plot(price_with_trends, symbol, subplot=[True,True], returns=[False,False], folderpath=folderPath, showPlot=True)
+	if "-folderPath" not in prompts:
+		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
+	else: 
+		folderPath = prompts[prompts.index("-folderPath") + 1]
+	# Gets the baseline symbol (S&P 500 index)
+	baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function=function, folderPath=folderPath, interval=interval)
+	# Gets the feature data for each one
+	for symbol in symbols:
+		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+		tick_data = tick_data[start_date:end_date]
+		print("Processing {0} features...".format(symbol))
+		time0 = time.time()
+		price_with_trends = get_features(tick_data, tick_data.close, baseline)
+		time1 = time.time()
+		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
+		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
+		price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
+
+if __name__ == "__main__":
+	main()

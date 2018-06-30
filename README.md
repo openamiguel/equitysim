@@ -88,6 +88,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - *none* (does not need any)
 - **plotter.py**
+  - `feature_plot` plots a file of features as a correlation heatmap
   - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
@@ -128,3 +129,12 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `variable_moving_average` returns the variable moving average of a price input
   - `weighted_close` returns the weighted close of asset data
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
+  - `get_features` returns a dataframe of features, with one column for each indicator listed above
+  - command prompt options:
+    - `-tickerUniverse`: collection of tickers to download (can also be a comma-delimited list of ticker symbols) 
+    - `-baseline`: selection of symbol to use as baseline asset/index
+    - `-startDate`: start date of data to process into features
+    - `-endDate`: end date of aforementioned
+    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-folderPath`: location of folder to write the files
