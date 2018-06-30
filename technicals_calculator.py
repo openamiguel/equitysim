@@ -1,10 +1,12 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 2.2.0
+## Version: 3.0.0
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import sys
 import time
 from random import sample
 
@@ -612,24 +614,91 @@ def all_indicators(tick_data, price, baseline):
 	price_with_trends['ZLEMA30'] = zero_lag_ema(price, num_periods=30)
 	return price_with_trends
 
-if __name__ == "__main__":
-	function = "DAILY"
+def main():
+	""" User interacts with program through command prompt. 
+		Example prompts: 
+		
+			python technicals_calculator.py -tickerUniverse AAPL,MSFT,GS,F,GOOG,AMZN -baseline ^^GSPC -startDate 2014-01-01 -endDate 2018-06-28 -timeSeriesFunction DAILY -folderPath C:/Users/Miguel/Documents/EQUITIES/stockDaily
+		
+		Inputs: implicit through command prompt
+		Outputs: 0 if everything works
+	"""
+	prompts = sys.argv
+	## Handles which symbol(s) the user wants to process.
+	symbols = []
+	name = ""
+	if "-tickerUniverse" not in prompts:
+		raise ValueError("No ticker universe provided. Please try again")
+	# Yields data on the S&P 500
+	elif "SNP500" in prompts:
+		symbols = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
+	# Yields data on the Dow 30
+	elif "DOW30" in prompts:
+		symbols = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
+	# Yields data on the NASDAQ 100
+	elif "NASDAQ100" in prompts:
+		symbols = ticker_universe.obtain_parse_nasdaq()
+	# Yields data on the NASDAQ 100
+	elif "ETF100" in prompts:
+		symbols = ticker_universe.obtain_parse_etfs()
+	# Yields data on the NASDAQ 100
+	elif "MF25" in prompts:
+		symbols = ticker_universe.obtain_parse_mutual_funds()
+	# Yields data on user-provided tickers
+	else:
+		symbols = prompts[prompts.index("-tickerUniverse") + 1].split(",")
+	## Handles which index/asset should be the baseline 
+	baselineSymbol = "^GSPC"
+	if "-baseline" not in prompts:
+		print("Default baseline: S&P 500 index")
+	else:
+		baselineSymbol = prompts[prompts.index("-baseline") + 1]
+	## Handles collection of the four dates
+	# Gets the start date for portfolio trading
+	start_date = ""
+	if "-startDate" not in prompts:
+		raise ValueError("No start date provided. Please try again.")
+	else:
+		start_date = prompts[prompts.index("-startDate") + 1]
+	# Gets the end date for portfolio trading
+	end_date = ""
+	if "-endDate" not in prompts:
+		raise ValueError("No end date provided. Please try again.")
+	else:
+		end_date = prompts[prompts.index("-endDate") + 1]
+	## Handles the desired time series function. 
+	function = ""
+	if "-timeSeriesFunction" in prompts:
+		function = prompts[prompts.index("-timeSeriesFunction") + 1]
+	else:
+		raise ValueError("No time series function provided. Please try again.")
+	# Handles the special case: if INTRADAY selected. 
 	interval = ""
+	if function == "INTRADAY" and "-interval" in prompts:
+		interval = prompts[prompts.index("-interval") + 1]
+	elif function == " INTRADAY" and "-interval" not in prompts:
+		raise ValueError("No interval for INTRADAY data provided. Please try again.")
+	## Handles where the user wants to download their files. 
+	# Default folder path is relevant to the author only. 
 	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	startDate = "2014-01-01"
-	endDate = "2018-06-28"
+	if "-folderPath" not in prompts:
+		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
+	else: 
+		folderPath = prompts[prompts.index("-folderPath") + 1]
 	# Gets the baseline symbol (S&P 500 index)
-	baseline = single_download.fetch_symbol_from_drive("^GSPC", function=function, folderPath=folderPath, interval=interval)
-	# Gets all the companies from the S&P 500
-	symbols = ticker_universe.obtain_parse_wiki("SNP500")
+	baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function=function, folderPath=folderPath, interval=interval)
 	# Gets the feature data for each one
 	for symbol in symbols:
 		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
-		tick_data = tick_data[startDate:endDate]
+		tick_data = tick_data[start_date:end_date]
 		print("Processing {0} features...".format(symbol))
 		time0 = time.time()
 		price_with_trends = all_indicators(tick_data, tick_data.close, baseline)
 		time1 = time.time()
 		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
+		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
 		price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
-		break
+
+if __name__ == "__main__":
+	main()
