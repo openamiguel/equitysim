@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 3.0.1
+## Version: 3.1.1
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +10,7 @@ import sys
 import time
 from random import sample
 
+import command_parser
 import plotter
 import single_download
 import ticker_universe
@@ -557,7 +558,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['generalStoch30'] = general_stochastic(price, num_periods=30)
 	mcd, macdPct = macd(price)
 	price_with_trends['MACD'] = mcd
-	price_with_trends['Pct'] = macdPct
+	price_with_trends['MACDPct'] = macdPct
 	price_with_trends['medianPrice'] = median_price(tick_data)
 	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = on_balance_volume(tick_data)
@@ -627,71 +628,27 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol(s) the user wants to process.
-	symbols = []
-	name = ""
-	if "-tickerUniverse" not in prompts:
-		raise ValueError("No ticker universe provided. Please try again")
-	# Yields data on the S&P 500
-	elif "SNP500" in prompts:
-		symbols = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
-	# Yields data on the Dow 30
-	elif "DOW30" in prompts:
-		symbols = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
-	# Yields data on the NASDAQ 100
-	elif "NASDAQ100" in prompts:
-		symbols = ticker_universe.obtain_parse_nasdaq()
-	# Yields data on the NASDAQ 100
-	elif "ETF100" in prompts:
-		symbols = ticker_universe.obtain_parse_etfs()
-	# Yields data on the NASDAQ 100
-	elif "MF25" in prompts:
-		symbols = ticker_universe.obtain_parse_mutual_funds()
-	# Yields data on user-provided tickers
-	else:
-		symbols = prompts[prompts.index("-tickerUniverse") + 1].split(",")
-	## Handles which index/asset should be the baseline 
-	baselineSymbol = "^GSPC"
-	if "-baseline" not in prompts:
-		print("Default baseline: S&P 500 index")
-	else:
-		baselineSymbol = prompts[prompts.index("-baseline") + 1]
-	## Handles collection of the four dates
-	# Gets the start date for portfolio trading
-	start_date = ""
-	if "-startDate" not in prompts:
-		raise ValueError("No start date provided. Please try again.")
-	else:
-		start_date = prompts[prompts.index("-startDate") + 1]
-	# Gets the end date for portfolio trading
-	end_date = ""
-	if "-endDate" not in prompts:
-		raise ValueError("No end date provided. Please try again.")
-	else:
-		end_date = prompts[prompts.index("-endDate") + 1]
-	## Handles the desired time series function. 
-	function = ""
-	if "-timeSeriesFunction" in prompts:
-		function = prompts[prompts.index("-timeSeriesFunction") + 1]
-	else:
-		raise ValueError("No time series function provided. Please try again.")
-	# Handles the special case: if INTRADAY selected. 
-	interval = ""
-	if function == "INTRADAY" and "-interval" in prompts:
-		interval = prompts[prompts.index("-interval") + 1]
-	elif function == " INTRADAY" and "-interval" not in prompts:
-		raise ValueError("No interval for INTRADAY data provided. Please try again.")
+	ticker_universe, name = command_parser.get_tickerverse_from_prompts(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	if "-folderPath" not in prompts:
-		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
-	else: 
-		folderPath = prompts[prompts.index("-folderPath") + 1]
-	# Gets the baseline symbol (S&P 500 index)
-	baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function=function, folderPath=folderPath, interval=interval)
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+	## Handles which index/asset should be the baseline 
+	baseline_symbol = command_parser.get_generic_from_prompts(prompts, query="-baseline", default="^GSPC", req=False)
+	## Handles collection of the start and end dates for trading
+	start_date = command_parser.get_generic_from_prompts(prompts, query="-startDate")
+	end_date = command_parser.get_generic_from_prompts(prompts, query="-endDate")
+	## Handles the desired time series function. 
+	function = command_parser.get_generic_from_prompts(prompts, query="-function")
+	## Handles the special case: if INTRADAY selected. 
+	interval = ""
+	intraday = function == "INTRADAY"
+	if intraday:
+		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")
+	# Gets the baseline data
+	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function=function, folderPath=folder_path, interval=interval)
 	# Gets the feature data for each one
-	for symbol in symbols:
-		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folderPath, interval=interval)
+	for symbol in ticker_universe:
+		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
 		tick_data = tick_data[start_date:end_date]
 		print("Processing {0} features...".format(symbol))
 		time0 = time.time()
@@ -700,7 +657,7 @@ def main():
 		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
 		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
 		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
-		price_with_trends.to_csv(folderPath + "/features/" + symbol + "_Features.csv")
+		price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
 
 if __name__ == "__main__":
 	main()

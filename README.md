@@ -14,7 +14,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-symbol`: symbol of the asset to download
     - `-folderPath`: location of folder to store file
     - `-apiKey`: AlphaVantage API key to download files from AlphaVantage (user-specific)
-    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **prelim_download.py**
   - `download_separate` pulls data on a ticker universe in the form of separate files, each named after the ticker symbol and the time series function
@@ -27,7 +27,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-separate`: download files separately
     - `-combined`: download files in a combined fashion
     - `-apiKey`: AlphaVantage API key (user-specific)
-    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **auto_update.py**
   - `update_separate` updates a collection of separately downloaded files with the latest data from AlphaVantage
@@ -72,6 +72,11 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-switch`: option to switch the buy and sell signals
 
 ### assorted calculators and misc. programs
+- **command_parser.py**
+  - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
+  - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
+  - command prompt options:
+    - *none* (does not need any)
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
@@ -93,7 +98,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
     - `-folderPath`: location of folder to look for files
-    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
@@ -135,6 +140,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-baseline`: selection of symbol to use as baseline asset/index
     - `-startDate`: start date of data to process into features
     - `-endDate`: end date of aforementioned
-    - `-timeSeriesFunction`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
     - `-folderPath`: location of folder to write the files
