@@ -72,6 +72,11 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-switch`: option to switch the buy and sell signals
 
 ### assorted calculators and misc. programs
+- **command_parser.py**
+  - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
+  - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
+  - command prompt options:
+    - *none* (does not need any)
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
