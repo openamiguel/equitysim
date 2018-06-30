@@ -1,7 +1,8 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.0.0
+## Version: 4.1.1
 
+import seaborn as sns
 import sys
 import numpy as np
 import pandas as pd
@@ -16,13 +17,33 @@ MONTHS = mdates.MonthLocator()
 DATES = mdates.DayLocator()
 HOURS = mdates.HourLocator()
 
+def feature_plot(symbol, folderpath="", savePlot=True, showPlot=False):
+	"""	Given a dataframe of features (downloaded from a file), this code plots the correlations of said features as a heatmap.
+		Inputs: symbol of company, folder path to write to and get plot from, order to save plot to folder path (default: yes), 
+			order to show plot on command line (default: no)
+		Outputs: heatmap of correlations
+	"""
+	filePath = folderpath + "/features/{}_Features.csv".format(symbol)
+	features = pd.read_csv(filePath)
+	featCorr = features.corr()
+	# Plot the heatmap of correlations
+	sns.heatmap(featCorr, xticklabels=featCorr.columns.values, yticklabels=featCorr.columns.values, center=0)
+	# If requested, save the file (default: do not save)
+	if savePlot:
+		figFilePath = folderpath + "/images/{}_Features.png".format(symbol)
+		plt.savefig(figFilePath)
+	# If requested, show the plot
+	if showPlot:
+		plt.show()
+	plt.close('all')
+
 def price_plot(price_with_trends, symbol, subplot, returns, longdates=[], shortdates=[], folderpath="", savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend(s), and baseline(s) data, plots the price against trend(s) and baseline(s). 
 		One has the option to show the window live, and to save it locally. 
 		Inputs: price with trends, symbol of company, dates with long positions, dates with short positions, 
 			folder path to write plot to, order to save plot to folder path (default: yes), order to show plot 
 			on command line (default: no) 
-		Outputs: dataframe of daily closing price, rolling mean over X days, and rolling mean over Y days
+		Outputs: plot with all the desired data
 	"""
 	# Every true element corresponds to command to plot list
 	num_subplots = subplot.count(False) + 1
@@ -148,6 +169,8 @@ def main():
 	tickData.columns = [x if x != columnChoice else "price" for x in tickData.columns.values.tolist()]
 	price_plot(pd.DataFrame(tickData.price, columns=['price']), symbol, subplot=[True], folderpath=folderPath, savePlot=True, showPlot=True)
 	return 0
+
+feature_plot("AAPL", folderpath="C:/Users/Miguel/Documents/EQUITIES/stockDaily", showPlot=True)
 
 if __name__ == "__main__":
 	main()
