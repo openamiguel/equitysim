@@ -1,6 +1,6 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.2.0
+## Version: 1.2.1
 
 from warnings import warn
 
@@ -53,6 +53,6 @@ def get_tickerverse_from_prompts(prompts, query="-tickerUniverse"):
 		name = "MF25"
 	# Yields data on user-provided tickers
 	else:
-		symbols = prompts[prompts.index(query) + 1].split(",")
+		tickerverse = prompts[prompts.index(query) + 1].split(",")
 		name = "CUSTOM"
 	return tickerverse, name
