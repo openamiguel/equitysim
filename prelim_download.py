@@ -1,7 +1,7 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.5.0
+## Version: 3.5.1
 
 import datetime
 import pandas as pd
@@ -86,7 +86,7 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	tickerUniverse, name = command_parser.get_tickerverse_from_prompts()
+	tickerUniverse, name = command_parser.get_tickerverse_from_prompts(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
 	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
