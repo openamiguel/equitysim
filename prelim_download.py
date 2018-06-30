@@ -1,13 +1,14 @@
 ## This code can download the constituents of the S&P 500, the Dow 30, and/or the NASDAQ 100.
 ## Alternatively, it can download each index as one combined file of closing prices.
 ## Author: Miguel Opeña
-## Version: 3.4.2
+## Version: 3.5.0
 
 import datetime
 import pandas as pd
 import time
 import sys
 
+import command_parser
 import single_download
 import ticker_universe
 
@@ -71,13 +72,13 @@ def main():
 	""" User interacts with interface through command prompt, which obtains several "input" data. 
 		Here are some examples of how to run this program: 
 
-		python prelim_download.py -tickerUniverse SNP500 -folderPath C:/Users/Miguel/Desktop/stockData -separate -apiKey <INSERT KEY> -timeSeriesFunction DAILY
+		python prelim_download.py -tickerUniverse SNP500 -folderPath C:/Users/Miguel/Desktop/stockData -separate -apiKey <INSERT KEY> -function DAILY
 			This will download separate files of daily data on S&P 500 tickers to the desired folder path.
 
-		python prelim_download.py -tickerUniverse DOW30 -folderPath C:/Users/Miguel/Desktop/stockData -combined -apiKey <INSERT KEY> -timeSeriesFunction DAILY
+		python prelim_download.py -tickerUniverse DOW30 -folderPath C:/Users/Miguel/Desktop/stockData -combined -apiKey <INSERT KEY> -function DAILY
 			This will download a combined file of daily (closing price only) data on the Dow 30 tickers to the desired folder path. 
 
-		python prelim_download.py -tickerUniverse NASDAQ100 -folderPath C:/Users/Miguel/Desktop/stockData -separate -apiKey <INSERT KEY> -timeSeriesFunction INTRADAY -interval 1min
+		python prelim_download.py -tickerUniverse NASDAQ100 -folderPath C:/Users/Miguel/Desktop/stockData -separate -apiKey <INSERT KEY> -function INTRADAY -interval 1min
 			This will download separate files of intraday data (1 minute interval) on NASDAQ 100 tickers to the desired folder path. 
 
 		Inputs: implicit through command prompt
@@ -85,66 +86,25 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	tickerUniverse = []
-	name = ""
-	if "-tickerUniverse" not in prompts:
-		raise ValueError("No ticker universe provided. Please try again")
-	# Yields data on the S&P 500
-	elif "SNP500" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
-		name = "SNP500"
-	# Yields data on the Dow 30
-	elif "DOW30" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
-		name = "DOW30"
-	# Yields data on the NASDAQ 100
-	elif "NASDAQ100" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
-		name = "NASDAQ100"
-	# Yields data on the NASDAQ 100
-	elif "ETF100" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_etfs()
-		name = "ETF100"
-	# Yields data on the NASDAQ 100
-	elif "MF25" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_mutual_funds()
-		name = "MF25"
-	# Yields data on user-provided tickers
-	else:
-		tickerPath = prompts[prompts.index("-ticker") + 1]
-		tickFrame = pd.read_csv(tickerPath, names=['tickers'])
-		tickerUniverse = tickFrame.tickers.tolist()
-		name = "CUSTOM"
+	tickerUniverse, name = command_parser.get_tickerverse_from_prompts()
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folderPath = "C:/Users/Miguel/Documents/stockData"
-	if "-folderPath" not in prompts:
-		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
-	else: 
-		folderPath = prompts[prompts.index("-folderPath") + 1]
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles the user's API key. 
-	apiKey = ""
-	if "-apiKey" in prompts:
-		apiKey = prompts[prompts.index("-apiKey") + 1]
-	else:
-		raise ValueError("No API key provided. Please try again.")
+	apiKey = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
 	## Handles the desired time series function. 
-	function = ""
-	if "-timeSeriesFunction" in prompts:
-		function = prompts[prompts.index("-timeSeriesFunction") + 1]
-	else:
-		raise ValueError("No time series function provided. Please try again.")
-	# Handles the special case: if INTRADAY selected. 
+	function = command_parser.get_generic_from_prompts(prompts, query="-function")
+	## Handles the special case: if INTRADAY selected. 
 	interval = ""
-	if function == "INTRADAY" and "-interval" in prompts:
-		interval = prompts[prompts.index("-interval") + 1]
-	elif function == " INTRADAY" and "-interval" not in prompts:
-		raise ValueError("No interval for INTRADAY data provided. Please try again.")
-	## Handles user choice of separate or combined
+	intraday = function == "INTRADAY"
+	if intraday:
+		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")## Handles user choice of separate or combined
 	if "-separate" in prompts:
 		download_separate(tickerUniverse, apiKey, function=function, folderPath=folderPath, interval=interval)
 	elif "-combined" in prompts:
 		download_combined(tickerUniverse, apiKey, function=function, folderPath=folderPath, outputFileName=name, interval=interval)
+	else:
+		raise ValueError("Required prompt of separate or combined not found. Please try again.")
 	# Closing output
 	print("Download complete. Have a nice day!")
 	return 0
