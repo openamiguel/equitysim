@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 3.0.0
+## Version: 3.0.1
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -528,8 +528,10 @@ def zero_lag_ema(price, num_periods):
 	zlema.name = 'ZLEMA'
 	return zlema
 
-def all_indicators(tick_data, price, baseline):
-	"""	Compiled function with 
+def get_features(tick_data, price, baseline):
+	"""	Compiled function with all indicators in the file added to it.
+		Inputs: asset data, column to use as price, baseline asset/index
+		Outputs: dataframe of features
 	"""
 	price_with_trends = tick_data
 	aroon_up, aroon_down = aroon(tick_data)
@@ -693,7 +695,7 @@ def main():
 		tick_data = tick_data[start_date:end_date]
 		print("Processing {0} features...".format(symbol))
 		time0 = time.time()
-		price_with_trends = all_indicators(tick_data, tick_data.close, baseline)
+		price_with_trends = get_features(tick_data, tick_data.close, baseline)
 		time1 = time.time()
 		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
 		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
