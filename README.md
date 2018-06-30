@@ -88,6 +88,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - *none* (does not need any)
 - **plotter.py**
+  - `feature_plot` plots a file of features as a correlation heatmap
   - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
