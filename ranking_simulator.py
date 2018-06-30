@@ -1,18 +1,19 @@
 ## This code models a basic ranking strategy, in which the top/bottom quantile is sold short and the bottom/top quintile is bought long.
 ## Author: Miguel Opeña
-## Version: 3.0.7
+## Version: 3.1.1
 
 import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+import command_parser
+import plotter
+import return_calculator
 import single_download
 import ticker_universe
-import return_calculator
-import plotter
 
-def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQuant, switchpos=False):
+def asset_ranker(tickerUniverse, startdate, enddate, folderPath, low_quant, high_quant, switchpos=False):
 	"""	Ranks a universe of stock tickers based on a given metric.
 		By default, the top 20% in this ranking are deemed overvalued, so they are sold short. 
 		Likewise, the bottom 20% are deemed undervalued, so they are bought long. 
@@ -56,8 +57,8 @@ def asset_ranker(tickerUniverse, startdate, enddate, folderPath, lowQuant, highQ
 	# If symbol could not be ranked, then don't include it
 	ranking.dropna(inplace=True)
 	# Isolates the stocks in the bottom quantile and top quantile of ranking, respectively
-	low_bound = ranking.metric.quantile(lowQuant)
-	high_bound = ranking.metric.quantile(highQuant)
+	low_bound = ranking.metric.quantile(low_quant)
+	high_bound = ranking.metric.quantile(high_quant)
 	longpos = ranking.symbol[ranking.metric < low_bound].values.tolist()
 	shortpos = ranking.symbol[ranking.metric > high_bound].values.tolist() 
 	# If you want to switch which quantile goes long or short, then the values of longpos and shortpos are switched
@@ -113,99 +114,47 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	tickerUniverse = []
-	name = ""
-	if "-tickerUniverse" not in prompts:
-		raise ValueError("No ticker universe provided. Please try again")
-	# Yields data on the S&P 500
-	elif "SNP500" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
-		name = "SNP500"
-	# Yields data on the Dow 30
-	elif "DOW30" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_wiki(selection="DOW30", seed="^DJI")
-		name = "DOW30"
-	# Yields data on the NASDAQ 100
-	elif "NASDAQ100" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_nasdaq()
-		name = "NASDAQ100"
-	# Yields data on the ETF100
-	elif "ETF100" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_etfs()
-		name = "ETF100"
-	elif "MF25" in prompts:
-		tickerUniverse = ticker_universe.obtain_parse_mutual_funds()
-		name = "MF25"
+	ticker_universe, name = command_parser.get_tickerverse_from_prompts(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folderPath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	if "-folderPath" not in prompts:
-		print("Warning: the program will use default file paths, which may not be compatible on your computer.")
-	else: 
-		folderPath = prompts[prompts.index("-folderPath") + 1]
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles collection of the four dates
 	# Gets the start date for ranking
-	startRankDate = ""
-	if "-startRankDate" not in prompts:
-		raise ValueError("No start date for ranking provided. Please try again.")
-	else:
-		startRankDate = prompts[prompts.index("-startRankDate") + 1]
-	# Gets the end date for ranking
-	endRankDate = ""
-	if "-endRankDate" not in prompts:
-		raise ValueError("No end date for ranking provided. Please try again.")
-	else:
-		endRankDate = prompts[prompts.index("-endRankDate") + 1]
-	# Gets the start date for portfolio testing
-	startTestDate = ""
-	if "-startTestDate" not in prompts:
-		raise ValueError("No start date for testing provided. Please try again.")
-	else:
-		startTestDate = prompts[prompts.index("-startTestDate") + 1]
-	# Gets the end date for portfolio testing
-	endTestDate = ""
-	if "-endTestDate" not in prompts:
-		raise ValueError("No end date for testing provided. Please try again.")
-	else:
-		endTestDate = prompts[prompts.index("-endTestDate") + 1]
+	start_rank_date = command_parser.get_generic_from_prompts(prompts, query="-startRankDate")
+	end_rank_date = command_parser.get_generic_from_prompts(prompts, query="-endRankDate")
+	start_test_date = command_parser.get_generic_from_prompts(prompts, query="-startTestDate")
+	end_test_date = command_parser.get_generic_from_prompts(prompts, query="-endTestDate")
 	## Handles which index/asset should be the baseline 
-	baselineSymbol = "^GSPC"
-	if "-baseline" not in prompts:
-		print("Default baseline: S&P 500 index")
-	else:
-		baselineSymbol = prompts[prompts.index("-baseline") + 1]
-	# Sets up baseline index/asset
-	baseline = single_download.fetch_symbol_from_drive(baselineSymbol, function="DAILY", folderPath=folderPath)
-	baseline = baseline[startTestDate:endTestDate]
+	baseline_symbol = command_parser.get_generic_from_prompts(prompts, query="-baseline", default="^GSPC", req=False)
 	## Handles the lower bound for quantiles
-	lowQuant = 0.2
-	if "-lowQuant" in prompts: lowQuant = float(prompts[prompts.index("-lowQuant") + 1])
+	low_quant = float(command_parser.get_generic_from_prompts(prompts, query="-lowQuant", default=0.2, req=False))
 	## Handles the higher bound for quantiles
-	highQuant = 0.8
-	if "-highQuant" in prompts: highQuant = float(prompts[prompts.index("-highQuant") + 1])
+	high_quant = float(command_parser.get_generic_from_prompts(prompts, query="-highQuant", default=0.8, req=False))
 	## Handles whether one wants to switch the long and short positions
-	switchpos = ("-switchPos" in prompts)
+	switchpos = "-switchPos" in prompts
 	## Handles whether one wants to show the plot
-	showplt = ("-showPlot" in prompts)
+	showplt = "-showPlot" in prompts
 	## Handles the file name of plot
-	plotName = "STRATEGY_01"
-	if "-plotName" in prompts: plotName = prompts[prompts.index("-plotName") + 1]
-	## Handles how many shares to include in the portfolio
-	numShares = 1
-	if "-numShares" in prompts: numShares = int(prompts[prompts.index("-numShares") + 1])
+	plot_name = command_parser.get_generic_from_prompts(prompts, query="-plotName", default="STRATEGY_01", req=False)
+	## Handles how many shares for each trade
+	num_shares = int(command_parser.get_generic_from_prompts(prompts, query="-numShares", default=1, req=False))
+	# Sets up baseline index/asset
+	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function="DAILY", folderPath=folder_path)
+	baseline = baseline[start_test_date:end_test_date]
 	# Sets up the portfolio
-	longpos, shortpos = asset_ranker(tickerUniverse, startRankDate, endRankDate, folderPath, lowQuant, highQuant, switchpos=switchpos)
-	portfolio = portfolio_generator(longpos, shortpos, startTestDate, endTestDate, folderPath=folderPath, baseline=baselineSymbol)
+	longpos, shortpos = asset_ranker(ticker_universe, start_rank_date, end_rank_date, folder_path, low_quant, high_quant, switchpos=switchpos)
+	portfolio = portfolio_generator(longpos, shortpos, start_test_date, end_test_date, folderPath=folder_path, baseline=baseline_symbol)
 	startValue, endValue, returns, baseReturns = return_calculator.portfolio_valuation(portfolio, baseline)
 	# Spits out some numerical info about the portfolio performance
 	print("\nStarting portfolio value: %f" % startValue)
 	print("Ending portfolio value: %f" % endValue)
 	print("Return on this strategy: %f" % returns)
-	print("Return on {0} baseline: {1}".format(baselineSymbol, baseReturns))
+	print("Return on {0} baseline: {1}".format(baseline_symbol, baseReturns))
 	print("Sharpe ratio: %f" % return_calculator.sharpe_ratio(portfolio))
 	# Plots the portfolio
 	port_price = pd.concat([portfolio.close, baseline.close], axis=1)
 	port_price.columns = ['portfolio', 'baseline']
-	plotter.price_plot(port_price, symbol=plotName, folderpath=folderPath, subplot=[True,True], returns=[True,True], showPlot=showplt)
+	plotter.price_plot(port_price, symbol=plot_name, folderpath=folder_path, subplot=[True,True], returns=[True,True], showPlot=showplt)
+
 if __name__ == "__main__":
 	main()
