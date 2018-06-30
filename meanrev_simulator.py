@@ -1,6 +1,6 @@
-## This code models a very basic mean reversion strategy, using daily closing prices of one stock. 
+## This code models two strategies: a crossover and a zscore distance. Both rely on mean reversion principles.
 ## Author: Miguel Opeña
-## Version: 3.2.6
+## Version: 3.2.7
 
 import pandas as pd
 import sys
