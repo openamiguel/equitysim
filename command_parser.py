@@ -1,10 +1,16 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.2.0
 
 from warnings import warn
 
-def get_generic_from_prompts(prompts, query, default, req=True):
+import ticker_universe
+
+def get_generic_from_prompts(prompts, query, default="", req=True):
+	"""	Parses command prompt for a selection of ticker universe (tickerverse).
+		Inputs: command prompts, name of query in prompts, default value of query (if applicable), check if query is required (default: yes)
+		Outputs: ticker universe and name
+	"""
 	if query not in prompts:
 		if req:
 			message = "Required prompt {} not found. Please try again.".format(query)
