@@ -1,7 +1,11 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.0.0
+## Version: 1.0.1
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def crossover(trend_baseline, switch=False):
 	"""	Simulates a crossover strategy for a trend and baseline. 
@@ -21,16 +25,19 @@ def crossover(trend_baseline, switch=False):
 		current_base = trend_baseline.baseline[date]
 		# Sells long if trend crosses below baseline
 		if current_trend < current_base and was_greater: 
+			logger.debug('Date:{}\tLONG position added.'.format(date))
 			was_greater = not was_greater
 			# 1 is the code for long positions
 			trades[date] = 1
 		# Sells short if trend crosses above baseline
 		elif current_trend > current_base and not was_greater:
+			logger.debug('Date:{}\tSHORT position added.'.format(date))
 			was_greater = not was_greater
 			# -1 is the code for short positions
 			trades[date] = -1
 		# Otherwise, hold all positions
 		else:
+			logger.debug('Date:{}\tAll positions held.'.format(date))
 			continue
 	# If prompted to switch, the long and short positions are safely switched
 	if switch:
