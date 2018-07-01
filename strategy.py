@@ -1,7 +1,7 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.1.1
+## Version: 1.1.2
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +26,7 @@ def crossover(trend_baseline, switch=False):
 	for date in timestamp:
 		current_trend = trend_baseline.trend[date]
 		current_base = trend_baseline.baseline[date]
-		# Sells long if trend crosses below baseline
+		# Buys long if trend crosses below baseline
 		if current_trend < current_base and was_greater: 
 			logger.debug('Date:{}\tLONG position added.'.format(date))
 			was_greater = not was_greater
@@ -51,7 +51,7 @@ def crossover(trend_baseline, switch=False):
 
 def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 	"""	Simulates a zscore proximity strategy for a trend and baseline. 
-		Sells if trend crosses far below baseline, buys if trend crosses far above baseline, unloads if insufficient distance. 
+		Sells if trend is too far above baseline, buys if trend is too far below baseline, unloads if insufficient distance. 
 		Inputs: price data with trend and baseline, list of z-scores to use as buy, sell, and clear signals, command to switch buy/sell signals
 		Outputs: dataframe of timestamp index and trade signals
 	"""
@@ -60,13 +60,31 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 	# Initializes the portfolio positions dataframe
 	trades = pd.DataFrame(0, index=timestamp, columns=['trades'])
 	# Initialize the z-score data
-	zscores = (trend_baseline.trend - trend_baseline.baseline) / trend_baseline.trend.std()
-	print(zscores)
+	zscore_running = (trend_baseline.trend - trend_baseline.baseline) / trend_baseline.trend.std()
+	print(zscore_running)
 	# Start iterating through the trend-baseline dataframe
 	for date in timestamp:
 		current_trend = trend_baseline.trend[date]
 		current_base = trend_baseline.baseline[date]
-		current_zscore = zscores[date]
+		current_zscore = zscore_running[date]
+		# Buys long if trend crosses below baseline
+		if current_zscore < zscores[0]:
+			logger.debug('Date:{}\tLONG position added.'.format(date))
+			# 1 is the code for long positions
+			trades[date] = 1
+		# Sells short if trend crosses above baseline
+		elif current_zscore > zscores[-1]: 
+			logger.debug('Date:{}\tSHORT position added.'.format(date))
+			# 1 is the code for long positions
+			trades[date] = -1
+		# Clears positions if trend is too close to baseline
+		elif abs(current_zscore) < zscores[1]:
+			logger.debug('Date:{}\tCLEAR positions.'.format(date))
+			trades[date] = 2
+		# Otherwise, hold all positions
+		else:
+			logger.debug('Date:{}\tAll positions held.'.format(date))
+			continue
 	# If prompted to switch, the long and short positions are safely switched
 	if switch:
 		trades.replace(-1, 7, inplace=True)
@@ -76,7 +94,9 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 
 def main():
 	symbol="AAPL"
+	print(symbol)
 	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+	print(folder)
 	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
 	trend = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=30)
 	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
