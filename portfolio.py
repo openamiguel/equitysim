@@ -1,16 +1,12 @@
 ## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.3.0
+## Version: 1.4.1
 
 import logging
 from math import floor
 import pandas as pd
 
-import single_download
-import strategy
-import technicals_calculator
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1, transaction=7):
@@ -74,21 +70,3 @@ def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1, transa
 		logger.info('Date: {0}\tPortfolio value at ${1}.'.format(date, portfolio.price[date]))
 		last_date = date
 	return portfolio
-
-def main():
-	symbol="AAPL"
-	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	start_date = "2010-01-01"
-	end_date = "2018-06-28"
-	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
-	tick_data = tick_data[start_date:end_date]
-	prices = pd.concat([tick_data.close], axis=1)
-	trend = technicals_calculator.simple_moving_average(tick_data.close, num_periods=30)
-	baseline = technicals_calculator.simple_moving_average(tick_data.close, num_periods=90)
-	trend_baseline = pd.concat([trend, baseline], axis=1)
-	trend_baseline.columns = ['trend','baseline']
-	trades = strategy.zscore_distance(trend_baseline)
-	portfolio = apply_trades(prices, trades)
-
-if __name__ == "__main__":
-	main()
