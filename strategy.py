@@ -1,7 +1,7 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.1.4
+## Version: 1.2.0
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -9,6 +9,21 @@ logger = logging.getLogger(__name__)
 
 import single_download
 import technicals_calculator
+
+def hold_clear(trend_baseline, switch=False):
+	"""	Simulates a very basic strategy: 
+		Inputs: trend and baseline data, order to switch start from long to short
+	"""
+	timestamp = trend_baseline.index
+	# Initializes the portfolio trades dataframe
+	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
+	# Gets the second date in the input data and fills it with long/short
+	second_date = timestamp[1]
+	trades[second_date] = -1 if switch else 1
+	# Gets the last date in the input data and fills it with clear
+	last_date = timestamp[-1]
+	trades[last_date] = 'X'
+	return trades
 
 def crossover(trend_baseline, switch=False):
 	"""	Simulates a crossover strategy for a trend and baseline. 
@@ -18,7 +33,7 @@ def crossover(trend_baseline, switch=False):
 	"""
 	# Saves timestamp to give the portfolio output an index
 	timestamp = trend_baseline.index
-	# Initializes the portfolio positions dataframe
+	# Initializes the portfolio trades dataframe
 	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Initialize boolean check variable
 	was_greater = (trend_baseline.trend[start_date] > trend_baseline.baseline[start_date])
