@@ -1,6 +1,6 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.3.0
+## Version: 1.3.1
 
 import logging
 import numpy as np
@@ -56,13 +56,13 @@ def main():
 	portfolio_baseline = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folder_path)
 	portfolio_baseline = portfolio_baseline[start_date:end_date]
 
-	start_value, end_value, returns, baseline_returns = returns_valuation(port, portfolio_baseline)
+	start_value, end_value, returns, baseline_returns = returns_valuation(port.price, portfolio_baseline.close)
 
-	logger.info("\nStarting portfolio value: {}".format(start_value))
+	logger.info("Starting portfolio value: {}".format(start_value))
 	logger.info("Ending portfolio value: {}".format(end_value))
 	logger.info("Return on this strategy: {}".format(returns))
 	logger.info("Return on S&P500 index: {}".format(baseline_returns))
-	logger.info("Sharpe ratio: {}".format(sharpe_ratio(port)))
+	logger.info("Sharpe ratio: {}".format(sharpe_ratio(port.price)))
 
 if __name__ == "__main__":
 	main()
