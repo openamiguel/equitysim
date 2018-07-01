@@ -1,7 +1,7 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.1.3
+## Version: 1.1.4
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +19,7 @@ def crossover(trend_baseline, switch=False):
 	# Saves timestamp to give the portfolio output an index
 	timestamp = trend_baseline.index
 	# Initializes the portfolio positions dataframe
-	trades = pd.DataFrame(0, index=timestamp, columns=['trades'])
+	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Initialize boolean check variable
 	was_greater = (trend_baseline.trend[start_date] > trend_baseline.baseline[start_date])
 	# Start iterating through the trend-baseline dataframe
@@ -58,7 +58,7 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 	# Saves timestamp to give the portfolio output an index
 	timestamp = trend_baseline.index
 	# Initializes the portfolio positions dataframe
-	trades = pd.DataFrame(0, index=timestamp, columns=['trades'])
+	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Initialize the z-score data
 	zscore_running = (trend_baseline.trend - trend_baseline.baseline) / trend_baseline.trend.std()
 	print(zscore_running)
