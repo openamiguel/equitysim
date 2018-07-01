@@ -1,7 +1,7 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.1.2
+## Version: 1.1.3
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -75,12 +75,13 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 		# Sells short if trend crosses above baseline
 		elif current_zscore > zscores[-1]: 
 			logger.debug('Date:{}\tSHORT position added.'.format(date))
-			# 1 is the code for long positions
+			# -1 is the code for short positions
 			trades[date] = -1
 		# Clears positions if trend is too close to baseline
 		elif abs(current_zscore) < zscores[1]:
 			logger.debug('Date:{}\tCLEAR positions.'.format(date))
-			trades[date] = 2
+			# 'X' is the code to clear positions
+			trades[date] = 'X'
 		# Otherwise, hold all positions
 		else:
 			logger.debug('Date:{}\tAll positions held.'.format(date))
