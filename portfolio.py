@@ -1,7 +1,6 @@
-## This code uses trading signals from 
-## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
+## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.2.4
+## Version: 1.2.5
 
 import logging
 from math import floor
@@ -16,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1):
 	"""	Applies a set of trades to a set of assets to calculate portfolio value over time
-		Inputs: dataframe of prices for multiple symbols, dataframe of trade signals, initial value to invest in 
+		Inputs: dataframe of prices for multiple symbols, dataframe of trade signals, initial value to invest in, 
+			proportion of initial value to seed the portfolio with, number of trades for each transaction
 	"""
 	# Saves timestamp to give the portfolio output an index
 	timestamp = prices.index
