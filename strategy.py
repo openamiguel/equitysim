@@ -1,14 +1,13 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.2.3
+## Version: 1.2.4
 
 import logging
 import pandas as pd
 
 import single_download
 import technicals_calculator
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -123,8 +122,10 @@ def main():
 	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
 	trend_baseline = pd.concat([trend, baseline], axis=1)
 	trend_baseline.columns = ['trend','baseline']
-	trades = crossover(trend_baseline)
-	print(trades)
+	trades = zscore_distance(trend_baseline)
+	print(trades[trades.all_trades == 1])
+	print(trades[trades.all_trades == -1])
+	print(trades[trades.all_trades == 'X'])
 
 if __name__ == "__main__":
 	main()
