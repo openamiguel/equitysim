@@ -1,6 +1,6 @@
 ## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.2.5
+## Version: 1.3.0
 
 import logging
 from math import floor
@@ -10,13 +10,14 @@ import single_download
 import strategy
 import technicals_calculator
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1):
+def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1, transaction=7):
 	"""	Applies a set of trades to a set of assets to calculate portfolio value over time
 		Inputs: dataframe of prices for multiple symbols, dataframe of trade signals, initial value to invest in, 
-			proportion of initial value to seed the portfolio with, number of trades for each transaction
+			proportion of initial value to seed the portfolio with, number of trades for each transaction, 
+			transaction cost (same currency units as initialval) for every buy and sell
 	"""
 	# Saves timestamp to give the portfolio output an index
 	timestamp = prices.index
@@ -42,7 +43,7 @@ def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1):
 		current_trade = trades.all_trades[date]
 		# Buys positions, reducing portfolio value
 		if current_trade == 1:
-			portfolio.price[date] = portfolio.price[last_date] - current_price * numtrades
+			portfolio.price[date] = portfolio.price[last_date] - current_price * numtrades - transaction
 			numpositions += numtrades
 			logger.debug('Date: {0}\tPortfolio modified by {1} LONG positions.'.format(date, numtrades))
 		# Holds positions, leaving portfolio value unchanged
@@ -51,16 +52,17 @@ def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1):
 			logger.debug('Date: {0}\tPortfolio positions held.'.format(date))
 		# Sells positions, increasing portfolio value
 		elif current_trade == -1:
-			portfolio.price[date] = portfolio.price[last_date] + current_price * numtrades
+			portfolio.price[date] = portfolio.price[last_date] + current_price * numtrades - transaction
 			numpositions -= numtrades
 			logger.debug('Date: {0}\tPortfolio modified by {1} SHORT positions.'.format(date, numtrades))
 		# Clears portfolio positions
 		elif current_trade == 'X':
-			portfolio.price[date] = portfolio.price[last_date] + current_price * numpositions
-			if numpositions > 0:
+			portfolio.price[date] = portfolio.price[last_date] + current_price * numpositions 
+			if numpositions == 0:
 				logger.debug('Date: {0}\tNo portfolio positions to clear.'.format(date))
 			else:
 				logger.debug('Date: {0}\tPortfolio cleared {1} positions.'.format(date, numpositions))
+				portfolio.price[date] = portfolio.price[date] - transaction
 			numpositions = 0
 		# No other values are currently permitted
 		else:
@@ -76,13 +78,13 @@ def apply_trades(prices, trades, initialval=10000, seed=0.1, numtrades=1):
 def main():
 	symbol="AAPL"
 	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	start_date = "2014-01-01"
+	start_date = "2010-01-01"
 	end_date = "2018-06-28"
 	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
 	tick_data = tick_data[start_date:end_date]
 	prices = pd.concat([tick_data.close], axis=1)
-	trend = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=30)
-	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
+	trend = technicals_calculator.simple_moving_average(tick_data.close, num_periods=30)
+	baseline = technicals_calculator.simple_moving_average(tick_data.close, num_periods=90)
 	trend_baseline = pd.concat([trend, baseline], axis=1)
 	trend_baseline.columns = ['trend','baseline']
 	trades = strategy.zscore_distance(trend_baseline)
