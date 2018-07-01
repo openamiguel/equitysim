@@ -37,7 +37,20 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-apiKey`: AlphaVantage API key (user-specific)
     
 ### simulator suite
+- **strategy.py**
+  - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
+  - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
+  - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
+- **portfolio.py**
+  - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
+- **performance.py**
+  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
+  - `returns_portfolio` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
+  - command prompt options:
+    - *none* (does not need any)
 - **ranking_simulator.py**
+  - _WARNING_: this code will soon be merged with strategy-portfolio-performance and deleted
   - `asset_ranker` returns two segments of a ticker universe (long positions and short positions) based on ranking metric
   - `portfolio_generator` builds a portfolio around the aforementioned long and short positions
   - **note:** requires that one download files using the code first; this will not read from AlphaVantage
@@ -55,21 +68,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-showPlot`: option to show the portfolio plot
     - `-plotName`: name of the plot image file
     - `-numShares`: number of shares to trade at each transaction (long or short)
-- **meanrev_simulator.py**
-  - `crossover` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
-  - `zscore_distance` emulates a strategy where buy/sell signals occur when one trend (ex. asset price) deviates too far from a baseline trend (ex. 90-day moving average), as measured by z-scores
-  - **note:** requires that one download files using the code first; this will not read from AlphaVantage
-  - command prompt options: 
-    - `-symbol`: symbol of the asset to trade
-    - `-folderPath`: location of folder to look for files
-    - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
-    - `-startDate`: start date of trading given stock
-    - `-endDate`: end date of aforementioned
-    - `-showPlot`: option to show the portfolio plot
-    - `-plotName`: name of the plot image file
-    - `-numShares`: number of shares to trade at each transaction (long or short)
-    - `-startValue`: initial value of portfolio (USD)
-    - `-switch`: option to switch the buy and sell signals
 
 ### assorted calculators and misc. programs
 - **command_parser.py**
@@ -87,9 +85,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
-  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
-    - proxy for risk-free rate is the 3-month US T-bill
-  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
 - **plotter.py**
