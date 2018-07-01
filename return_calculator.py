@@ -1,6 +1,6 @@
-## This code computes a few basic metrics of returns and performance. 
+## This code computes a few basic metrics of returns. 
 ## Author: Miguel Opeña
-## Version: 3.3.0
+## Version: 3.4.0
 
 import numpy as np
 import pandas as pd
@@ -19,16 +19,3 @@ def overall_returns(prices):
 		Outputs: return over the given timespan
 	"""
 	return 100 * (prices[-1] - prices[0]) / abs(prices[0])
-
-def portfolio_valuation(portfolio, baseline):
-	"""	Values the aforementioned portfolio in terms of CLOSING PRICE against a baseline. 
-		Inputs: dataframe of portfolio price over time, dataframe of baseline price over time
-		Outputs: the portfolio's initial value, final value, overall returns; the baseline's returns
-	"""
-	# Calculate start value, end value, and returns on portfolio
-	initialValue = portfolio.close[0]
-	finalValue = portfolio.close[-1]
-	returns = overall_returns(portfolio.close.values.tolist())
-	baseReturns = overall_returns(baseline.close.values.tolist())
-	# Returns all four variables
-	return initialValue, finalValue, returns, baseReturns
