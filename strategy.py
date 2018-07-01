@@ -1,22 +1,25 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.0.1
+## Version: 1.1.1
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import single_download
+import technicals_calculator
+
 def crossover(trend_baseline, switch=False):
 	"""	Simulates a crossover strategy for a trend and baseline. 
 		Sells if trend crosses down below baseline, buys if trend crosses up above baseline. 
 		Inputs: trend and baseline data (price data unnecessary for this function), command to switch buy/sell signals
-		Outputs: dataframe of timestamp index and price, dates to go long, dates to go short
+		Outputs: dataframe of timestamp index and trade signals
 	"""
 	# Saves timestamp to give the portfolio output an index
 	timestamp = trend_baseline.index
 	# Initializes the portfolio positions dataframe
-	trades = pd.DataFrame(0, index=timestamp, columns['trade'])
+	trades = pd.DataFrame(0, index=timestamp, columns=['trades'])
 	# Initialize boolean check variable
 	was_greater = (trend_baseline.trend[start_date] > trend_baseline.baseline[start_date])
 	# Start iterating through the trend-baseline dataframe
@@ -45,3 +48,42 @@ def crossover(trend_baseline, switch=False):
 		trades.replace(1, -1, inplace=True)
 		trades.replace(7, 1, inplace=True)
 	return trades
+
+def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
+	"""	Simulates a zscore proximity strategy for a trend and baseline. 
+		Sells if trend crosses far below baseline, buys if trend crosses far above baseline, unloads if insufficient distance. 
+		Inputs: price data with trend and baseline, list of z-scores to use as buy, sell, and clear signals, command to switch buy/sell signals
+		Outputs: dataframe of timestamp index and trade signals
+	"""
+	# Saves timestamp to give the portfolio output an index
+	timestamp = trend_baseline.index
+	# Initializes the portfolio positions dataframe
+	trades = pd.DataFrame(0, index=timestamp, columns=['trades'])
+	# Initialize the z-score data
+	zscores = (trend_baseline.trend - trend_baseline.baseline) / trend_baseline.trend.std()
+	print(zscores)
+	# Start iterating through the trend-baseline dataframe
+	for date in timestamp:
+		current_trend = trend_baseline.trend[date]
+		current_base = trend_baseline.baseline[date]
+		current_zscore = zscores[date]
+	# If prompted to switch, the long and short positions are safely switched
+	if switch:
+		trades.replace(-1, 7, inplace=True)
+		trades.replace(1, -1, inplace=True)
+		trades.replace(7, 1, inplace=True)
+	return trades
+
+def main():
+	symbol="AAPL"
+	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+	trend = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=30)
+	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
+	trend_baseline = pd.concat([trend, baseline], axis=1)
+	trend_baseline.columns = ['trend','baseline']
+	trades = zscore_distance(trend_baseline)
+	print(trades)
+
+if __name__ == "__main__":
+	main()
