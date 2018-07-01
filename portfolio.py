@@ -1,7 +1,7 @@
 ## This code uses trading signals from 
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import logging
 import pandas as pd
@@ -35,22 +35,35 @@ def apply_trades(prices, trades, injection=1000000, numtrades=1):
 	for date in timestamp[1:]:
 		current_price = prices.all_prices[date]
 		current_trade = trades.all_trades[date]
+		# Checks if any assets left to trade
+		if numtrades * current_price > portfolio.price[last_date]:
+			logger.error("Error: Portfolio has run out of funds at {}.".format(date))
+			return None
 		# Buys positions, reducing portfolio value
 		if current_trade == 1:
 			portfolio.price[date] = portfolio.price[last_date] - current_price * numtrades
 			numpositions += numtrades
+			logger.debug('Date: {0}\tPortfolio modified by {1} LONG positions.'.format(date, numtrades))
 		# Holds positions, leaving portfolio value unchanged
 		elif current_trade == 0:
 			portfolio.price[date] = portfolio.price[last_date]
+			logger.debug('Date: {0}\tPortfolio positions held.'.format(date))
 		# Sells positions, increasing portfolio value
 		elif current_trade == -1:
 			portfolio.price[date] = portfolio.price[last_date] + current_price * numtrades
 			numpositions -= numtrades
+			logger.debug('Date: {0}\tPortfolio modified by {1} SHORT positions.'.format(date, numtrades))
 		# Clears portfolio positions
 		elif current_trade == 'X':
-			eee
+			portfolio.price[date] = portfolio.price[last_date] + current_price * numpositions
+			if numpositions > 0:
+				logger.debug('Date: {0}\tNo portfolio positions to clear.'.format(date))
+			else:
+				logger.debug('Date: {0}\tPortfolio cleared {1} positions.'.format(date, numpositions))
 			numpositions = 0
 		# No other values are currently permitted
 		else:
 			logger.error("Error: bad trading signal found at date {0}".format(date))
+		logger.info('Date: {0}\tPortfolio value at ${1}.'.format(date, portfolio.price[date]))
 		last_date = date
+	return portfolio
