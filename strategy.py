@@ -1,14 +1,17 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.2.0
+## Version: 1.2.3
 
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import pandas as pd
 
 import single_download
 import technicals_calculator
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def hold_clear(trend_baseline, switch=False):
 	"""	Simulates a very basic strategy: 
@@ -19,10 +22,10 @@ def hold_clear(trend_baseline, switch=False):
 	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Gets the second date in the input data and fills it with long/short
 	second_date = timestamp[1]
-	trades[second_date] = -1 if switch else 1
+	trades.all_trades[second_date] = -1 if switch else 1
 	# Gets the last date in the input data and fills it with clear
 	last_date = timestamp[-1]
-	trades[last_date] = 'X'
+	trades.all_trades[last_date] = 'X'
 	return trades
 
 def crossover(trend_baseline, switch=False):
@@ -33,6 +36,8 @@ def crossover(trend_baseline, switch=False):
 	"""
 	# Saves timestamp to give the portfolio output an index
 	timestamp = trend_baseline.index
+	# Saves start date as variable
+	start_date = timestamp[0]
 	# Initializes the portfolio trades dataframe
 	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Initialize boolean check variable
@@ -46,13 +51,13 @@ def crossover(trend_baseline, switch=False):
 			logger.debug('Date:{}\tLONG position added.'.format(date))
 			was_greater = not was_greater
 			# 1 is the code for long positions
-			trades[date] = 1
+			trades.all_trades[date] = 1
 		# Sells short if trend crosses above baseline
 		elif current_trend > current_base and not was_greater:
 			logger.debug('Date:{}\tSHORT position added.'.format(date))
 			was_greater = not was_greater
 			# -1 is the code for short positions
-			trades[date] = -1
+			trades.all_trades[date] = -1
 		# Otherwise, hold all positions
 		else:
 			logger.debug('Date:{}\tAll positions held.'.format(date))
@@ -76,7 +81,6 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 	trades = pd.DataFrame(0, index=timestamp, columns=['all_trades'])
 	# Initialize the z-score data
 	zscore_running = (trend_baseline.trend - trend_baseline.baseline) / trend_baseline.trend.std()
-	print(zscore_running)
 	# Start iterating through the trend-baseline dataframe
 	for date in timestamp:
 		current_trend = trend_baseline.trend[date]
@@ -86,17 +90,17 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 		if current_zscore < zscores[0]:
 			logger.debug('Date:{}\tLONG position added.'.format(date))
 			# 1 is the code for long positions
-			trades[date] = 1
+			trades.all_trades[date] = 1
 		# Sells short if trend crosses above baseline
 		elif current_zscore > zscores[-1]: 
 			logger.debug('Date:{}\tSHORT position added.'.format(date))
 			# -1 is the code for short positions
-			trades[date] = -1
+			trades.all_trades[date] = -1
 		# Clears positions if trend is too close to baseline
 		elif abs(current_zscore) < zscores[1]:
 			logger.debug('Date:{}\tCLEAR positions.'.format(date))
 			# 'X' is the code to clear positions
-			trades[date] = 'X'
+			trades.all_trades[date] = 'X'
 		# Otherwise, hold all positions
 		else:
 			logger.debug('Date:{}\tAll positions held.'.format(date))
@@ -110,15 +114,16 @@ def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 
 def main():
 	symbol="AAPL"
-	print(symbol)
 	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-	print(folder)
+	start_date = "2014-01-01"
+	end_date = "2018-06-28"
 	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+	tick_data =tick_data[start_date:end_date]
 	trend = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=30)
 	baseline = technicals_calculator.exponential_moving_average(tick_data.close, num_periods=90)
 	trend_baseline = pd.concat([trend, baseline], axis=1)
 	trend_baseline.columns = ['trend','baseline']
-	trades = zscore_distance(trend_baseline)
+	trades = crossover(trend_baseline)
 	print(trades)
 
 if __name__ == "__main__":
