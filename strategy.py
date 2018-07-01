@@ -1,13 +1,12 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.3.0
+## Version: 1.3.1
 
 import logging
 import pandas as pd
 
 import single_download
-import technicals_calculator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
