@@ -1,12 +1,13 @@
 ## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.5.4
+## Version: 1.5.5
 
 import logging
 from math import floor
 import pandas as pd
 
 import performance
+import plotter
 import return_calculator
 import single_download
 import strategy
@@ -120,7 +121,7 @@ def main():
 	prices = prices[start_date:end_date]
 	prices.columns  = tickerverse
 	long_prices, short_prices = asset_ranker(prices, ranking_method=return_calculator.overall_returns)
-	port = apply_trades(long_prices, strategy.hold_clear(long_prices)) + apply_trades(short_prices, strategy.hold_clear(short_prices, switch=True))
+	port = apply_trades(long_prices, strategy.hold_clear(long_prices, switch=True)) + apply_trades(short_prices, strategy.hold_clear(short_prices))
 
 	portfolio_baseline = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folder_path)
 	portfolio_baseline = portfolio_baseline[~portfolio_baseline.index.duplicated(keep='first')]
@@ -133,6 +134,12 @@ def main():
 	logger.info("Return on this strategy: {}".format(returns))
 	logger.info("Return on S&P500 index: {}".format(baseline_returns))
 	logger.info("Sharpe ratio: {}".format(performance.sharpe_ratio(port.price)))
+
+	# Plots the portfolio
+	plot_name = "SNP500Ranking_New_01"
+	port_price = pd.concat([port.price, portfolio_baseline.close], axis=1)
+	port_price.columns = ['portfolio', 'baseline']
+	plotter.price_plot(port_price, symbol=plot_name, folderpath=folder_path, subplot=[True,True], returns=[True,True], showPlot=True)
 
 if __name__ == "__main__":
 	main()
