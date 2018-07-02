@@ -37,39 +37,19 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-apiKey`: AlphaVantage API key (user-specific)
     
 ### simulator suite
-- **ranking_simulator.py**
-  - `asset_ranker` returns two segments of a ticker universe (long positions and short positions) based on ranking metric
-  - `portfolio_generator` builds a portfolio around the aforementioned long and short positions
-  - **note:** requires that one download files using the code first; this will not read from AlphaVantage
+- **strategy.py**
+  - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
+  - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
+  - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
+- **portfolio.py**
+  - `asset_ranker` ranks a group of assets based on a certain criterion, choosing which ones should be bought long or sold short
+  - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
+- **performance.py**
+  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
+  - `returns_portfolio` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
-    - `-tickerUniverse`: collection of tickers to rank
-    - `-folderPath`: location of folder to look for files
-    - `-baseline`: asset or index (typically latter) to use as performance baseline
-    - `-startRankDate`: start date of data to generate ranking with
-    - `-endRankDate`: end date of aforementioned
-    - `-startTestDate`: start date of trading the ranking portfolio
-    - `-endTestDate`: end date of aforementioned
-    - `-lowQuant`: lower cutoff for the quantiles
-    - `-highQuant`: higher cutoff for the quantiles
-    - `-switchPos`: option to swap the long and short portfolios
-    - `-showPlot`: option to show the portfolio plot
-    - `-plotName`: name of the plot image file
-    - `-numShares`: number of shares to trade at each transaction (long or short)
-- **meanrev_simulator.py**
-  - `crossover` emulates a strategy where buy/sell signals occur when one trend (ex. 30-day moving average) crosses a baseline trend (ex. 90-day moving average)
-  - `zscore_distance` emulates a strategy where buy/sell signals occur when one trend (ex. asset price) deviates too far from a baseline trend (ex. 90-day moving average), as measured by z-scores
-  - **note:** requires that one download files using the code first; this will not read from AlphaVantage
-  - command prompt options: 
-    - `-symbol`: symbol of the asset to trade
-    - `-folderPath`: location of folder to look for files
-    - `-baseline`: asset or index (typically latter) to use as performance baseline (default: S&P500 index)
-    - `-startDate`: start date of trading given stock
-    - `-endDate`: end date of aforementioned
-    - `-showPlot`: option to show the portfolio plot
-    - `-plotName`: name of the plot image file
-    - `-numShares`: number of shares to trade at each transaction (long or short)
-    - `-startValue`: initial value of portfolio (USD)
-    - `-switch`: option to switch the buy and sell signals
+    - *none* (does not need any)
 
 ### assorted calculators and misc. programs
 - **command_parser.py**
@@ -87,9 +67,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
-  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
-    - proxy for risk-free rate is the 3-month US T-bill
-  - `portfolio_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
 - **plotter.py**
