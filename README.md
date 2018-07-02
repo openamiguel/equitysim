@@ -42,6 +42,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
   - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
 - **portfolio.py**
+  - `asset_ranker` ranks a group of assets based on a certain criterion, choosing which ones should be bought long or sold short
   - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
 - **performance.py**
   - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
@@ -49,25 +50,6 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `returns_portfolio` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
   - command prompt options:
     - *none* (does not need any)
-- **ranking_simulator.py**
-  - _WARNING_: this code will soon be merged with strategy-portfolio-performance and deleted
-  - `asset_ranker` returns two segments of a ticker universe (long positions and short positions) based on ranking metric
-  - `portfolio_generator` builds a portfolio around the aforementioned long and short positions
-  - **note:** requires that one download files using the code first; this will not read from AlphaVantage
-  - command prompt options:
-    - `-tickerUniverse`: collection of tickers to rank
-    - `-folderPath`: location of folder to look for files
-    - `-baseline`: asset or index (typically latter) to use as performance baseline
-    - `-startRankDate`: start date of data to generate ranking with
-    - `-endRankDate`: end date of aforementioned
-    - `-startTestDate`: start date of trading the ranking portfolio
-    - `-endTestDate`: end date of aforementioned
-    - `-lowQuant`: lower cutoff for the quantiles
-    - `-highQuant`: higher cutoff for the quantiles
-    - `-switchPos`: option to swap the long and short portfolios
-    - `-showPlot`: option to show the portfolio plot
-    - `-plotName`: name of the plot image file
-    - `-numShares`: number of shares to trade at each transaction (long or short)
 
 ### assorted calculators and misc. programs
 - **command_parser.py**
