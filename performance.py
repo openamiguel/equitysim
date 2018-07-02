@@ -1,11 +1,12 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.3.1
+## Version: 1.3.2
 
 import logging
 import numpy as np
 import pandas as pd
 
+import plotter
 import portfolio
 import return_calculator
 import single_download
@@ -63,6 +64,13 @@ def main():
 	logger.info("Return on this strategy: {}".format(returns))
 	logger.info("Return on S&P500 index: {}".format(baseline_returns))
 	logger.info("Sharpe ratio: {}".format(sharpe_ratio(port.price)))
+
+	# Plots the portfolio
+	plot_name = "Strategy01"
+	port_price = pd.concat([port.price, portfolio_baseline.close], axis=1)
+	port_price.columns = ['portfolio', 'baseline']
+	plotter.price_plot(port_price, symbol=plot_name, folderpath=folder_path, subplot=[True,True], returns=[True,True], showPlot=True)
+
 
 if __name__ == "__main__":
 	main()
