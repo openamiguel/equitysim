@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.2.0
+## Version: 4.2.3
 
 import seaborn as sns
 import sys
@@ -24,11 +24,18 @@ def feature_plot(symbol, folderpath="", savePlot=True, showPlot=False):
 			order to show plot on command line (default: no)
 		Outputs: heatmap of correlations
 	"""
+	# Initializes figure
+	fig = plt.figure(figsize=(12.5, 9.5))
+	plt.gcf().subplots_adjust(bottom=0.25)
+	plt.gcf().subplots_adjust(left=0.2)
+	# Get data from file
 	filePath = folderpath + "/features/{}_Features.csv".format(symbol)
 	features = pd.read_csv(filePath)
 	featCorr = features.corr()
+	# Gives plot a title
+	plt.title(symbol + " features heatmap")
 	# Plot the heatmap of correlations
-	sns.heatmap(featCorr, xticklabels=featCorr.columns.values, yticklabels=featCorr.columns.values, center=0)
+	sns.heatmap(featCorr, xticklabels=featCorr.columns.values, yticklabels=featCorr.columns.values, center=0, linewidths=0.7, cmap="seismic")
 	# If requested, save the file (default: do not save)
 	if savePlot:
 		figFilePath = folderpath + "/images/{}_Features.png".format(symbol)
@@ -36,7 +43,7 @@ def feature_plot(symbol, folderpath="", savePlot=True, showPlot=False):
 	# If requested, show the plot
 	if showPlot:
 		plt.show()
-	plt.close('all')
+	plt.close(fig)
 
 def price_plot(price_with_trends, symbol, subplot, returns, longdates=[], shortdates=[], folderpath="", savePlot=True, showPlot=False):
 	"""	Given a dataframe of price, trend(s), and baseline(s) data, plots the price against trend(s) and baseline(s). 
