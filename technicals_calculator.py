@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 3.1.3
+## Version: 3.1.4
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -644,20 +644,23 @@ def main():
 	intraday = function == "INTRADAY"
 	if intraday:
 		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")
+	## Checks if user wants to plot only, not to process features data
+	plot_only = "-plotOnly" in prompts
 	# Gets the baseline data
 	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function=function, folderPath=folder_path, interval=interval)
 	# Gets the feature data for each one
 	for symbol in ticker_universe:
-		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
-		tick_data = tick_data[start_date:end_date]
-		print("Processing {0} features...".format(symbol))
-		time0 = time.time()
-		price_with_trends = get_features(tick_data, tick_data.close, baseline)
-		time1 = time.time()
-		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
-		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
-		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
-		price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
+		if not plot_only:
+			tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
+			tick_data = tick_data[start_date:end_date]
+			print("Processing {0} features...".format(symbol))
+			time0 = time.time()
+			price_with_trends = get_features(tick_data, tick_data.close, baseline)
+			time1 = time.time()
+			print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
+			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
+			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
 		plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 
 if __name__ == "__main__":
