@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 3.1.2
+## Version: 3.1.3
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -658,6 +658,7 @@ def main():
 		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
 		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
 		price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
+		plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 
 if __name__ == "__main__":
 	main()
