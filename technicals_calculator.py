@@ -1,6 +1,6 @@
 ## This code contains a bunch of code for technical indicators.
 ## Author: Miguel Opeña
-## Version: 3.1.1
+## Version: 3.1.2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -411,7 +411,7 @@ def rel_momentum_index(price, num_periods):
 	return rmi
 
 def rel_strength_index(price):
-	return rel_momentum_index(price, num_periods=1)
+	return rel_momentum_index(price, num_periods=14)
 
 def simple_moving_average(input_values, num_periods=30):
 	"""	Computes the simple moving average (SMA) of a time series over certain timespan.
