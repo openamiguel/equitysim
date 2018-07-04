@@ -1,20 +1,21 @@
 ## This code contains a bunch of code for technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com
 ## Author: Miguel Opeña
-## Version: 3.2.3
+## Version: 3.2.5
 
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import sys
 import time
-from random import sample
 
 import command_parser
 import download
 import plotter
-import ticker_universe
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def aroon(tick_data, num_periods=25):
 	"""	Computes the Aroon indicator of an asset over time. 
@@ -581,7 +582,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['aroonUp25'] = aroon_up
 	price_with_trends['aroonDown25'] = aroon_down
 	price_with_trends['aroonOsc25'] = aroon_oscillator(tick_data)
-	# print(list(price_with_trends.columns.values))
+	logger.debug(list(price_with_trends.columns.values))
 	price_with_trends['averagePrice'] = average_price(tick_data)
 	price_with_trends['ATR14'] = average_true_range(tick_data)
 	lowband, midband, hiband, width = bollinger(tick_data)
@@ -593,7 +594,7 @@ def get_features(tick_data, price, baseline):
 	di_positive, di_negative = directional_index(tick_data, num_periods=30)
 	price_with_trends['DIPLUS_30'] = di_positive
 	price_with_trends['DIMINUS_30'] = di_negative
-	# print(list(price_with_trends.columns.values))
+	logger.debug(list(price_with_trends.columns.values))
 	price_with_trends['DX30'] = directional_movt_index(tick_data, num_periods=30)
 	price_with_trends['ease_of_movt'] = ease_of_movt(tick_data, constant=10000000)
 	price_with_trends['EMA30'] = exponential_moving_average(price)
@@ -609,7 +610,7 @@ def get_features(tick_data, price, baseline):
 	hichannel, lochannel = price_channel(price, num_periods=30)
 	price_with_trends['PriceChannelHigh'] = hichannel
 	price_with_trends['PriceChannelLow'] = lochannel
-	# print(list(price_with_trends.columns.values))
+	logger.debug(list(price_with_trends.columns.values))
 	priceOscVMA, priceOscVMAPct = price_oscillator(price, variable_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscVMA_30_14'] = priceOscVMA
 	price_with_trends['PriceOscVMAPct_30_14'] = priceOscVMAPct
@@ -625,7 +626,7 @@ def get_features(tick_data, price, baseline):
 	priceOscZLEMA, priceOscZLEMAPct = price_oscillator(price, zero_lag_ema, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
 	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
-	# print(list(price_with_trends.columns.values))
+	logger.debug(list(price_with_trends.columns.values))
 	price_with_trends['QstickVMA_30'] = qstick(tick_data, variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = qstick(tick_data, simple_moving_average, num_periods=30)
 	price_with_trends['QstickEMA_30'] = qstick(tick_data, exponential_moving_average, num_periods=30)
@@ -634,7 +635,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['RMI30'] = rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = rel_strength_index(price)
 	price_with_trends['SMA30'] = simple_moving_average(price)
-	# print(list(price_with_trends.columns.values))
+	logger.debug(list(price_with_trends.columns.values))
 	"""
 	fastDVMA, slowDVMA = stochastic_oscillator(price, variable_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscVMA_30'] = fastDVMA
@@ -671,7 +672,7 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol(s) the user wants to process.
-	ticker_universe, name = command_parser.get_tickerverse_from_prompts(prompts)
+	tickerverse, name = command_parser.get_tickerverse_from_prompts(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
 	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
@@ -689,17 +690,17 @@ def main():
 	# Gets the baseline data
 	baseline = download.load_single_drive(baseline_symbol, function=function, interval=interval, folderpath=folder_path)
 	# Gets the feature data for each one
-	for symbol in ticker_universe:
+	for symbol in tickerverse:
 		if plot_only:
 			plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 		else:
 			tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
 			tick_data = tick_data[start_date:end_date]
-			print("Processing {0} features...".format(symbol))
+			logger.info("Processing {0} features...".format(symbol))
 			time0 = time.time()
 			price_with_trends = get_features(tick_data, tick_data.close, baseline)
 			time1 = time.time()
-			print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+			logger.info("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
 			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
 			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
 			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
