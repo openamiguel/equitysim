@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 1.2.1
+## Version: 1.3.0
 
 import pandas as pd
 import time
@@ -74,3 +74,16 @@ def load_single_drive(symbol, function="DAILY", interval="", folderpath="", data
 	tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
 	logger.debug("Data on " + symbol + " successfully retrieved!")
 	return tick_data
+
+def load_separate(tickerverse, api_key, function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
+	""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
+		Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
+			output size (default: full), folder path to write files to (default: empty), output type (default: CSV)
+		Outputs: True if everything works
+	"""
+	for symbol in tickerverse:
+		# Read each symbol and write to file (hence writeFile=True)
+		load_single(symbol, api_key, function=function, interval=interval, output_size=output_size, writefile=True, folderpath=folderpath, datatype=datatype)
+		# Delay prevents HTTP 503 errors
+		time.sleep(DELAY)
+	return True
