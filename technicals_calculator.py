@@ -1,7 +1,7 @@
 ## This code contains a bunch of code for technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com
 ## Author: Miguel Opeña
-## Version: 3.2.0
+## Version: 3.2.1
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -324,7 +324,7 @@ def on_balance_volume(tick_data):
 			obv.OBV[now_date] = obv.OBV[last_date]
 	return obv
 
-def parabolic_sar(tick_data, portfolio_signals, accel_start=0.02, accel_thresh=0.2, accel_step=0.02):
+def parabolic_sar(tick_data, accel_start=0.02, accel_thresh=0.2, accel_step=0.02):
 	"""	Computes the parabolic SAR of an asset over time. 
 		Source: https://www.tradinformed.com/2014/03/24/calculate-psar-indicator-using-excel/
 		Inputs: dataframe with high, low, and closing price over given timespan
@@ -707,3 +707,14 @@ def main():
 
 if __name__ == "__main__":
 	main()
+"""
+symbol = "AMZN"
+folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+start_date = "2015-12-03"
+end_date = "2018-05-29"
+tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+tick_data = tick_data[start_date:end_date]
+trend = parabolic_sar(tick_data)
+price_trend = pd.concat([tick_data.close, trend], axis=1)
+plotter.price_plot(price_trend, symbol, subplot=[True,True], returns=[False,False], folderpath=folder_path, savePlot=True, showPlot=True)
+"""
