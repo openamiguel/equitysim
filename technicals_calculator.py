@@ -1,7 +1,7 @@
 ## This code contains a bunch of code for technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com
 ## Author: Miguel Opeña
-## Version: 3.2.2
+## Version: 3.2.3
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,8 +12,8 @@ import time
 from random import sample
 
 import command_parser
+import download
 import plotter
-import single_download
 import ticker_universe
 
 def aroon(tick_data, num_periods=25):
@@ -683,20 +683,17 @@ def main():
 	## Handles the desired time series function. 
 	function = command_parser.get_generic_from_prompts(prompts, query="-function")
 	## Handles the special case: if INTRADAY selected. 
-	interval = ""
-	intraday = function == "INTRADAY"
-	if intraday:
-		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")
+	interval = command_parser.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
 	## Checks if user wants to plot only, not to process features data
 	plot_only = "-plotOnly" in prompts
 	# Gets the baseline data
-	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function=function, folderPath=folder_path, interval=interval)
+	baseline = download.load_single_drive(baseline_symbol, function=function, interval=interval, folderpath=folder_path)
 	# Gets the feature data for each one
 	for symbol in ticker_universe:
 		if plot_only:
 			plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 		else:
-			tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
+			tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
 			tick_data = tick_data[start_date:end_date]
 			print("Processing {0} features...".format(symbol))
 			time0 = time.time()
@@ -714,7 +711,7 @@ symbol = "AMZN"
 folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
 start_date = "2015-12-03"
 end_date = "2018-05-29"
-tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+tick_data = download.load_single_drive(symbol, folderpath=folder_path)
 tick_data = tick_data[start_date:end_date]
 trend = parabolic_sar(tick_data)
 price_trend = pd.concat([tick_data.close, trend], axis=1)
