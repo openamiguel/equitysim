@@ -7,7 +7,11 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 ## documentation of each file and its functions
 
 ### AlphaVantage data download/update suite
+- **download.py**
+  - `load_single` downloads and processes a single symbol from AlphaVantage
+  - `load_single_drive` downloads and processes a single symbol from local drive
 - **single_download.py**
+  - WARNING: code will be deleted soon
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
   - `fetch_symbol_from_drive` retrieves a single symbol from local drive
   - command prompt options: 
@@ -17,6 +21,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **prelim_download.py**
+  - WARNING: code will be deleted soon
   - `download_separate` pulls data on a ticker universe in the form of separate files, each named after the ticker symbol and the time series function
     - separate files contain as much data as AlphaVantage can offer
   - `download_combined` pulls data on a ticker universe in the form of one combined file, named after the ticker universe and the time series function
