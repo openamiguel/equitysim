@@ -1,6 +1,7 @@
 ## This code contains a bunch of code for technical indicators.
+## Unless otherwise stated, the source for formulas is FMlabs.com
 ## Author: Miguel Opeña
-## Version: 3.1.2
+## Version: 3.2.2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -322,14 +323,55 @@ def on_balance_volume(tick_data):
 		else:
 			obv.OBV[now_date] = obv.OBV[last_date]
 	return obv
-		
 
-"""
-def parabolic_sar(tick_data, portfolio_signals):
-	step = 1
-	acceleration = 0
-	extreme_point = 0
-"""
+def parabolic_sar(tick_data, accel_start=0.02, accel_thresh=0.2, accel_step=0.02):
+	"""	Computes the parabolic SAR of an asset over time. 
+		Source: https://www.tradinformed.com/2014/03/24/calculate-psar-indicator-using-excel/
+		Inputs: dataframe with high, low, and closing price over given timespan
+		Outputs: parabolic SAR over given timespan
+	"""
+	# Initializes timestamp and start date variables
+	timestamp = tick_data.index
+	start_date = timestamp[0]
+	# Initializes the seed values for parabolic SAR
+	accel = accel_start
+	is_falling = True
+	extreme_point = tick_data.low[start_date]
+	initial_psar = 0
+	# Fills PSAR dataframe with seed value
+	psar = pd.DataFrame(index=timestamp, columns=['PSAR'])
+	psar.PSAR[start_date] = tick_data.high[start_date]
+	for i in range(1, len(timestamp)):
+		# Gets the date now, the last date, and the date before that
+		now_date = timestamp[i]
+		last_date = timestamp[i-1]
+		# Safeguard for the first iteration, when i == 1
+		farther_date = timestamp[i-2] if i > 1 else last_date
+		difference = psar.PSAR[last_date] - extreme_point * accel
+		# Saves last extreme point for incrementing accel
+		last_extreme_point = extreme_point
+		# Falling parabolic SAR calculation
+		if is_falling:
+			initial_psar = max(psar.PSAR[last_date] - difference, tick_data.high[last_date], tick_data.high[farther_date])
+			psar.PSAR[now_date] = initial_psar if tick_data.high[now_date] < initial_psar else extreme_point
+			extreme_point = min(extreme_point, tick_data.low[now_date])
+		# Rising parabolic SAR calculation
+		else:
+			initial_psar = max(psar.PSAR[last_date] - difference, tick_data.low[last_date], tick_data.low[farther_date])
+			psar.PSAR[now_date] = initial_psar if tick_data.low[now_date] > initial_psar else extreme_point
+			extreme_point = max(extreme_point, tick_data.high[now_date])
+		# Compares previous and current state of is_falling to increment accel properly
+		last_is_falling = is_falling
+		is_falling = tick_data.close[now_date] > psar.PSAR[now_date]
+		# Conditional updates and checks on accel
+		if last_is_falling == is_falling:
+			if last_extreme_point != extreme_point and accel < accel_thresh:
+				accel = accel + accel_step
+			else:
+				accel = accel_thresh
+		else: 
+			accel = accel_start
+	return psar
 
 def percent_volume_oscillator(volume, num_periods_slow, num_periods_fast):
 	"""	Computes the percent volume oscillator of an asset over time
@@ -562,6 +604,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['medianPrice'] = median_price(tick_data)
 	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = on_balance_volume(tick_data)
+	price_with_trends['PSAR'] = parabolic_sar(tick_data)
 	price_with_trends['PVO_30_14'] = percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
 	hichannel, lochannel = price_channel(price, num_periods=30)
 	price_with_trends['PriceChannelHigh'] = hichannel
@@ -644,20 +687,36 @@ def main():
 	intraday = function == "INTRADAY"
 	if intraday:
 		interval = command_parser.get_generic_from_prompts(prompts, query="-interval")
+	## Checks if user wants to plot only, not to process features data
+	plot_only = "-plotOnly" in prompts
 	# Gets the baseline data
 	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function=function, folderPath=folder_path, interval=interval)
 	# Gets the feature data for each one
 	for symbol in ticker_universe:
-		tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
-		tick_data = tick_data[start_date:end_date]
-		print("Processing {0} features...".format(symbol))
-		time0 = time.time()
-		price_with_trends = get_features(tick_data, tick_data.close, baseline)
-		time1 = time.time()
-		print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
-		# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
-		price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
-		price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
+		if plot_only:
+			plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
+		else:
+			tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
+			tick_data = tick_data[start_date:end_date]
+			print("Processing {0} features...".format(symbol))
+			time0 = time.time()
+			price_with_trends = get_features(tick_data, tick_data.close, baseline)
+			time1 = time.time()
+			print("{0} finished! Time elapsed: {1}\n".format(symbol, time1 - time0))
+			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
+			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
+			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
 
 if __name__ == "__main__":
 	main()
+"""
+symbol = "AMZN"
+folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+start_date = "2015-12-03"
+end_date = "2018-05-29"
+tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+tick_data = tick_data[start_date:end_date]
+trend = parabolic_sar(tick_data)
+price_trend = pd.concat([tick_data.close, trend], axis=1)
+plotter.price_plot(price_trend, symbol, subplot=[True,True], returns=[False,False], folderpath=folder_path, savePlot=True, showPlot=True)
+"""
