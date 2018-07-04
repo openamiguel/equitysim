@@ -1,12 +1,10 @@
 ## This code models assorted strategies and returns a dataframe of trades.
 ## -1 corresponds to sell short, 0 to hold, 1 to buy long, and 'X' to clear all positions
 ## Author: Miguel Opeña
-## Version: 1.3.1
+## Version: 1.3.2
 
 import logging
 import pandas as pd
-
-import single_download
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -66,7 +64,7 @@ def crossover(trend_baseline, switch=False):
 		trades.replace(1, -1, inplace=True)
 		trades.replace(7, 1, inplace=True)
 	return trades
-
+	
 def zscore_distance(trend_baseline, zscores=[-1,0.5,1], switch=False):
 	"""	Simulates a zscore proximity strategy for a trend and baseline. 
 		Sells if trend is too far above baseline, buys if trend is too far below baseline, unloads if insufficient distance. 
