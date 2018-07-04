@@ -1,10 +1,13 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.2.1
+## Version: 1.3.0
 
-from warnings import warn
+import logging
 
 import ticker_universe
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_generic_from_prompts(prompts, query, default="", req=True):
 	"""	Parses command prompt for a selection of ticker universe (tickerverse).
@@ -13,11 +16,10 @@ def get_generic_from_prompts(prompts, query, default="", req=True):
 	"""
 	if query not in prompts:
 		if req:
-			message = "Required prompt {} not found. Please try again.".format(query)
-			raise ValueError(message)
+			logger.error("Required prompt {} not found. Please try again.".format(query))
+			return None
 		else:
-			message = "Prompt {0} not found, default value of {1} used.".format(query, default)
-			warn(message, UserWarning)
+			logger.info("Prompt {0} not found, default value of {1} used.".format(query, default))
 			return default
 	else:
 		return prompts[prompts.index(query) + 1]
@@ -30,8 +32,8 @@ def get_tickerverse_from_prompts(prompts, query="-tickerUniverse"):
 	tickerverse = []
 	name = ""
 	if query not in prompts:
-		message = "Required prompt {} not found. Please try again.".format(query)
-		raise ValueError(message)
+		logger.error("Required prompt {} not found. Please try again.".format(query))
+		return None
 	# Yields data on the S&P 500
 	elif "SNP500" in prompts:
 		tickerverse = ticker_universe.obtain_parse_wiki(selection="SNP500", seed="^GSPC")
