@@ -1,7 +1,7 @@
 ## This code contains a bunch of code for technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com
 ## Author: Miguel Opeña
-## Version: 3.2.1
+## Version: 3.2.2
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -604,6 +604,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['medianPrice'] = median_price(tick_data)
 	price_with_trends['normalizedPrice'] = normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = on_balance_volume(tick_data)
+	price_with_trends['PSAR'] = parabolic_sar(tick_data)
 	price_with_trends['PVO_30_14'] = percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
 	hichannel, lochannel = price_channel(price, num_periods=30)
 	price_with_trends['PriceChannelHigh'] = hichannel
@@ -692,7 +693,9 @@ def main():
 	baseline = single_download.fetch_symbol_from_drive(baseline_symbol, function=function, folderPath=folder_path, interval=interval)
 	# Gets the feature data for each one
 	for symbol in ticker_universe:
-		if not plot_only:
+		if plot_only:
+			plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
+		else:
 			tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
 			tick_data = tick_data[start_date:end_date]
 			print("Processing {0} features...".format(symbol))
@@ -703,7 +706,6 @@ def main():
 			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
 			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
 			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
-		plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 
 if __name__ == "__main__":
 	main()
