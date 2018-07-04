@@ -43,9 +43,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **auto_update.py**
-  - `update_separate` updates a collection of separately downloaded files with the latest data from AlphaVantage
-  - `update_combined` updates a combined file with the latest data from AlphaVantage
-  - command prompt options:
+  - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
     
