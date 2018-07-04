@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.2.4
+## Version: 4.2.5
 
 import seaborn as sns
 import sys
@@ -10,8 +10,8 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 import command_parser
+import download
 import return_calculator
-import single_download
 
 YEARS = mdates.YearLocator()
 MONTHS = mdates.MonthLocator()
@@ -139,7 +139,7 @@ def main():
 	## Handles command line option for which column of dataframe to plot
 	column_choice = command_parser.get_generic_from_prompts(prompts, query="-column", default="close", req=False)
 	## Runs the plot code on the lone symbol
-	tick_data = single_download.fetch_symbol_from_drive(symbol, function=function, folderPath=folder_path, interval=interval)
+	tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
 	tick_data = tick_data[start_date:end_date]
 	tick_data.columns = [x if x != column_choice else "price" for x in tick_data.columns.values.tolist()]
 	price_plot(pd.DataFrame(tick_data.price, columns=['price']), symbol, subplot=[True], returns=[False],folderpath=folder_path, savePlot=True, showPlot=True)
