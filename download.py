@@ -69,8 +69,8 @@ def load_single_drive(symbol, function="DAILY", interval="", folderpath="", data
 	try:
 		tick_data = pd.read_csv(readpath, index_col='timestamp')
 	except FileNotFoundError:
-		logger.error("Retrieval unsuccessful. File not found at " + readpath + "\n")
-		return None
+		logger.error("Retrieval unsuccessful. File not found at " + readpath)
+		return tick_data
 	tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
-	logger.debug("Data on " + symbol + " successfully retrieved!\n")
+	logger.debug("Data on " + symbol + " successfully retrieved!")
 	return tick_data
