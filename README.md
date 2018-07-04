@@ -97,6 +97,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `median_price` returns the median price of asset data
   - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
   - `on_balance_volume` returns the on balance volume of asset data
+  - `parabolic_sar` returns the parabolic SAR of asset data
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
@@ -120,3 +121,4 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
     - `-folderPath`: location of folder to write the files
+    - `-plotOnly`: if indicated, plot the heatmaps; otherwise, build from scratch without plots
