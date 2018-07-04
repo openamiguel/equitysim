@@ -1,15 +1,15 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.3.2
+## Version: 1.3.3
 
 import logging
 import numpy as np
 import pandas as pd
 
+import download
 import plotter
 import portfolio
 import return_calculator
-import single_download
 import strategy
 import technicals_calculator
 
@@ -44,7 +44,7 @@ def main():
 	folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
 	start_date = "2010-01-05"
 	end_date = "2018-06-28"
-	tick_data = single_download.fetch_symbol_from_drive(symbol, folderPath=folder_path)
+	tick_data = download.load_single_drive(symbol, folderpath=folder_path)
 	tick_data = tick_data[start_date:end_date]
 	prices = pd.concat([tick_data.close], axis=1)
 	trend = technicals_calculator.simple_moving_average(tick_data.close, num_periods=30)
@@ -54,7 +54,7 @@ def main():
 	trades = strategy.zscore_distance(trend_baseline)
 	port = portfolio.apply_trades(prices, trades)
 
-	portfolio_baseline = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folder_path)
+	portfolio_baseline = download.load_single_drive("^GSPC", folderpath=folder_path)
 	portfolio_baseline = portfolio_baseline[start_date:end_date]
 
 	start_value, end_value, returns, baseline_returns = returns_valuation(port.price, portfolio_baseline.close)

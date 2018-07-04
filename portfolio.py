@@ -1,15 +1,15 @@
 ## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.5.5
+## Version: 1.5.6
 
 import logging
 from math import floor
 import pandas as pd
 
+import download
 import performance
 import plotter
 import return_calculator
-import single_download
 import strategy
 import ticker_universe
 
@@ -116,14 +116,14 @@ def main():
 	prices = pd.DataFrame()
 	column_choice = "close"
 	for symbol in tickerverse:
-		symboldata = single_download.fetch_symbol_from_drive(symbol, function="DAILY", folderPath=folder_path)
+		symboldata = download.load_single_drive(symbol, folderpath=folder_path)
 		prices = pd.concat([prices, symboldata[column_choice]], axis=1)
 	prices = prices[start_date:end_date]
 	prices.columns  = tickerverse
 	long_prices, short_prices = asset_ranker(prices, ranking_method=return_calculator.overall_returns)
 	port = apply_trades(long_prices, strategy.hold_clear(long_prices, switch=True)) + apply_trades(short_prices, strategy.hold_clear(short_prices))
 
-	portfolio_baseline = single_download.fetch_symbol_from_drive("^GSPC", function="DAILY", folderPath=folder_path)
+	portfolio_baseline = download.load_single_drive("^GSPC", folderpath=folder_path)
 	portfolio_baseline = portfolio_baseline[~portfolio_baseline.index.duplicated(keep='first')]
 	portfolio_baseline = portfolio_baseline[start_date:end_date]
 

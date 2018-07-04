@@ -7,7 +7,19 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 ## documentation of each file and its functions
 
 ### AlphaVantage data download/update suite
+- **download.py**
+  - `load_single` downloads and processes a single symbol from AlphaVantage API into a file
+  - `load_single_drive` downloads and processes a single symbol from local drive into a variable
+  - `load_separate` downloads and processes many symbols from AlphaVantage API into many files
+  - `load_combined_drive` downloads and processes many symbols from local drive into one variable
+  - command prompt options:
+    - `-tickerUniverse`: collection of tickers to download (can also be a CSV of ticker symbols) 
+    - `-folderPath`: location of folder to store file
+    - `-apiKey`: AlphaVantage API key (user-specific)
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **single_download.py**
+  - WARNING: code will be deleted soon
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
   - `fetch_symbol_from_drive` retrieves a single symbol from local drive
   - command prompt options: 
@@ -17,6 +29,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **prelim_download.py**
+  - WARNING: code will be deleted soon
   - `download_separate` pulls data on a ticker universe in the form of separate files, each named after the ticker symbol and the time series function
     - separate files contain as much data as AlphaVantage can offer
   - `download_combined` pulls data on a ticker universe in the form of one combined file, named after the ticker universe and the time series function
@@ -30,9 +43,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **auto_update.py**
-  - `update_separate` updates a collection of separately downloaded files with the latest data from AlphaVantage
-  - `update_combined` updates a combined file with the latest data from AlphaVantage
-  - command prompt options:
+  - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
     
