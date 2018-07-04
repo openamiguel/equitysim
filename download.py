@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import pandas as pd
 import time
@@ -9,6 +9,9 @@ import sys
 
 import command_parser
 import ticker_universe
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Start of the URL for AlphaVantage queries
 MAIN_URL = "https://www.alphavantage.co/query?"
@@ -28,24 +31,24 @@ def load_single(symbol, api_key, function="DAILY", interval="", output_size="ful
 	if function == "INTRADAY":
 		read_path = read_path + "&interval=" + interval
 	# Gives a tidbit of verbose output
-	print("Downloading " + symbol + " from AlphaVantage...")
+	logger.debug("Downloading " + symbol + " from AlphaVantage...")
 	tick_data = None
 	# Accounts for the fact that AlphaVantage lacks certain high-volume ETFs and mutual funds
 	try:
 		tick_data = pd.read_csv(read_path, index_col='timestamp')
 	except ValueError:
-		print(symbol + " not found by AlphaVantage. Download unsuccessful.\n")
+		logger.error(symbol + " not found by AlphaVantage. Download unsuccessful.")
 		return tick_data
-	print(symbol + " successfully downloaded!")
+	logger.debug(symbol + " successfully downloaded!")
 	# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
 	tick_data = tick_data.reindex(index=tick_data.index[::-1])
 	# Saves ticker data to CSV, if requested
 	if writefile:
-		print("Saving data on " + symbol + "...")
+		logger.debug("Saving data on " + symbol + "...")
 		write_path = folderpath + "/" + symbol + "_" + function
 		if interval != "": 
 			write_path = write_path + "&" + interval
 		tick_data.to_csv(write_path + "." + datatype)
-		print("Data on " + symbol + " successfully saved!\n")
+		logger.debug("Data on " + symbol + " successfully saved!")
 	# Returns the data on symbol
 	return tick_data
