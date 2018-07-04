@@ -8,8 +8,10 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 
 ### AlphaVantage data download/update suite
 - **download.py**
-  - `load_single` downloads and processes a single symbol from AlphaVantage
-  - `load_single_drive` downloads and processes a single symbol from local drive
+  - `load_single` downloads and processes a single symbol from AlphaVantage API into a file
+  - `load_single_drive` downloads and processes a single symbol from local drive into a variable
+  - `load_separate` downloads and processes many symbols from AlphaVantage API into many files
+  - `load_combined_drive` downloads and processes many symbols from local drive into one variable
 - **single_download.py**
   - WARNING: code will be deleted soon
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
