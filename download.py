@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 1.1.1
+## Version: 1.2.1
 
 import pandas as pd
 import time
@@ -51,4 +51,26 @@ def load_single(symbol, api_key, function="DAILY", interval="", output_size="ful
 		tick_data.to_csv(write_path + "." + datatype)
 		logger.debug("Data on " + symbol + " successfully saved!")
 	# Returns the data on symbol
+	return tick_data
+
+def load_single_drive(symbol, function="DAILY", interval="", folderpath="", datatype="csv"):
+	""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
+
+		Inputs: symbol, time series function (default: daily), time interval (for intraday data only), 
+			folder path to look for file (default: empty), data type (default: csv)
+		Outputs: dataframe with all available data on symbol
+	"""
+	readpath = folderpath + "/" + symbol + "_" + function
+	if interval != "":
+		readpath = readpath + "&" + interval
+	readpath = readpath + "." + datatype
+	logger.debug("Retrieving " + symbol + " from local drive...")
+	tick_data = None
+	try:
+		tick_data = pd.read_csv(readpath, index_col='timestamp')
+	except FileNotFoundError:
+		logger.error("Retrieval unsuccessful. File not found at " + readpath + "\n")
+		return None
+	tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
+	logger.debug("Data on " + symbol + " successfully retrieved!\n")
 	return tick_data
