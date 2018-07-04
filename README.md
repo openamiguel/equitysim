@@ -12,6 +12,12 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `load_single_drive` downloads and processes a single symbol from local drive into a variable
   - `load_separate` downloads and processes many symbols from AlphaVantage API into many files
   - `load_combined_drive` downloads and processes many symbols from local drive into one variable
+  - command prompt options:
+    - `-tickerUniverse`: collection of tickers to download (can also be a CSV of ticker symbols) 
+    - `-folderPath`: location of folder to store file
+    - `-apiKey`: AlphaVantage API key (user-specific)
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **single_download.py**
   - WARNING: code will be deleted soon
   - `fetch_symbol` downloads and processes a single symbol from AlphaVantage.
