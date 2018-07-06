@@ -51,6 +51,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **edgar_load.py** downloads financial statement data from the SEC EDGAR database and returns one file per company of interest
   - `memory_check` verifies if file occupies too much space in RAM
   - `download_unzip` downloads and unzips data directly from the SEC website
+  - `get_sic_names` scrapes SEC.gov for data on industry codes (SICs)
   - `submission_parse` parses submission files
   - `number_parse` parses number files
   - `presentation_parse` parses presentation files
