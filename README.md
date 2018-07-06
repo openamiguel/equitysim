@@ -46,7 +46,17 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
-    
+
+### SEC data download/update suite
+- **edgar_load.py** downloads financial statement data from the SEC EDGAR database and returns one file per company of interest
+  - `memory_check` verifies if file occupies too much space in RAM
+  - `download_unzip` downloads and unzips data directly from the SEC website
+  - `submission_parse` parses submission files
+  - `number_parse` parses number files
+  - `presentation_parse` parses presentation files
+  - `tag_parse` parses tag files
+  - `parse_in_directory` walks through download directory and calls each parser accordingly
+
 ### simulator suite
 - **strategy.py**
   - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
