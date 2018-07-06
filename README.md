@@ -2,6 +2,8 @@
 
 Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on the big players: any member of the S&P 500, Dow 30, or NASDAQ 100 indices, as well as any of the 100 most-traded ETFs and the top 25 most-traded mutual funds. 
 
+Also downloads data from the US SEC's Financial Statements datasets, which can bring plenty of fundamental data into one's analysis. 
+
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
 ## documentation of each file and its functions
