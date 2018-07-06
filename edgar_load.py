@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.3.0
+## Version: 1.4.0
 
 import logging
 import os
@@ -58,6 +58,10 @@ def download_unzip(folderpath, startyear=2009, endyear=2018):
     return
 
 def get_sic_names(target_url='https://www.sec.gov/info/edgar/siccodes.htm'):
+    """ Scrapes the SEC website for data on SIC codes.
+        Inputs: URL of aforementioned website
+        Outputs: dataframe of SIC codes and names
+    """
     # Processes the raw data into dataframe
     webpage = pd.read_html(target_url)
     table = webpage[2]
@@ -125,18 +129,42 @@ def submission_parse(filepath, outpath):
     return True
 
 def number_parse(filepath, outpath):
-    return
+    """ Parses the data on number files ONLY.
+        Inputs: path of number file, output path of processed file
+        Outputs: True if everything works
+    """
+    num_df = pd.read_csv(filepath, sep='\t')
+    # Does the easy processing: columns to keep as-is or simply rename
+    proc_cols = ['adsh', 'tag', 'version', 'ddate', 'qtrs', 'uom', 'value', 
+                 'footnote']
+    num_proc_df = pd.concat([num_df[col] for col in proc_cols], axis=1)
+    col_dict = {'adsh': 'accession_num', 'tag': 'tag_name', 
+                'version': 'tag_version', 'ddate': 'end_date_rounded', 
+                'qtrs': 'num_quarters'}
+    num_proc_df = num_proc_df.rename(columns=col_dict)
+    # Writes to file
+    num_proc_df.to_csv(outpath, sep='\t', index=False)
+    return True
 
 def presentation_parse(filepath, outpath):
+    """ Parses the data on presentation files ONLY.
+        Inputs: path of presentation file, output path of processed file
+        Outputs: True if everything works
+    """
     return
 
 def tag_parse(filepath, outpath):
+    """ Parses the data on tag files ONLY.
+        Inputs: path of tag file, output path of processed file
+        Outputs: True if everything works
+    """
     return
 
 def parse_in_directory(folderpath):
     for cur_path, directories, files in os.walk(folderpath, topdown=True):
         for file in files:
             path = os.path.join(cur_path,file)
+            logger.debug("Processing {}".format(path))
             if "sub" in file:
                 submission_parse(path, folderpath + "SUB_FINAL.txt")
             elif "num" in file:
