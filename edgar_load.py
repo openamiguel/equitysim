@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.6.1
+## Version: 1.6.3
 
 import logging
 import os
@@ -11,7 +11,7 @@ import urllib.request
 import urllib.error
 import zipfile
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 lambda_reg_case = lambda x: " ".join([w.lower().capitalize() for w in x.split(" ")])
@@ -23,10 +23,21 @@ def memory_check(filepath, threshold_ratio=10):
     """
     ram = virtual_memory()
     filesize = os.path.getsize(filepath)
-    if filesize > threshold_ratio * ram / 100.0:
-        pct = filesize * 100 / ram
+    # ram[1] gets the available RAM
+    if filesize > threshold_ratio * ram[1] / 100.0:
+        pct = filesize * 100 / ram[1]
         logger.warn("File occupies {}%% of RAM.".format(pct))
     return
+
+def write_as_append(dataframe, filepath):
+    """ Writes dataframe to file in append mode. 
+        Inputs: dataframe, file path to append to
+        Outputs: True if everything works
+    """
+    with open(filepath, 'a') as outfile:
+        dataframe.to_csv(outfile, sep='\t', index=False)
+    outfile.close()
+    return True
 
 def download_unzip(folderpath, startyear=2009, endyear=2018):
     """ Downloads and unzips all the data from SEC EDGAR on financial statements.
@@ -51,10 +62,12 @@ def download_unzip(folderpath, startyear=2009, endyear=2018):
                 logger.error("URLError encountered with {}. Continuing to next file...".format(file_name))
                 continue
             # Extracts file as ZIP
+            logger.debug("Extracting {} from ZIP file...".format(file_name.split('.')[0]))
             zip_ref = zipfile.ZipFile(folderpath + file_name, 'r')
             zip_ref.extractall(folderpath + file_name.split('.')[0])
             zip_ref.close()
             # Deletes the ZIP
+            logger.debug("Deleting {} ZIP file...".format(file_name.split('.')[0]))
             os.remove(folderpath + file_name)
     return
 
@@ -126,7 +139,7 @@ def submission_parse(filepath, outpath):
     # Deletes rows where symbol is not given (useless for my purposes)
     sub_proc_df = sub_proc_df[pd.notnull(sub_proc_df['symbol'])]
     # Writes to file
-    sub_proc_df.to_csv(outpath, sep='\t', index=False)
+    write_as_append(sub_proc_df, outpath)
     return True
 
 def number_parse(filepath, outpath):
@@ -143,7 +156,7 @@ def number_parse(filepath, outpath):
                 'qtrs': 'num_quarters'}
     num_proc_df = num_proc_df.rename(columns=col_dict)
     # Writes to file
-    num_proc_df.to_csv(outpath, sep='\t', index=False)
+    write_as_append(num_proc_df, outpath)
     return True
 
 def presentation_parse(filepath, outpath):
@@ -161,7 +174,7 @@ def presentation_parse(filepath, outpath):
     # Combines statement and report data into new column and deletes the old one
     pre_proc_df['statement_report'] = pre_proc_df['stmt'] + "_" + pre_proc_df['report'].astype(str)
     pre_proc_df.drop(labels=['stmt', 'report'], axis=1, inplace=True)
-    pre_proc_df.to_csv(outpath, sep='\t', index=False)
+    write_as_append(pre_proc_df, outpath)
     return True
 
 def tag_parse(filepath, outpath):
@@ -181,7 +194,7 @@ def tag_parse(filepath, outpath):
     lambda_swap = lambda x: int(not x)
     tag_proc_df['abstract'] = tag_proc_df['abstract'].apply(lambda_swap)
     tag_proc_df = tag_proc_df.rename(columns={'abstract':'is_numeric'})
-    tag_proc_df.to_csv(outpath, sep='\t', index=False)
+    write_as_append(tag_proc_df, outpath)
     return True
 
 def parse_in_directory(folderpath):
@@ -201,5 +214,5 @@ def parse_in_directory(folderpath):
     return
 
 folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
-download_unzip(folder_path, startyear=2009)
+# download_unzip(folder_path, startyear=2017)
 parse_in_directory(folder_path)
