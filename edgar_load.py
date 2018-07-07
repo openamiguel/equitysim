@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.7.4
+## Version: 1.7.6
 
 import csv
 import logging
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 lambda_reg_case = lambda x: " ".join([w.lower().capitalize() for w in x.split(" ")])
 
 writeheader = [True, True, True, True]
-csize = 100000
+csize = 1000000
 
 # Move to separate file?
 def memory_check(filepath, threshold_ratio=10):
@@ -245,9 +245,9 @@ def get_current_symbols(folderpath, function="DAILY", datatype="csv"):
     return symbols
             
 
-def post_proc(folderpath, stock_folderpath, outfolder):
+def post_proc(folderpath, stock_folderpath):
     """ Post-processing on data of interest.
-        Inputs: path of tag file, output path of processed file
+        Inputs: path of tag file, path of stock data folder
         Outputs: True if everything works
     """
     ## Loads all stock data downloaded to given folder
@@ -258,18 +258,13 @@ def post_proc(folderpath, stock_folderpath, outfolder):
     logger.debug("Reading %s file from local drive...", "SUB")
     sub_inter_df = pd.read_csv(folderpath + "SUB_INTERMEDIATE.txt", sep='\t', encoding='iso8859-1')
     # Drop non-unique CIK values
-    sub_inter_df.drop_duplicates(subset=['central_index_key'], inplace=True)
+    sub_inter_df.drop_duplicates(subset=['accession_num'], inplace=True)
     # Drop rows with symbols not in the symbol list
     sub_inter_df = sub_inter_df[sub_inter_df.symbol.isin(symbols)]
-    # Gets all the columns of interest for json metadata
-    json_meta = pd.concat([sub_inter_df.symbol, sub_inter_df.company_name, 
-                           sub_inter_df.central_index_key, sub_inter_df.industry_name, 
-                           sub_inter_df.former_name, sub_inter_df.date_of_name_change, 
-                           sub_inter_df.is_well_known_seasoned_issuer, sub_inter_df.data_source], axis=1)
     # Saves the accession number column for later use
     accession_list = list(sub_inter_df.accession_num.values)
     # Frees up some memory and writes SUB FINAL to file
-    sub_inter_df = sub_inter_df.to_csv(outfolder + "SUB_FINAL.txt", sep='\t', index=False)
+    sub_inter_df = sub_inter_df.to_csv(folderpath + "SUB_FINAL.txt", sep='\t', index=False)
     #########################################################
     ## Loads TAG_INTERMEDIATE from its location            ##
     #########################################################
@@ -278,14 +273,14 @@ def post_proc(folderpath, stock_folderpath, outfolder):
     # Drops non-unique values based on tag name AND tag version
     tag_inter_df.drop_duplicates(subset=['tag_name', 'tag_version'], inplace=True)
     # Frees up memory and writes TAG FINAL to file
-    tag_inter_df = tag_inter_df.to_csv(outfolder + "TAG_FINAL.txt", sep='\t', index=False)
+    tag_inter_df = tag_inter_df.to_csv(folderpath + "TAG_FINAL.txt", sep='\t', index=False)
     #########################################################
     ## Loads NUM_INTERMEDIATE from its location in chunks  ##
     #########################################################
     logger.debug("Reading %s file from local drive...", "NUM")
     num_chunks = pd.read_csv(folderpath + "NUM_INTERMEDIATE.txt", sep='\t', chunksize=csize, encoding='iso8859-1')
     writeHeader = True
-    with open(outfolder + "NUM_FINAL.txt", 'w') as numfinalfile:
+    with open(folderpath + "NUM_FINAL.txt", 'w') as numfinalfile:
         for chunk in num_chunks:
             logger.debug("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
             chunk_filter = chunk[chunk.accession_num.isin(accession_list)]
@@ -298,34 +293,57 @@ def post_proc(folderpath, stock_folderpath, outfolder):
     logger.debug("Reading %s file from local drive...", "PRE")
     pre_chunks = pd.read_csv(folderpath + "PRE_INTERMEDIATE.txt", sep='\t', chunksize=csize, encoding='iso8859-1')
     writeHeader = True
-    with open(outfolder + "PRE_FINAL.txt", 'w') as prefinalfile:
+    with open(folderpath + "PRE_FINAL.txt", 'w') as prefinalfile:
         for chunk in pre_chunks:
             logger.debug("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
             chunk_filter = chunk[chunk.accession_num.isin(accession_list)]
             chunk_filter.to_csv(prefinalfile, sep='\t', index=False, header=writeHeader)
             writeHeader = False
     prefinalfile.close()
+    return True
+
+def json_build(folderpath, outpath):
+    # Loads the four FINAL files from their location
+    sub_final_df = pd.read_csv(folderpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
+    # num_final_df = pd.read_csv(folderpath + "NUM_FINAL.txt", sep='\t', encoding='iso8859-1')
+    # pre_final_df = pd.read_csv(folderpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
+    # tag_final_df = pd.read_csv(folderpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
+    # Gets all the columns of interest for json metadata
+    json_meta = pd.concat([sub_final_df.symbol, sub_final_df.company_name, 
+                           sub_final_df.central_index_key, sub_final_df.industry_name, 
+                           sub_final_df.former_name, sub_final_df.date_of_name_change, 
+                           sub_final_df.is_well_known_seasoned_issuer, sub_final_df.data_source], axis=1)
+    # The metadata entries are one-to-one with symbol
+    json_meta.drop_duplicates(subset=['symbol'], inplace=True)
     # For each symbol in json_meta, processes into a different JSON file
-    for ind in json_meta.index:
-        this_symbol = json_meta.symbol[ind]
-        logger.debug("Processing %s financal statements...", this_symbol)
-        filename = outfolder + "{}_Financials.json".format(this_symbol)
-        json_meta_one = json_meta.loc[[ind]].to_json(orient='records')
+    for symbol in json_meta.symbol:
+        # Gets the current symbol
+        logger.debug("Processing %s financal statements...", symbol)
+        # Gets all accession numbers for this symbol
+        symbol_sub = sub_final_df[sub_final_df.symbol == symbol]
+        # Isolates the metadata for this symbol
+        json_meta_one = json_meta[json_meta.symbol == symbol].to_json(orient='records')
         # Indicates that this info is metadata
         json_meta_one = json_meta_one[:1] + "\"metadata\":" + json_meta_one[1:]
+        # Cleans up the JSON metadata
         json_meta_one = json_meta_one.replace('[', '')
         json_meta_one = json_meta_one.replace(']', '')
-        json_meta_one = "{" + json_meta_one + ",\n"
-        with open(filename, 'a') as jsonfile:
-            jsonfile.write(json_meta_one)
+        json_meta_one = "{" + json_meta_one + ","
+        # For given symbol, merge symbol_sub with NUM on accession_num
+        # and merge with PRE on accession_num
+        # and merge with TAG on tag_name and tag_version
+        # Write each row of dataframe as JSON file
+        # Writes each line of JSON to file with symbol in name
+        filename = outpath + "{}_Financials.json".format(symbol)
+        with open(filename, 'w') as jsonfile:
+            jsonfile.write(json_meta_one + '\n')
+        jsonfile.close()
         break
-    ## TODO:
-    # Walk through NUM (in chunks) and drop rows with accession_num not in SUB
-    # Walk through PRE (in chunks) and drow rows with accession_num not in SUB
 
 folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
 stock_folder_path = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
 outpath = "C:/Users/Miguel/Desktop/"
-# download_unzip(folder_path, endyear=2016)
+# download_unzip(folder_path)
 # parse_in_directory(folder_path)
-post_proc(folder_path, stock_folder_path, outpath)
+# post_proc(folder_path, stock_folder_path)
+json_build(folder_path, outpath)
