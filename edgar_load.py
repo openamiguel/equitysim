@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.5.0
+## Version: 1.6.1
 
 import logging
 import os
@@ -24,7 +24,8 @@ def memory_check(filepath, threshold_ratio=10):
     ram = virtual_memory()
     filesize = os.path.getsize(filepath)
     if filesize > threshold_ratio * ram / 100.0:
-        logger.warn("File occupies {}%% of RAM.".format(threshold_ratio))
+        pct = filesize * 100 / ram
+        logger.warn("File occupies {}%% of RAM.".format(pct))
     return
 
 def download_unzip(folderpath, startyear=2009, endyear=2018):
@@ -169,20 +170,30 @@ def tag_parse(filepath, outpath):
         Outputs: True if everything works
     """
     tag_df = pd.read_csv(filepath, sep='\t')
-    
-    return
+    # Does the easy processing: columns to keep as-is or simply rename
+    proc_cols = ['tag', 'version', 'abstract', 'datatype', 
+                 'iord', 'crdr', 'doc']
+    tag_proc_df = pd.concat([tag_df[col] for col in proc_cols], axis=1)
+    col_dict = {'tag': 'tag_name', 'version': 'tag_version', 
+                'iord':'point_or_duration', 'crdr':'debit_or_credit'}
+    tag_proc_df = tag_proc_df.rename(columns=col_dict)
+    # Transforms abstract into is_numeric by swapping values
+    lambda_swap = lambda x: int(not x)
+    tag_proc_df['abstract'] = tag_proc_df['abstract'].apply(lambda_swap)
+    tag_proc_df = tag_proc_df.rename(columns={'abstract':'is_numeric'})
+    tag_proc_df.to_csv(outpath, sep='\t', index=False)
+    return True
 
 def parse_in_directory(folderpath):
     for cur_path, directories, files in os.walk(folderpath, topdown=True):
         for file in files:
             path = os.path.join(cur_path,file)
+            memory_check(path)
             logger.debug("Processing {}".format(path))
             if "sub" in file:
-                continue
-                # submission_parse(path, folderpath + "SUB_FINAL.txt")
+                submission_parse(path, folderpath + "SUB_FINAL.txt")
             elif "num" in file:
-                continue
-                # number_parse(path, folderpath + "NUM_FINAL.txt")
+                number_parse(path, folderpath + "NUM_FINAL.txt")
             elif "pre" in file:
                 presentation_parse(path, folderpath + "PRE_FINAL.txt")
             elif "tag" in file:
@@ -190,5 +201,5 @@ def parse_in_directory(folderpath):
     return
 
 folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
-# download_unzip(folder_path, startyear=2018)
+download_unzip(folder_path, startyear=2009)
 parse_in_directory(folder_path)
