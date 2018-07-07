@@ -1,9 +1,10 @@
 ## Contains support functions for file I/O. 
 ## Author: Miguel Opeña
-## Version: 1.0.0
+## Version: 1.1.0
 
 import logging
 import os
+import pandas as pd
 from psutil import virtual_memory
 
 logging.basicConfig(level=logging.DEBUG)
@@ -37,6 +38,20 @@ def memory_check(filepath, threshold_ratio=10):
         pct = filesize * 100 / ram[1]
         logger.warning("File occupies %.2f percent of RAM.", pct)
     return
+
+def merge_chunked(filepath, leftframe, sep='\t', csize=500000, encoding='iso8859-1'):
+    """ Reads dataframe in chunks and inner-joins with dataframe on left
+        Inputs: file path to read dataframe, column to merge on, reference list, 
+            file delimiter (default: tab), chunk size (default: 100000)
+        Outputs: True if everything works
+    """
+    chunks = pd.read_csv(filepath, sep=sep, chunksize=csize, encoding=encoding)
+    out_df = pd.DataFrame()
+    for chunk in chunks:
+        logger.debug("Currently reading row %8d...", chunk.index[0])
+        chunk_filter = leftframe.merge(chunk, how='inner')
+        out_df = pd.concat([out_df, chunk_filter], axis=0)
+    return out_df
 
 def write_as_append(dataframe, filepath, index=False, header=False, sep='\t'):
     """ Writes dataframe to file in append mode. 
