@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.7.7
+## Version: 1.7.10
 
 import logging
 import os
@@ -50,7 +50,7 @@ def download_unzip(folderpath, startyear=2009, endyear=2018):
             os.remove(folderpath + file_name)
     return
 
-def parse_in_directory(folderpath):
+def proc_in_directory(folderpath):
     """ Parses the data on all files in a directory.
         Inputs: path of target directory
         Outputs: True if everything works
@@ -130,9 +130,8 @@ def post_proc(folderpath, stock_folderpath):
 def json_build(folderpath, outpath):
     # Loads the four FINAL files from their location
     sub_final_df = pd.read_csv(folderpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
-    # num_final_df = pd.read_csv(folderpath + "NUM_FINAL.txt", sep='\t', encoding='iso8859-1')
-    # pre_final_df = pd.read_csv(folderpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
-    # tag_final_df = pd.read_csv(folderpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
+    pre_final_df = pd.read_csv(folderpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
+    tag_final_df = pd.read_csv(folderpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
     # Gets all the columns of interest for json metadata
     json_meta = pd.concat([sub_final_df.symbol, sub_final_df.company_name, 
                            sub_final_df.central_index_key, sub_final_df.industry_name, 
@@ -142,11 +141,9 @@ def json_build(folderpath, outpath):
     json_meta.drop_duplicates(subset=['symbol'], inplace=True)
     # For each symbol in json_meta, processes into a different JSON file
     for symbol in json_meta.symbol:
-        # Gets the current symbol
-        logger.debug("Processing %s financal statements...", symbol)
-        # Gets all accession numbers for this symbol
-        symbol_sub = sub_final_df[sub_final_df.symbol == symbol]
-        # Isolates the metadata for this symbol
+        ## Logs the current symbol
+        logger.debug("Processing %s financial statements...", symbol)
+        ## Isolates the metadata for this symbol
         json_meta_one = json_meta[json_meta.symbol == symbol].to_json(orient='records')
         # Indicates that this info is metadata
         json_meta_one = json_meta_one[:1] + "\"metadata\":" + json_meta_one[1:]
@@ -154,14 +151,40 @@ def json_build(folderpath, outpath):
         json_meta_one = json_meta_one.replace('[', '')
         json_meta_one = json_meta_one.replace(']', '')
         json_meta_one = "{" + json_meta_one + ","
-        # For given symbol, merge symbol_sub with NUM on accession_num
-        # and merge with PRE on accession_num
-        # and merge with TAG on tag_name and tag_version
+        ## Gets all data for current symbol
+        symbol_sub = sub_final_df[sub_final_df.symbol == symbol]
+        # Drops irrelevant records (already in metadata):
+        symbol_sub.drop(labels=['central_index_key', 'company_name',
+                                'former_name', 'date_of_name_change',
+                                'is_well_known_seasoned_issuer', 'detail', 
+                                'data_source', 'symbol', 'industry_name'], axis=1, inplace=True) 
+        # For given symbol, merge symbol_sub with PRE on accession_num (in chunks)
+        symbol_sub_pre = symbol_sub.merge(pre_final_df, how='inner')
+        # Merge with TAG on tag_name and tag_version
+        symbol_sub_pre_tag = symbol_sub_pre.merge(tag_final_df, how='inner')
+        symbol_sub_pre_tag.drop(labels=['doc'], axis=1, inplace=True)
+        # Merge with NUM on accession_num
+        symbol_all = io_support.merge_chunked(folderpath + "NUM_FINAL.txt", symbol_sub_pre_tag)
+        # Drops irrelevant records (already in metadata):
+        # Sort the dataframe
+        symbol_all.sort_values(by=['accession_num','tag_name','tag_version'], inplace=True)
         # Write each row of dataframe as JSON file
         # Writes each line of JSON to file with symbol in name
         filename = outpath + "{}_Financials.json".format(symbol)
         with open(filename, 'w') as jsonfile:
+            json_rows = symbol_all.to_json(orient='records')
+            # Cleans up the JSON rows
+            json_rows = json_rows.replace('[', '')
+            json_rows = json_rows.replace(']', '')
+            json_rows = json_rows.replace('\\/', '/')
+            json_rows = json_rows.replace('},', '},\n')
+            # Removes unnecessary data
+            json_rows = json_rows.replace('\"nciks\":1,', '')
+            json_rows = json_rows.replace('\"aciks\":null,', '')
+            json_rows = json_rows.replace(',\"debit_or_credit\":null', '')
+            # Writes metadata and rows to file
             jsonfile.write(json_meta_one + '\n')
+            jsonfile.write(json_rows + "}")
         jsonfile.close()
         break
 
@@ -169,6 +192,6 @@ folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
 stock_folder_path = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
 outpath = "C:/Users/Miguel/Desktop/"
 # download_unzip(folder_path)
-# parse_in_directory(folder_path)
+# proc_in_directory(folder_path)
 # post_proc(folder_path, stock_folder_path)
 json_build(folder_path, outpath)
