@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.4.0
+## Version: 1.5.0
 
 import logging
 import os
@@ -135,8 +135,7 @@ def number_parse(filepath, outpath):
     """
     num_df = pd.read_csv(filepath, sep='\t')
     # Does the easy processing: columns to keep as-is or simply rename
-    proc_cols = ['adsh', 'tag', 'version', 'ddate', 'qtrs', 'uom', 'value', 
-                 'footnote']
+    proc_cols = ['adsh', 'tag', 'version', 'ddate', 'qtrs', 'uom', 'value']
     num_proc_df = pd.concat([num_df[col] for col in proc_cols], axis=1)
     col_dict = {'adsh': 'accession_num', 'tag': 'tag_name', 
                 'version': 'tag_version', 'ddate': 'end_date_rounded', 
@@ -151,13 +150,26 @@ def presentation_parse(filepath, outpath):
         Inputs: path of presentation file, output path of processed file
         Outputs: True if everything works
     """
-    return
+    pre_df = pd.read_csv(filepath, sep='\t')
+    # Does the easy processing: columns to keep as-is or simply rename
+    proc_cols = ['adsh', 'report', 'stmt', 'line', 'tag', 'version']
+    pre_proc_df = pd.concat([pre_df[col] for col in proc_cols], axis=1)
+    col_dict = {'adsh': 'accession_num', 'tag': 'tag_name', 
+                'version': 'tag_version'}
+    pre_proc_df = pre_proc_df.rename(columns=col_dict)
+    # Combines statement and report data into new column and deletes the old one
+    pre_proc_df['statement_report'] = pre_proc_df['stmt'] + "_" + pre_proc_df['report'].astype(str)
+    pre_proc_df.drop(labels=['stmt', 'report'], axis=1, inplace=True)
+    pre_proc_df.to_csv(outpath, sep='\t', index=False)
+    return True
 
 def tag_parse(filepath, outpath):
     """ Parses the data on tag files ONLY.
         Inputs: path of tag file, output path of processed file
         Outputs: True if everything works
     """
+    tag_df = pd.read_csv(filepath, sep='\t')
+    
     return
 
 def parse_in_directory(folderpath):
@@ -166,9 +178,11 @@ def parse_in_directory(folderpath):
             path = os.path.join(cur_path,file)
             logger.debug("Processing {}".format(path))
             if "sub" in file:
-                submission_parse(path, folderpath + "SUB_FINAL.txt")
+                continue
+                # submission_parse(path, folderpath + "SUB_FINAL.txt")
             elif "num" in file:
-                number_parse(path, folderpath + "NUM_FINAL.txt")
+                continue
+                # number_parse(path, folderpath + "NUM_FINAL.txt")
             elif "pre" in file:
                 presentation_parse(path, folderpath + "PRE_FINAL.txt")
             elif "tag" in file:
