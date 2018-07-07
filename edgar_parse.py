@@ -1,7 +1,7 @@
 ## Supporting parser code for each file in the EDGAR dataset.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.0.0
+## Version: 1.0.1
 
 import csv
 import pandas as pd
@@ -40,7 +40,7 @@ def submission_parse(filepath, outpath):
     sub_df = pd.read_csv(filepath, sep='\t', encoding='iso8859-1', quoting=csv.QUOTE_NONE)
     # Does the easy processing: columns to keep as-is or simply rename
     proc_cols = ['adsh', 'cik', 'name', 'sic', 'former', 'changed', 'wksi', 
-                 'form', 'detail', 'instance', 'nciks', 'aciks']
+                 'form', 'instance', 'nciks', 'aciks']
     sub_proc_df = pd.concat([sub_df[col] for col in proc_cols], axis=1)
     col_dict = {'adsh': 'accession_num', 'cik': 'central_index_key', 
                 'name': 'company_name', 'former': 'former_name', 
