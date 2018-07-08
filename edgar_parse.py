@@ -1,7 +1,7 @@
 ## Supporting parser code for each file in the EDGAR dataset.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.0.1
+## Version: 1.1.0
 
 import csv
 import pandas as pd
@@ -10,6 +10,17 @@ import io_support
 
 lambda_reg_case = lambda x: " ".join([w.lower().capitalize() for w in x.split(" ")])
 writeheader = [True, True, True, True]
+
+def json_parse(json_as_string, newline=False):
+    json_as_string = json_as_string.replace('\\/', '/')
+    json_as_string = json_as_string.replace('\"nciks\":1,', '')
+    json_as_string = json_as_string.replace('\"aciks\":null,', '')
+    json_as_string = json_as_string.replace(',\"debit_or_credit\":null', '')
+    json_as_string = json_as_string.replace(',\"point_or_duration\":null', '')
+    json_as_string = json_as_string.replace(',\"datatype\":null', '')
+    if newline:
+        json_as_string = json_as_string.replace('},', '},\n')
+    return json_as_string
 
 def get_sic_names(target_url='https://www.sec.gov/info/edgar/siccodes.htm'):
     """ Scrapes the SEC website for data on SIC codes.
