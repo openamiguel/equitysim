@@ -2,6 +2,8 @@
 
 Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on the big players: any member of the S&P 500, Dow 30, or NASDAQ 100 indices, as well as any of the 100 most-traded ETFs and the top 25 most-traded mutual funds. 
 
+Also downloads data from the US SEC's Financial Statements datasets, which can bring plenty of fundamental data into one's analysis. Data downloaded from ZIP files at this URL: [SEC EDGAR Financial Statement Datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html). 
+
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
 ## documentation of each file and its functions
@@ -22,7 +24,21 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
-    
+
+### SEC EDGAR data download/update suite
+- **edgar_load.py**
+  - `download_unzip` downloads and unzips data directly from the SEC website
+  - `proc_in_directory` walks through download directory and parses each file
+  - `post_proc` performs post-processing on files, which makes them smaller
+  - `json_build` builds one JSON file for each company chosen
+- **edgar_parse.py**
+  - `json_parse` provides backup parsing code to clean up the JSON files in edgar_load.py
+  - `get_sic_names` scrapes SEC.gov for data on industry codes (SICs)
+  - `submission_parse` parses submission files
+  - `number_parse` parses number files
+  - `presentation_parse` parses presentation files
+  - `tag_parse` parses tag files
+
 ### simulator suite
 - **strategy.py**
   - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
@@ -42,6 +58,13 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
 - **command_parser.py**
   - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
   - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
+  - command prompt options:
+    - *none* (does not need any)
+- **io_support.py**
+  - `get_current_symbols` looks for stock ticker symbols in the files within directory
+  - `memory_check` verifies if file occupies too much space in RAM
+  - `merge_chunked` inner-joins a small dataframe (left) with a large one (right), the latter being read in chunks
+  - `write_as_append` writes dataframe to file path in append mode
   - command prompt options:
     - *none* (does not need any)
 - **ticker_universe.py**
