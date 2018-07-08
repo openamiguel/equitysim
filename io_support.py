@@ -1,6 +1,6 @@
 ## Contains support functions for file I/O. 
 ## Author: Miguel Opeña
-## Version: 1.1.1
+## Version: 1.1.2
 
 import logging
 import os
@@ -59,6 +59,6 @@ def write_as_append(dataframe, filepath, index=False, header=False, sep='\t'):
         Outputs: True if everything works
     """
     with open(filepath, 'a') as outfile:
-        dataframe.to_csv(outfile, sep=sep, header=header)
+        dataframe.to_csv(outfile, sep=sep, header=header, index=index)
     outfile.close()
     return True
