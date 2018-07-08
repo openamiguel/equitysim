@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.2
+## Version: 2.0.3
 
 import logging
 import os
@@ -205,7 +205,6 @@ def json_build(inpath, outpath):
         # Resets the values in json_split
         json_rows = '\n'.join(json_split)
         json_split = json_rows.split('\n')
-        print(json_split)
         #########################################################
         ## Merges TAG_FINAL and NUM_FINAL using tag info       ##
         #########################################################
@@ -224,6 +223,9 @@ def json_build(inpath, outpath):
             this_tag_num = symbol_all[symbol_sub_pre_tag.tag_name == this_tagname]
             this_tag_num = this_tag_num[this_tag_num.tag_version == this_tagver]
             this_tag_num.drop(labels=['tag_name', 'tag_version', 'accession_num'], axis=1, inplace=True)
+            # Converts date field to actual date
+            lambda_date = lambda x: str(int(x))[:4] + "-" + str(int(x))[4:6] + "-" + str(int(x))[6:8] if not pd.isna(x) else x
+            this_tag_num['end_date_rounded'] = this_tag_num['end_date_rounded'].apply(lambda_date)
             # Retrives data on TAG only
             tag_cols = ['is_numeric', 'datatype', 'point_or_duration', 'debit_or_credit']
             this_tag = pd.concat([this_tag_num[col] for col in tag_cols], axis=1)
@@ -234,6 +236,10 @@ def json_build(inpath, outpath):
             # Retrieves data on NUM only
             this_num = this_tag_num.drop(labels=[col for col in tag_cols], axis=1)
             num_json = edgar_parse.json_parse(this_num.to_json(orient='records'))
+            # Removes entries with blank num (i.e. non-numerical rows)
+            if num_json == "[]":
+                json_split.pop(idx)
+                continue
             num_json = "\"num\":" + num_json
             # Builds number and tag data into JSON object
             endcap = json_split[idx][json_split[idx].rfind("\"") + 1:]
