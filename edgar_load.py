@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.0
+## Version: 2.0.1
 
 import logging
 import os
@@ -138,6 +138,7 @@ def json_build(inpath, outpath):
     # Retrieves already processed symbols
     previous_symbols = io_support.get_current_symbols(outpath, keyword='Financials', datatype='json')
     # Loads the four FINAL files from their location
+    logger.debug("Loading FINAL files...")
     sub_final_df = pd.read_csv(inpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
     pre_final_df = pd.read_csv(inpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
     tag_final_df = pd.read_csv(inpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
@@ -172,7 +173,7 @@ def json_build(inpath, outpath):
         symbol_sub.drop(labels=['central_index_key', 'company_name',
                                 'former_name', 'date_of_name_change',
                                 'is_well_known_seasoned_issuer', 'detail', 
-                                'data_source', 'symbol', 'industry_name'], axis=1, inplace=True) 
+                                'data_source', 'symbol', 'industry_name'], axis=1, inplace=True, errors='ignore') 
         symbol_json = symbol_sub.drop_duplicates(subset=['accession_num'])
         # Harvests SUB records as JSON and cleans up file
         json_rows = json_rows + symbol_json.to_json(orient='records')
