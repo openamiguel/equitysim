@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.1
+## Version: 2.0.2
 
 import logging
 import os
@@ -16,7 +16,7 @@ import command_parser
 import edgar_parse
 import io_support
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 csize = 1000000
@@ -35,7 +35,7 @@ def download_unzip(folderpath, startyear=2013, endyear=2018):
         for quarter in range(1, 5):
             # Handles proper file format from SEC
             file_name = "{0}q{1}.zip".format(year, quarter)
-            logger.debug("Downloading {} from SEC website...".format(file_name))
+            logger.info("Downloading {} from SEC website...".format(file_name))
             # Tries to download data
             try:
                 urllib.request.urlretrieve(base_url + file_name, folderpath + file_name)
@@ -44,12 +44,12 @@ def download_unzip(folderpath, startyear=2013, endyear=2018):
                 logger.error("URLError encountered with {}. Continuing to next file...".format(file_name))
                 continue
             # Extracts file as ZIP
-            logger.debug("Extracting {} from ZIP file...".format(file_name.split('.')[0]))
+            logger.info("Extracting {} from ZIP file...".format(file_name.split('.')[0]))
             zip_ref = zipfile.ZipFile(folderpath + file_name, 'r')
             zip_ref.extractall(folderpath + file_name.split('.')[0])
             zip_ref.close()
             # Deletes the ZIP
-            logger.debug("Deleting {} ZIP file...".format(file_name.split('.')[0]))
+            logger.info("Deleting {} ZIP file...".format(file_name.split('.')[0]))
             os.remove(folderpath + file_name)
     return
 
@@ -62,7 +62,7 @@ def proc_in_directory(folderpath):
         for file in files:
             path = os.path.join(cur_path,file)
             io_support.memory_check(path)
-            logger.debug("Processing {}".format(path))
+            logger.info("Processing {}".format(path))
             if "sub" in file:
                 edgar_parse.submission_parse(path, folderpath + "SUB_INTERMEDIATE.txt")
             elif "num" in file:
@@ -83,7 +83,7 @@ def post_proc(folderpath, stock_folderpath):
     #########################################################
     ## Loads SUB_INTERMEDIATE from its location            ##
     #########################################################
-    logger.debug("Reading %s file from local drive...", "SUB")
+    logger.info("Reading %s file from local drive...", "SUB")
     sub_inter_df = pd.read_csv(folderpath + "SUB_INTERMEDIATE.txt", sep='\t', encoding='iso8859-1')
     # Drop non-unique accession numbers
     sub_inter_df.drop_duplicates(subset=['accession_num'], inplace=True)
@@ -96,7 +96,7 @@ def post_proc(folderpath, stock_folderpath):
     #########################################################
     ## Loads TAG_INTERMEDIATE from its location            ##
     #########################################################
-    logger.debug("Reading %s file from local drive...", "TAG")
+    logger.info("Reading %s file from local drive...", "TAG")
     tag_inter_df = pd.read_csv(folderpath + "TAG_INTERMEDIATE.txt", sep='\t', encoding='iso8859-1')
     # Drops non-unique values based on tag name AND tag version
     tag_inter_df.drop_duplicates(subset=['tag_name', 'tag_version'], inplace=True)
@@ -105,12 +105,12 @@ def post_proc(folderpath, stock_folderpath):
     #########################################################
     ## Loads NUM_INTERMEDIATE from its location in chunks  ##
     #########################################################
-    logger.debug("Reading %s file from local drive...", "NUM")
+    logger.info("Reading %s file from local drive...", "NUM")
     num_chunks = pd.read_csv(folderpath + "NUM_INTERMEDIATE.txt", sep='\t', chunksize=csize, encoding='iso8859-1')
     writeHeader = True
     with open(folderpath + "NUM_FINAL.txt", 'w') as numfinalfile:
         for chunk in num_chunks:
-            logger.debug("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
+            logger.info("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
             chunk_filter = chunk[chunk.accession_num.isin(accession_list)]
             chunk_filter.to_csv(numfinalfile, sep='\t', index=False, header=writeHeader)
             writeHeader = False
@@ -118,12 +118,12 @@ def post_proc(folderpath, stock_folderpath):
     #########################################################
     ## Loads PRE_INTERMEDIATE from its location in chunks  ##
     #########################################################
-    logger.debug("Reading %s file from local drive...", "PRE")
+    logger.info("Reading %s file from local drive...", "PRE")
     pre_chunks = pd.read_csv(folderpath + "PRE_INTERMEDIATE.txt", sep='\t', chunksize=csize, encoding='iso8859-1')
     writeHeader = True
     with open(folderpath + "PRE_FINAL.txt", 'w') as prefinalfile:
         for chunk in pre_chunks:
-            logger.debug("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
+            logger.info("Accession #%s being read...", chunk.accession_num[chunk.index[0]])
             chunk_filter = chunk[chunk.accession_num.isin(accession_list)]
             chunk_filter.to_csv(prefinalfile, sep='\t', index=False, header=writeHeader)
             writeHeader = False
@@ -138,7 +138,7 @@ def json_build(inpath, outpath):
     # Retrieves already processed symbols
     previous_symbols = io_support.get_current_symbols(outpath, keyword='Financials', datatype='json')
     # Loads the four FINAL files from their location
-    logger.debug("Loading FINAL files...")
+    logger.info("Loading FINAL files...")
     sub_final_df = pd.read_csv(inpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
     pre_final_df = pd.read_csv(inpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
     tag_final_df = pd.read_csv(inpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
@@ -157,7 +157,7 @@ def json_build(inpath, outpath):
         # Starts timer for each symbol
         time0 = time.time() 
         ## Logs the current symbol
-        logger.debug("Processing %s financial statements...", symbol)
+        logger.info("Processing %s financial statements...", symbol)
         ## Isolates the metadata for this symbol
         json_rows = json_meta[json_meta.symbol == symbol].to_json(orient='records')
         # Indicates that this info is metadata
@@ -192,7 +192,7 @@ def json_build(inpath, outpath):
                 continue
             # Harvests current accession number
             this_acc = row.split("\"")[3]
-            logger.debug("Processing accession number: %s", this_acc)
+            logger.info("Processing accession number: %s", this_acc)
             # Retrives data from this accession number
             this_pre = symbol_sub_pre[symbol_sub_pre.accession_num == this_acc]
             this_pre.sort_values(by=['line'], inplace=True)
