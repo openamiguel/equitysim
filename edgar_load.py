@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.8.0
+## Version: 1.8.1
 
 import logging
 import os
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 csize = 1000000
 
-def download_unzip(folderpath, startyear=2009, endyear=2018):
+def download_unzip(folderpath, startyear=2013, endyear=2018):
     """ Downloads and unzips all the data from SEC EDGAR on financial statements.
         Inputs: folder path to write files to, start year of downloaded data, 
             end year of downloaded data
@@ -72,7 +72,7 @@ def proc_in_directory(folderpath):
     return True
 
 def post_proc(folderpath, stock_folderpath):
-    """ Post-processing on data of interest.
+    """ Post-processing on the four combined files from EDGAR.
         Inputs: path of tag file, path of stock data folder
         Outputs: True if everything works
     """
@@ -128,11 +128,17 @@ def post_proc(folderpath, stock_folderpath):
     prefinalfile.close()
     return True
 
-def json_build(folderpath, outpath):
+def json_build(inpath, outpath):
+    """ Processes data into one JSON file for each company.
+        Inputs: path of input folder, path of output folder
+        Outputs: True if everything works
+    """
+    # Retrieves already processed symbols
+    previous_symbols = io_support.get_current_symbols(outpath, keyword='Financials', datatype='json')
     # Loads the four FINAL files from their location
-    sub_final_df = pd.read_csv(folderpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
-    pre_final_df = pd.read_csv(folderpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
-    tag_final_df = pd.read_csv(folderpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
+    sub_final_df = pd.read_csv(inpath + "SUB_FINAL.txt", sep='\t', encoding='iso8859-1')
+    pre_final_df = pd.read_csv(inpath + "PRE_FINAL.txt", sep='\t', encoding='iso8859-1')
+    tag_final_df = pd.read_csv(inpath + "TAG_FINAL.txt", sep='\t', encoding='iso8859-1')
     # Gets all the columns of interest for json metadata
     json_meta = pd.concat([sub_final_df.symbol, sub_final_df.company_name, 
                            sub_final_df.central_index_key, sub_final_df.industry_name, 
@@ -142,6 +148,9 @@ def json_build(folderpath, outpath):
     json_meta.drop_duplicates(subset=['symbol'], inplace=True)   
     # For each symbol in json_meta, processes into a different JSON file
     for symbol in json_meta.symbol:
+        # Skips symbols already in the folder
+        if symbol in previous_symbols:
+            continue
         # Starts timer for each symbol
         time0 = time.time() 
         ## Logs the current symbol
@@ -199,7 +208,7 @@ def json_build(folderpath, outpath):
         #########################################################
         symbol_sub_pre_tag = symbol_sub_pre.merge(tag_final_df, how='inner')
         symbol_sub_pre_tag.drop(labels=['doc'], axis=1, inplace=True)
-        symbol_all = io_support.merge_chunked(folderpath + "NUM_FINAL.txt", symbol_sub_pre_tag)
+        symbol_all = io_support.merge_chunked(inpath + "NUM_FINAL.txt", symbol_sub_pre_tag)
         # Iterates through current lines of submission and presentation data
         for idx, row in enumerate(json_split):
             if "line" not in row:
