@@ -1,16 +1,18 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.8.1
+## Version: 2.0.0
 
 import logging
 import os
 import pandas as pd
+import sys
 import time
 import urllib.request
 import urllib.error
 import zipfile
 
+import command_parser
 import edgar_parse
 import io_support
 
@@ -251,10 +253,43 @@ def json_build(inpath, outpath):
         logger.info("Time elapsed for %s was %4.2f seconds", symbol, time_tot)
     return True
 
-folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
-stock_folder_path = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-outpath = "C:/Users/Miguel/Desktop/Financials/"
-# download_unzip(folder_path)
-# proc_in_directory(folder_path)
-# post_proc(folder_path, stock_folder_path)
-json_build(folder_path, outpath)
+def main():
+    """ User interacts with interface through command prompt, which obtains several "input" data. 
+        Here are some examples of how to run this program: 
+        
+        python edgar_load.py -startYear 2013 -endYear 2018 -folderPath C:/Users/Miguel/Desktop/EDGAR/ -stockFolderPath C:/Users/Miguel/Documents/EQUITIES/stockDaily -financialFolderPath C:/Users/Miguel/Desktop/Financials
+        This will download data from 2013 to 2018 into folderPath, filter based on stocks at stockFolderPath, and store final output in financialFolderPath
+        
+        Inputs: implicit through command prompt
+        Outputs: True if everything works
+    """
+    prompts = sys.argv
+    ## Handles start and end year of download
+    startyear = int(command_parser.get_generic_from_prompts(prompts, query="-startYear"))
+    endyear = int(command_parser.get_generic_from_prompts(prompts, query="-endYear"))
+    ## Handles where the user wants to download files. 
+    # Default folder path is relevant to the author only. 
+    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Desktop/EDGAR", req=False)
+    folder_path = folder_path + "/" if folder_path[-1] != "/" else folder_path
+    ## Handles where the user downloaded their stock data.  
+    # Default folder path is relevant to the author only. 
+    stock_folder_path = command_parser.get_generic_from_prompts(prompts, query="-stockFolderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+    stock_folder_path = stock_folder_path + "/" if stock_folder_path[-1] != "/" else stock_folder_path
+    ## Handles where the user wants to store their financial data.
+    # Default folder path is relevant to the author only.
+    financial_folder_path = command_parser.get_generic_from_prompts(prompts, query="-financialFolderPath", default="C:/Users/Miguel/Desktop/Financials", req=False)
+    financial_folder_path = financial_folder_path + "/" if financial_folder_path[-1] != "/" else financial_folder_path
+    # Checks if user wants to suppress any functions
+    suppress = ["-suppressDownload" in prompts, "-suppressProcess" in prompts]
+    ## Does all the legwork
+    if not suppress[0]:
+        download_unzip(folder_path, startyear=startyear, endyear=endyear)
+    if not suppress[1]:
+        proc_in_directory(folder_path)
+        post_proc(folder_path, stock_folder_path)
+    json_build(folder_path, financial_folder_path)
+    logger.info("All tasks completed. Have a nice day!")
+    return True
+
+if __name__ == "__main__":
+    main()
