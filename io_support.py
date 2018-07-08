@@ -1,6 +1,6 @@
 ## Contains support functions for file I/O. 
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import logging
 import os
@@ -10,9 +10,9 @@ from psutil import virtual_memory
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def get_current_symbols(folderpath, function="DAILY", datatype="csv"):
+def get_current_symbols(folderpath, keyword="DAILY", datatype="csv"):
     """ Returns list of all symbols downloaded to given folder. 
-        Inputs: path of folder directory, time series function, data type
+        Inputs: path of folder directory, file keyword, data type
         Outputs: list of aforementioned
     """
     symbols = []
@@ -20,7 +20,7 @@ def get_current_symbols(folderpath, function="DAILY", datatype="csv"):
     for cur_path, directories, files in os.walk(folderpath):
         for file in files:
             # Skips all irrelevant files
-            if datatype not in file or function not in file:
+            if datatype not in file or keyword not in file:
                 continue
             # Process the file name for symbol
             symbols.append(file.split('_')[0])
