@@ -704,7 +704,7 @@ def main():
 			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
 			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
 			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
-
+      
 if __name__ == "__main__":
 	main()
 """
