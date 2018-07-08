@@ -22,6 +22,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **auto_update.py**
   - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
+  - command prompt options:
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
 
@@ -31,6 +32,12 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `proc_in_directory` walks through download directory and parses each file
   - `post_proc` performs post-processing on files, which makes them smaller
   - `json_build` builds one JSON file for each company chosen
+  - command prompt options:
+    - `-folderPath`: location of folder to download data
+    - `-stockFolderPath`: location of folder to look for stock data
+    - `-financialFolderPath`: location of folder to load financial data
+    - `-suppressDownload`: order to suppress downloading data (i.e. already downloaded)
+    - `-suppressProcess`: order to suppress processing data (i.e. already processed)
 - **edgar_parse.py**
   - `json_parse` provides backup parsing code to clean up the JSON files in edgar_load.py
   - `get_sic_names` scrapes SEC.gov for data on industry codes (SICs)
@@ -38,15 +45,21 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `number_parse` parses number files
   - `presentation_parse` parses presentation files
   - `tag_parse` parses tag files
+  - command prompt options:
+    - *none* (does not need any)
 
 ### simulator suite
 - **strategy.py**
   - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
   - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
   - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
+  - command prompt options:
+    - *none* (does not need any)
 - **portfolio.py**
   - `asset_ranker` ranks a group of assets based on a certain criterion, choosing which ones should be bought long or sold short
   - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
+  - command prompt options:
+    - *none* (does not need any)
 - **performance.py**
   - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
     - proxy for risk-free rate is the 3-month US T-bill
