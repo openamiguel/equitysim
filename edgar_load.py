@@ -1,11 +1,12 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.7.10
+## Version: 1.8.0
 
 import logging
 import os
 import pandas as pd
+import time
 import urllib.request
 import urllib.error
 import zipfile
@@ -82,7 +83,7 @@ def post_proc(folderpath, stock_folderpath):
     #########################################################
     logger.debug("Reading %s file from local drive...", "SUB")
     sub_inter_df = pd.read_csv(folderpath + "SUB_INTERMEDIATE.txt", sep='\t', encoding='iso8859-1')
-    # Drop non-unique CIK values
+    # Drop non-unique accession numbers
     sub_inter_df.drop_duplicates(subset=['accession_num'], inplace=True)
     # Drop rows with symbols not in the symbol list
     sub_inter_df = sub_inter_df[sub_inter_df.symbol.isin(symbols)]
@@ -138,59 +139,112 @@ def json_build(folderpath, outpath):
                            sub_final_df.former_name, sub_final_df.date_of_name_change, 
                            sub_final_df.is_well_known_seasoned_issuer, sub_final_df.data_source], axis=1)
     # The metadata entries are one-to-one with symbol
-    json_meta.drop_duplicates(subset=['symbol'], inplace=True)
+    json_meta.drop_duplicates(subset=['symbol'], inplace=True)   
     # For each symbol in json_meta, processes into a different JSON file
     for symbol in json_meta.symbol:
+        # Starts timer for each symbol
+        time0 = time.time() 
         ## Logs the current symbol
         logger.debug("Processing %s financial statements...", symbol)
         ## Isolates the metadata for this symbol
-        json_meta_one = json_meta[json_meta.symbol == symbol].to_json(orient='records')
+        json_rows = json_meta[json_meta.symbol == symbol].to_json(orient='records')
         # Indicates that this info is metadata
-        json_meta_one = json_meta_one[:1] + "\"metadata\":" + json_meta_one[1:]
+        json_rows = json_rows[:1] + "\"metadata\":" + json_rows[1:]
         # Cleans up the JSON metadata
-        json_meta_one = json_meta_one.replace('[', '')
-        json_meta_one = json_meta_one.replace(']', '')
-        json_meta_one = "{" + json_meta_one + ","
-        ## Gets all data for current symbol
+        json_rows = json_rows[1:-1]
+        json_rows = "[{" + json_rows + ","
+        #########################################################
+        ## Loads SUB_FINAL for given symbol into JSON          ##
+        #########################################################
         symbol_sub = sub_final_df[sub_final_df.symbol == symbol]
         # Drops irrelevant records (already in metadata):
         symbol_sub.drop(labels=['central_index_key', 'company_name',
                                 'former_name', 'date_of_name_change',
                                 'is_well_known_seasoned_issuer', 'detail', 
                                 'data_source', 'symbol', 'industry_name'], axis=1, inplace=True) 
-        # For given symbol, merge symbol_sub with PRE on accession_num (in chunks)
+        symbol_json = symbol_sub.drop_duplicates(subset=['accession_num'])
+        # Harvests SUB records as JSON and cleans up file
+        json_rows = json_rows + symbol_json.to_json(orient='records')
+        json_rows = edgar_parse.json_parse(json_rows, newline=True)
+        json_rows = json_rows.replace('[', '')
+        json_rows = json_rows.replace(']', '')
+        json_rows = json_rows.replace('xml\"},\n', 'xml\",\n')
+        # Saves JSON rows to split on newline
+        json_split = json_rows.split('\n')
+        #########################################################
+        ## Merges PRE_FINAL using accession number             ##
+        #########################################################
         symbol_sub_pre = symbol_sub.merge(pre_final_df, how='inner')
-        # Merge with TAG on tag_name and tag_version
+        for idx, row in enumerate(json_split):
+            if "metadata" in row:
+                continue
+            # Harvests current accession number
+            this_acc = row.split("\"")[3]
+            logger.debug("Processing accession number: %s", this_acc)
+            # Retrives data from this accession number
+            this_pre = symbol_sub_pre[symbol_sub_pre.accession_num == this_acc]
+            this_pre.sort_values(by=['line'], inplace=True)
+            this_pre.drop(labels=['accession_num', 'source', 'form'], axis=1, inplace=True)
+            # Builds presentation data into JSON object
+            pre_json = edgar_parse.json_parse(this_pre.to_json(orient='records'), newline=True)
+            json_split[idx] = json_split[idx] + "\"presentation\":\n" + pre_json + "},"
+        # Drops unnecessary columns
+        symbol_sub_pre.drop(labels=['source', 'form', 'line', 'statement_report'], axis=1, inplace=True)
+        # Resets the values in json_split
+        json_rows = '\n'.join(json_split)
+        json_split = json_rows.split('\n')
+        print(json_split)
+        #########################################################
+        ## Merges TAG_FINAL and NUM_FINAL using tag info       ##
+        #########################################################
         symbol_sub_pre_tag = symbol_sub_pre.merge(tag_final_df, how='inner')
         symbol_sub_pre_tag.drop(labels=['doc'], axis=1, inplace=True)
-        # Merge with NUM on accession_num
         symbol_all = io_support.merge_chunked(folderpath + "NUM_FINAL.txt", symbol_sub_pre_tag)
-        # Drops irrelevant records (already in metadata):
-        # Sort the dataframe
-        symbol_all.sort_values(by=['accession_num','tag_name','tag_version'], inplace=True)
-        # Write each row of dataframe as JSON file
-        # Writes each line of JSON to file with symbol in name
+        # Iterates through current lines of submission and presentation data
+        for idx, row in enumerate(json_split):
+            if "line" not in row:
+                continue
+            # Harvests current tag name and version
+            this_tagname = row.split("\"")[5]
+            this_tagver = row.split("\"")[9]
+            logger.info("Processing tag name: %s", this_tagname)
+            # Retrives data from the combined tag-num dataframe
+            this_tag_num = symbol_all[symbol_sub_pre_tag.tag_name == this_tagname]
+            this_tag_num = this_tag_num[this_tag_num.tag_version == this_tagver]
+            this_tag_num.drop(labels=['tag_name', 'tag_version', 'accession_num'], axis=1, inplace=True)
+            # Retrives data on TAG only
+            tag_cols = ['is_numeric', 'datatype', 'point_or_duration', 'debit_or_credit']
+            this_tag = pd.concat([this_tag_num[col] for col in tag_cols], axis=1)
+            tag_json = edgar_parse.json_parse(this_tag.to_json(orient='records'))
+            tag_json = '[ ]' if tag_json == '[]' else tag_json
+            tag_json = tag_json.split('},')[0][2:].strip() if '},' in tag_json else tag_json[2:-2].strip()
+            tag_json = tag_json + ',' if tag_json != '' else tag_json
+            # Retrieves data on NUM only
+            this_num = this_tag_num.drop(labels=[col for col in tag_cols], axis=1)
+            num_json = edgar_parse.json_parse(this_num.to_json(orient='records'))
+            num_json = "\"num\":" + num_json
+            # Builds number and tag data into JSON object
+            endcap = json_split[idx][json_split[idx].rfind("\"") + 1:]
+            json_split[idx] = json_split[idx].replace(endcap, ',' + tag_json)
+            json_split[idx] = json_split[idx] + num_json + endcap
+        # Converts json_split into string and caps off the file
+        json_rows = "\n".join(json_split) + "}"
+        if json_rows[-2] == ',':
+            json_rows = json_rows[:-2] + json_rows[-1]
         filename = outpath + "{}_Financials.json".format(symbol)
+        # Writes final JSON file
         with open(filename, 'w') as jsonfile:
-            json_rows = symbol_all.to_json(orient='records')
-            # Cleans up the JSON rows
-            json_rows = json_rows.replace('[', '')
-            json_rows = json_rows.replace(']', '')
-            json_rows = json_rows.replace('\\/', '/')
-            json_rows = json_rows.replace('},', '},\n')
-            # Removes unnecessary data
-            json_rows = json_rows.replace('\"nciks\":1,', '')
-            json_rows = json_rows.replace('\"aciks\":null,', '')
-            json_rows = json_rows.replace(',\"debit_or_credit\":null', '')
-            # Writes metadata and rows to file
-            jsonfile.write(json_meta_one + '\n')
-            jsonfile.write(json_rows + "}")
+            jsonfile.write(json_rows)
         jsonfile.close()
-        break
+        # Starts timer for each symbol
+        time1 = time.time()
+        time_tot = (time1 - time0)
+        logger.info("Time elapsed for %s was %4.2f seconds", symbol, time_tot)
+    return True
 
 folder_path = "C:/Users/Miguel/Desktop/EDGAR/"
 stock_folder_path = "C:/Users/Miguel/Documents/EQUITIES/stockDaily"
-outpath = "C:/Users/Miguel/Desktop/"
+outpath = "C:/Users/Miguel/Desktop/Financials/"
 # download_unzip(folder_path)
 # proc_in_directory(folder_path)
 # post_proc(folder_path, stock_folder_path)
