@@ -1,6 +1,6 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.4.0
+## Version: 1.4.1
 
 import logging
 import numpy as np
@@ -24,7 +24,8 @@ def beta(price, baseline):
     price_baseline = pd.concat([price, baseline], axis=1)
     price_baseline.columns = ['price', 'baseline']
     cov = price_baseline.cov()
-    return cov.baseline[0]
+    var = baseline.var()
+    return cov.baseline[0] / var
 
 def sharpe_ratio(portfolio, risk_free_rate=1.94):
     """ Calculates the Sharpe ratio of the given portfolio.
