@@ -1,10 +1,14 @@
 # equitysim
 
-Harnesses the AlphaVantage API to pull, store, plot, and analyze equity data on the big players: any member of the S&P 500, Dow 30, or NASDAQ 100 indices, as well as any of the 100 most-traded ETFs and the top 25 most-traded mutual funds. 
+This code harnesses the AlphaVantage API to download and analyze equity data on any constituent of the following groups: 
+- the S&P 500 stock index
+- the Dow 30 stock index
+- the NASDAQ 100 stock index
+- the top 100 most-traded ETFs
+- the top 25 most-traded mutual funds
+These data are readily transformed using technical indicators and processed into features for machine learning. 
 
-Also downloads data from the US SEC's Financial Statements datasets, which can bring plenty of fundamental data into one's analysis. Data downloaded from ZIP files at this URL: [SEC EDGAR Financial Statement Datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html). 
-
-See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
+This code also downloads and analyzes data from the [US SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
 
 ## AlphaVantage data download/update
 - **download.py**
@@ -23,6 +27,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
+- See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on their API calls. 
 
 ## SEC EDGAR data download/update
 - **edgar_load.py**
