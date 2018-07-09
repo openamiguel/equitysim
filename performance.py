@@ -1,6 +1,6 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.4.1
+## Version: 1.4.2
 
 import logging
 import numpy as np
@@ -11,7 +11,7 @@ import plotter
 import portfolio
 import return_calculator
 import strategy
-import technicals_calculator
+import technicals as ti
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -68,8 +68,8 @@ def main():
     tick_data = download.load_single_drive(symbol, folderpath=folder_path)
     tick_data = tick_data[start_date:end_date]
     prices = pd.concat([tick_data.close], axis=1)
-    trend = technicals_calculator.simple_moving_average(tick_data.close, num_periods=30)
-    baseline = technicals_calculator.simple_moving_average(tick_data.close, num_periods=90)
+    trend = ti.simple_moving_average(tick_data.close, num_periods=30)
+    baseline = ti.simple_moving_average(tick_data.close, num_periods=90)
     trend_baseline = pd.concat([trend, baseline], axis=1)
     trend_baseline.columns = ['trend','baseline']
     trades = strategy.zscore_distance(trend_baseline)
