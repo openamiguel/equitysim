@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.1
+## Version: 1.0.2
 
 import logging
 import sys
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_features(tick_data, price, baseline):
-    """ Compiled function with all indicators in the file added to it.
+    """ Compiled function with all possible features added to it.
         Inputs: asset data, column to use as price, baseline asset/index
         Outputs: dataframe of features
     """
