@@ -67,6 +67,19 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - command prompt options:
     - *none* (does not need any)
 
+### machine learning suite
+- **feature_build.py**
+  - `get_features` returns a dataframe of features, with one column for each indicator listed above
+  - command prompt options:
+    - `-tickerUniverse`: collection of tickers to download (can also be a comma-delimited list of ticker symbols) 
+    - `-baseline`: selection of symbol to use as baseline asset/index
+    - `-startDate`: start date of data to process into features
+    - `-endDate`: end date of aforementioned
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-folderPath`: location of folder to write the files
+    - `-plotOnly`: if indicated, plot the heatmaps; otherwise, build from scratch without plots
+
 ### assorted calculators and misc. programs
 - **command_parser.py**
   - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
@@ -103,7 +116,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
     - `-column`: choice of price or volume to plot
-- **technicals_calculator.py**
+- **technicals.py**
   - `aroon` returns the Aroon indicator of asset data
   - `aroon_oscillator` returns the Aroon oscillator of asset data
   - `average_price` returns the average price of asset data
@@ -135,13 +148,3 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `variable_moving_average` returns the variable moving average of a price input
   - `weighted_close` returns the weighted close of asset data
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
-  - `get_features` returns a dataframe of features, with one column for each indicator listed above
-  - command prompt options:
-    - `-tickerUniverse`: collection of tickers to download (can also be a comma-delimited list of ticker symbols) 
-    - `-baseline`: selection of symbol to use as baseline asset/index
-    - `-startDate`: start date of data to process into features
-    - `-endDate`: end date of aforementioned
-    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
-    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
-    - `-folderPath`: location of folder to write the files
-    - `-plotOnly`: if indicated, plot the heatmaps; otherwise, build from scratch without plots
