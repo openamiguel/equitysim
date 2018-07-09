@@ -6,9 +6,7 @@ Also downloads data from the US SEC's Financial Statements datasets, which can b
 
 See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on how API calls work within this code! 
 
-## documentation of each file and its functions
-
-### AlphaVantage data download/update suite
+## AlphaVantage data download/update
 - **download.py**
   - `load_single` downloads and processes a single symbol from AlphaVantage API into a file
   - `load_single_drive` downloads and processes a single symbol from local drive into a variable
@@ -26,7 +24,7 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
 
-### SEC EDGAR data download/update suite
+## SEC EDGAR data download/update
 - **edgar_load.py**
   - `download_unzip` downloads and unzips data directly from the SEC website
   - `proc_in_directory` walks through download directory and parses each file
@@ -47,75 +45,18 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `tag_parse` parses tag files
   - command prompt options:
     - *none* (does not need any)
+- **edgar_update.py**
+  - COMING SOON!
 
-### simulator suite
-- **strategy.py**
-  - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
-  - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
-  - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
-  - command prompt options:
-    - *none* (does not need any)
-- **portfolio.py**
-  - `asset_ranker` ranks a group of assets based on a certain criterion, choosing which ones should be bought long or sold short
-  - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
-  - command prompt options:
-    - *none* (does not need any)
-- **performance.py**
-  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
-    - proxy for risk-free rate is the 3-month US T-bill
-  - `returns_portfolio` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
-  - command prompt options:
-    - *none* (does not need any)
-
-### machine learning suite
-- **feature_build.py**
-  - `get_features` returns a dataframe of features, with one column for each indicator listed above
-  - command prompt options:
-    - `-tickerUniverse`: collection of tickers to download (can also be a comma-delimited list of ticker symbols) 
-    - `-baseline`: selection of symbol to use as baseline asset/index
-    - `-startDate`: start date of data to process into features
-    - `-endDate`: end date of aforementioned
-    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
-    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
-    - `-folderPath`: location of folder to write the files
-    - `-plotOnly`: if indicated, plot the heatmaps; otherwise, build from scratch without plots
-
-### assorted calculators and misc. programs
-- **command_parser.py**
-  - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
-  - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
-  - command prompt options:
-    - *none* (does not need any)
-- **io_support.py**
-  - `get_current_symbols` looks for stock ticker symbols in the files within directory
-  - `memory_check` verifies if file occupies too much space in RAM
-  - `merge_chunked` inner-joins a small dataframe (left) with a large one (right), the latter being read in chunks
-  - `write_as_append` writes dataframe to file path in append mode
-  - command prompt options:
-    - *none* (does not need any)
-- **ticker_universe.py**
-  - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
-  - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
-  - `obtain_parse_mutual_funds` gets the top 25 mutual funds from marketwatch.com.
-  - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
-  - command prompt options:
-    - *none* (does not need any)
+## fundamental analysis
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
   - command prompt options:
     - *none* (does not need any)
-- **plotter.py**
-  - `feature_plot` plots a file of features as a correlation heatmap
-  - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
-  - command prompt options:
-    - `-symbol`: symbol of the asset to plot
-    - `-folderPath`: location of folder to look for files
-    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
-    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
-    - `-startDate`: start date of data to plot
-    - `-endDate`: end date of aforementioned
-    - `-column`: choice of price or volume to plot
+- Code to parse EDGAR data is COMING SOON!
+
+## technical analysis
 - **technicals.py**
   - `aroon` returns the Aroon indicator of asset data
   - `aroon_oscillator` returns the Aroon oscillator of asset data
@@ -148,3 +89,70 @@ See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/)
   - `variable_moving_average` returns the variable moving average of a price input
   - `weighted_close` returns the weighted close of asset data
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
+
+## machine learning suite
+- **feature_build.py**
+  - `get_features` returns a dataframe of features, with one column for each indicator listed above
+  - command prompt options:
+    - `-tickerUniverse`: collection of tickers to download (can also be a comma-delimited list of ticker symbols) 
+    - `-baseline`: selection of symbol to use as baseline asset/index
+    - `-startDate`: start date of data to process into features
+    - `-endDate`: end date of aforementioned
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-folderPath`: location of folder to write the files
+    - `-plotOnly`: if indicated, plot the heatmaps; otherwise, build from scratch without plots
+
+## general simulators
+- **strategy.py**
+  - `hold_clear` builds a simple strategy for buying/selling, holding one's position, and clearing
+  - `crossover` builds a strategy for buying when trend crosses below baseline and selling when trend crosses above (or vice versa)
+  - `zscore_distance` builds a strategy for for buying when trend crosses far below baseline and selling when trend crosses far above (or vice versa), as measured by z-scores
+  - command prompt options:
+    - *none* (does not need any)
+- **portfolio.py**
+  - `asset_ranker` ranks a group of assets based on a certain criterion, choosing which ones should be bought long or sold short
+  - `apply_trades` applies any series of trades to any set of symbols, yielding a portfolio simulation
+  - command prompt options:
+    - *none* (does not need any)
+- **performance.py**
+  - `beta` calculates asset/portfolio beta
+  - `sharpe_ratio` calculates the Sharpe ratio for a given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
+  - `treynor_ratio` calculates the Treynor ratio for given portfolio
+    - proxy for risk-free rate is the 3-month US T-bill
+  - `returns_valuation` values the portfolio (initial value, final value, and return) against a benchmark (such as an index)
+  - command prompt options:
+    - *none* (does not need any)
+
+## miscellaneous
+- **command_parser.py**
+  - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
+  - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
+  - command prompt options:
+    - *none* (does not need any)
+- **io_support.py**
+  - `get_current_symbols` looks for stock ticker symbols in the files within directory
+  - `memory_check` verifies if file occupies too much space in RAM
+  - `merge_chunked` inner-joins a small dataframe (left) with a large one (right), the latter being read in chunks
+  - `write_as_append` writes dataframe to file path in append mode
+  - command prompt options:
+    - *none* (does not need any)
+- **ticker_universe.py**
+  - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
+  - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
+  - `obtain_parse_mutual_funds` gets the top 25 mutual funds from marketwatch.com.
+  - `obtain_parse_etfs` gets the top 100 ETFs from etfdb.com.
+  - command prompt options:
+    - *none* (does not need any)
+- **plotter.py**
+  - `feature_plot` plots a file of features as a correlation heatmap
+  - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
+  - command prompt options:
+    - `-symbol`: symbol of the asset to plot
+    - `-folderPath`: location of folder to look for files
+    - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
+    - `-interval` specifies what kind of intraday (1min, 15min, etc.)
+    - `-startDate`: start date of data to plot
+    - `-endDate`: end date of aforementioned
+    - `-column`: choice of price or volume to plot
