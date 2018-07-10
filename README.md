@@ -50,8 +50,6 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
   - `tag_parse` parses tag files
   - command prompt options:
     - *none* (does not need any)
-- **edgar_update.py**
-  - COMING SOON!
 
 ## fundamental analysis
 - **return_calculator.py**
