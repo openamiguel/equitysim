@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.3
+## Version: 2.0.7
 
 import logging
 import os
@@ -153,6 +153,7 @@ def json_build(inpath, outpath):
     for symbol in json_meta.symbol:
         # Skips symbols already in the folder
         if symbol in previous_symbols:
+            logger.info("Symbol %s already processed, moving on.", symbol)
             continue
         # Starts timer for each symbol
         time0 = time.time() 
@@ -174,13 +175,12 @@ def json_build(inpath, outpath):
                                 'former_name', 'date_of_name_change',
                                 'is_well_known_seasoned_issuer', 'detail', 
                                 'data_source', 'symbol', 'industry_name'], axis=1, inplace=True, errors='ignore') 
-        symbol_json = symbol_sub.drop_duplicates(subset=['accession_num'])
+        symbol_json = symbol_sub.drop_duplicates(subset=['accession_num'])[1:]
         # Harvests SUB records as JSON and cleans up file
         json_rows = json_rows + symbol_json.to_json(orient='records')
         json_rows = edgar_parse.json_parse(json_rows, newline=True)
-        json_rows = json_rows.replace('[', '')
-        json_rows = json_rows.replace(']', '')
         json_rows = json_rows.replace('xml\"},\n', 'xml\",\n')
+        json_rows = json_rows.replace('[{\"accession', '{\"accession')
         # Saves JSON rows to split on newline
         json_split = json_rows.split('\n')
         #########################################################
@@ -197,9 +197,11 @@ def json_build(inpath, outpath):
             this_pre = symbol_sub_pre[symbol_sub_pre.accession_num == this_acc]
             this_pre.sort_values(by=['line'], inplace=True)
             this_pre.drop(labels=['accession_num', 'source', 'form'], axis=1, inplace=True)
+            this_pre = pd.concat([this_pre.line, this_pre.tag_name, this_pre.tag_version, 
+                                  this_pre.statement_report, this_pre.nciks, this_pre.aciks], axis=1)
             # Builds presentation data into JSON object
             pre_json = edgar_parse.json_parse(this_pre.to_json(orient='records'), newline=True)
-            json_split[idx] = json_split[idx] + "\"presentation\":\n" + pre_json + "},"
+            json_split[idx] = json_split[idx] + "\"presentation\":\n[[" + pre_json + "},"
         # Drops unnecessary columns
         symbol_sub_pre.drop(labels=['source', 'form', 'line', 'statement_report'], axis=1, inplace=True)
         # Resets the values in json_split
@@ -220,7 +222,7 @@ def json_build(inpath, outpath):
             this_tagver = row.split("\"")[9]
             logger.info("Processing tag name: %s", this_tagname)
             # Retrives data from the combined tag-num dataframe
-            this_tag_num = symbol_all[symbol_sub_pre_tag.tag_name == this_tagname]
+            this_tag_num = symbol_all[symbol_all.tag_name == this_tagname]
             this_tag_num = this_tag_num[this_tag_num.tag_version == this_tagver]
             this_tag_num.drop(labels=['tag_name', 'tag_version', 'accession_num'], axis=1, inplace=True)
             # Converts date field to actual date
@@ -247,6 +249,8 @@ def json_build(inpath, outpath):
             json_split[idx] = json_split[idx] + num_json + endcap
         # Converts json_split into string and caps off the file
         json_rows = "\n".join(json_split) + "}"
+        json_rows = json_rows.replace('\"},\n{\"acc', '\"}]},\n{\"acc')
+        json_rows = json_rows.replace('\"SEC_EDGAR\"}]},', '\"SEC_EDGAR\"},')
         if json_rows[-2] == ',':
             json_rows = json_rows[:-2] + json_rows[-1]
         filename = outpath + "{}_Financials.json".format(symbol)
