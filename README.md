@@ -8,7 +8,7 @@ This code harnesses the AlphaVantage API to download and analyze equity data on 
 - the top 25 most-traded mutual funds
 These data are readily transformed using technical indicators and processed into features for machine learning. 
 
-This code also downloads and analyzes data from the [US SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
+This code also downloads and analyzes data from the [United States SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
 
 ## AlphaVantage data download/update
 - **download.py**
