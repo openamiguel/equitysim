@@ -8,7 +8,7 @@ This code harnesses the AlphaVantage API to download and analyze equity data on 
 - the top 25 most-traded mutual funds
 These data are readily transformed using technical indicators and processed into features for machine learning. 
 
-This code also downloads and analyzes data from the [US SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
+This code also downloads and analyzes data from the [United States SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
 
 ## AlphaVantage data download/update
 - **download.py**
@@ -145,6 +145,10 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
   - `write_as_append` writes dataframe to file path in append mode
   - command prompt options:
     - *none* (does not need any)
+- **bonds.py**
+  - `periodic_compound` calculates the bond discounting factor under periodic compounding
+  - `continuous_compound` calculates the bond discounting factor under continuous compounding
+  - `fixed_rate_bond` calculates the initial bond price for zero- and non-zero-coupon fixed-rate bonds
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
