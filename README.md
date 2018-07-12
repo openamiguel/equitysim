@@ -52,12 +52,16 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
     - *none* (does not need any)
 
 ## fundamental analysis
+- **edgar_pull.py**
+  - `get_unique_tags` returns list of unique tags in a single company's JSON file
+  - `get_data_this_tag` writes data on one chosen tag to an output file
+  - command prompt options:
+    - pending
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
   - command prompt options:
     - *none* (does not need any)
-- Code to parse EDGAR data is COMING SOON!
 
 ## technical analysis
 - **technicals.py**
