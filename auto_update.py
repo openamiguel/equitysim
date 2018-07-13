@@ -1,6 +1,6 @@
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.1.1
+## Version: 4.1.2
 
 import glob
 import logging
@@ -54,7 +54,7 @@ def update_in_folder(folder_path, file_path, api_key):
 		return None
 	# Isolates the data that is new (based on last date/time collected)
 	new_data = new_data[(new_data.index == last_date).cumsum() > 0]
-	new_data = new_data.drop(index=last_date) if last_date in new_data.index
+	new_data = new_data.drop(index=last_date) if last_date in list(new_data.index.values)
 	# Concatenate along row
 	finished_output = pd.concat([old_data, new_data])
 	# Writes allTickerData to chosen folder path
