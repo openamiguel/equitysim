@@ -1,6 +1,6 @@
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.1.4
+## Version: 4.1.5
 
 import glob
 import logging
