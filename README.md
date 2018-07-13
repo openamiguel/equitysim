@@ -8,7 +8,7 @@ This code harnesses the AlphaVantage API to download and analyze equity data on 
 - the top 25 most-traded mutual funds
 These data are readily transformed using technical indicators and processed into features for machine learning. 
 
-This code also downloads and analyzes data from the [US SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
+This code also downloads and analyzes data from the [United States SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
 
 ## AlphaVantage data download/update
 - **download.py**
@@ -52,12 +52,16 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
     - *none* (does not need any)
 
 ## fundamental analysis
+- **edgar_pull.py**
+  - `get_unique_tags` returns list of unique tags in a single company's JSON file
+  - `get_data_this_tag` writes data on one chosen tag to an output file
+  - command prompt options:
+    - pending
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
   - command prompt options:
     - *none* (does not need any)
-- Code to parse EDGAR data is COMING SOON!
 
 ## technical analysis
 - **technicals.py**
@@ -141,6 +145,10 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
   - `write_as_append` writes dataframe to file path in append mode
   - command prompt options:
     - *none* (does not need any)
+- **bonds.py**
+  - `periodic_compound` calculates the bond discounting factor under periodic compounding
+  - `continuous_compound` calculates the bond discounting factor under continuous compounding
+  - `fixed_rate_bond` calculates the initial bond price for zero- and non-zero-coupon fixed-rate bonds
 - **ticker_universe.py**
   - `obtain_parse_nasdaq` gets the Nasdaq 100 stocks from stockmonitor.com. 
   - `obtain_parse_wiki` gets either the S&P 500 or the Dow 30 stocks from Wikipedia. 
@@ -150,6 +158,7 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
     - *none* (does not need any)
 - **plotter.py**
   - `feature_plot` plots a file of features as a correlation heatmap
+  - `candle_plot` plots a single asset in candlestick form
   - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
@@ -159,3 +168,4 @@ This code also downloads and analyzes data from the [US SEC's Financial Statemen
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
     - `-column`: choice of price or volume to plot
+    - `-candlestick`: choice to use candlestick plot instead of typical plot
