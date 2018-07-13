@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.3.3
+## Version: 4.3.4
 
 import logging
 import seaborn as sns
@@ -49,7 +49,7 @@ def feature_plot(symbol, folderpath="", savePlot=True, showPlot=False):
         plt.show()
     plt.close(fig)
 
-def plot_candles(tick_data, symbol, volume_bars=False, folderpath="", savePlot=True, showPlot=False):
+def candle_plot(tick_data, symbol, volume_bars=False, folderpath="", savePlot=True, showPlot=False):
     """ Plots a candlestick chart on OHLC data, with volume as subplot if desired.
         Inputs: OHLC dataframe, company symbol, order to plot volume (default: no), 
             folder path to save file, order to save plot (default: yes), 
@@ -203,8 +203,6 @@ def main():
         end_date = end_date.replace("_"," ")
     ## Check if one desires candlestick plot
     candles = "-candlestick" in prompts
-    ## Handles command line option for which column of dataframe to plot
-    column_choice = command_parser.get_generic_from_prompts(prompts, query="-column", default="close", req=False)
     ## Runs the plot code on the lone symbol
     tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
     tick_data = tick_data[start_date:end_date]
@@ -214,8 +212,10 @@ def main():
             logger.error("ERROR: CANDLESTICK PLOTTER NOT OPTIMIZED FOR INTRADAY")
             return 1
         else:
-            plot_candles(tick_data, symbol=symbol, volume_bars=True, folderpath=folder_path, savePlot=True, showPlot=True)    
+            candle_plot(tick_data, symbol=symbol, volume_bars=True, folderpath=folder_path, savePlot=True, showPlot=True)    
     else:
+        ## Handles command line option for which column of dataframe to plot (irrelevant for candlestick)
+        column_choice = command_parser.get_generic_from_prompts(prompts, query="-column", default="close", req=False)
         tick_data.columns = [x if x != column_choice else "price" for x in tick_data.columns.values.tolist()]
         price_plot(pd.DataFrame(tick_data.price, columns=['price']), symbol, subplot=[True], returns=[False],folderpath=folder_path, savePlot=True, showPlot=True)
     return 0
