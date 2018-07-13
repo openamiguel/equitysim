@@ -158,6 +158,7 @@ This code also downloads and analyzes data from the [United States SEC's Financi
     - *none* (does not need any)
 - **plotter.py**
   - `feature_plot` plots a file of features as a correlation heatmap
+  - `candle_plot` plots a single asset in candlestick form
   - `price_plot` plots a single asset against any number of prices, trends, indicators, etc.
   - command prompt options:
     - `-symbol`: symbol of the asset to plot
@@ -167,3 +168,4 @@ This code also downloads and analyzes data from the [United States SEC's Financi
     - `-startDate`: start date of data to plot
     - `-endDate`: end date of aforementioned
     - `-column`: choice of price or volume to plot
+    - `-candlestick`: choice to use candlestick plot instead of typical plot
