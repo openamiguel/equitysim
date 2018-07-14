@@ -1,6 +1,6 @@
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.1.5
+## Version: 4.1.6
 
 import glob
 import logging
@@ -44,7 +44,7 @@ def update_in_folder(folder_path, file_path, api_key):
 		function = functionSplit[0]
 		interval = functionSplit[1]
 	# We only need the compact version if the data is not intraday
-	output_size = "full" if function == "INTRADAY" else compact
+	output_size = "full" if function == "INTRADAY" else "compact"
 	new_data = download.load_single(symbol, api_key, function=function, output_size=output_size, interval=interval)
 	# If unavailable, don't download
 	if new_data is None:
