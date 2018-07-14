@@ -109,17 +109,21 @@ def apply_trades(prices, trades, initialval=100000, seed=0.1, numtrades=1, trans
 
 def main():
 	tickerverse = ticker_universe.obtain_parse_wiki("SNP500")
+	tickerverse_copy = tickerverse
 	folder_path="/Users/openamiguel/Documents/EQUITIES/stockDaily"
 	start_date = "2014-01-06"
 	end_date = "2018-06-28"
 
 	prices = pd.DataFrame()
 	column_choice = "close"
-	for symbol in tickerverse:
+	for symbol in tickerverse_copy:
 		symboldata = download.load_single_drive(symbol, folderpath=folder_path)
 		if symboldata is not None: 
 			prices = pd.concat([prices, symboldata[column_choice]], axis=1)
+		else:
+			tickerverse.remove(symbol)
 	prices = prices[start_date:end_date]
+	print(prices.columns)
 	prices.columns  = tickerverse
 	long_prices, short_prices = asset_ranker(prices, ranking_method=return_calculator.overall_returns)
 	port = apply_trades(long_prices, strategy.hold_clear(long_prices, switch=True)) + apply_trades(short_prices, strategy.hold_clear(short_prices))
