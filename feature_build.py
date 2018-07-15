@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.2
+## Version: 1.0.3
 
 import logging
 import sys
@@ -118,7 +118,7 @@ def main():
     tickerverse, name = cmd.get_tickerverse_from_prompts(prompts)
     ## Handles where the user wants to download their files. 
     # Default folder path is relevant to the author only. 
-    folder_path = cmd.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+    folder_path = cmd.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
     ## Handles which index/asset should be the baseline 
     baseline_symbol = cmd.get_generic_from_prompts(prompts, query="-baseline", default="^GSPC", req=False)
     ## Handles collection of the start and end dates for trading

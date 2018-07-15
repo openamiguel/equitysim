@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.7
+## Version: 2.0.8
 
 import logging
 import os
@@ -280,15 +280,15 @@ def main():
     endyear = int(command_parser.get_generic_from_prompts(prompts, query="-endYear"))
     ## Handles where the user wants to download files. 
     # Default folder path is relevant to the author only. 
-    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Desktop/EDGAR", req=False)
+    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Desktop/EDGAR", req=False)
     folder_path = folder_path + "/" if folder_path[-1] != "/" else folder_path
     ## Handles where the user downloaded their stock data.  
     # Default folder path is relevant to the author only. 
-    stock_folder_path = command_parser.get_generic_from_prompts(prompts, query="-stockFolderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+    stock_folder_path = command_parser.get_generic_from_prompts(prompts, query="-stockFolderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
     stock_folder_path = stock_folder_path + "/" if stock_folder_path[-1] != "/" else stock_folder_path
     ## Handles where the user wants to store their financial data.
     # Default folder path is relevant to the author only.
-    financial_folder_path = command_parser.get_generic_from_prompts(prompts, query="-financialFolderPath", default="C:/Users/Miguel/Desktop/Financials", req=False)
+    financial_folder_path = command_parser.get_generic_from_prompts(prompts, query="-financialFolderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily/Financials", req=False)
     financial_folder_path = financial_folder_path + "/" if financial_folder_path[-1] != "/" else financial_folder_path
     # Checks if user wants to suppress any functions
     suppress = ["-suppressDownload" in prompts, "-suppressProcess" in prompts]

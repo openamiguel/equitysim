@@ -1,6 +1,6 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.4.2
+## Version: 1.4.3
 
 import logging
 import numpy as np
@@ -62,7 +62,7 @@ def returns_valuation(portfolio, baseline):
 
 def main():
     symbol="AAPL"
-    folder_path="C:/Users/Miguel/Documents/EQUITIES/stockDaily"
+    folder_path="/Users/openamiguel/Documents/EQUITIES/stockDaily"
     start_date = "2010-01-05"
     end_date = "2018-06-28"
     tick_data = download.load_single_drive(symbol, folderpath=folder_path)

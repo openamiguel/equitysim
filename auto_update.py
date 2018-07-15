@@ -1,6 +1,6 @@
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.1.6
+## Version: 4.1.7
 
 import glob
 import logging
@@ -80,7 +80,7 @@ def main():
 	prompts = sys.argv
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/stockData", req=False)
+	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles the user's API key. 
 	api_key = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
 	## Gets all CSV files in the folder
