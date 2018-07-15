@@ -1,7 +1,7 @@
 ## From the downloaded JSON files, this code pulls 
 ## Part of the fundamental analysis. 
 ## Author: Miguel Opeña
-## Version: 1.0.3
+## Version: 1.0.4
 
 import logging
 
@@ -50,7 +50,7 @@ def get_data_this_tag(filepath, tag):
     return
 
 def main():
-    inpath = "C:/Users/Miguel/Documents/EQUITIES/stockDaily/Financials/AAPL_Financials.json"
+    inpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily/Financials/AAPL_Financials.json"
     print(get_unique_tags(inpath))
     get_data_this_tag(inpath, "Dividends")
 
