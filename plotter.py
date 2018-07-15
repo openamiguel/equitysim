@@ -1,6 +1,6 @@
 ## This code contains several functionalities for plotting stocks: whether as individual assets (price), or as portfolios (returns).
 ## Author: Miguel Opeña
-## Version: 4.3.4
+## Version: 4.3.5
 
 import logging
 import seaborn as sns
@@ -188,7 +188,7 @@ def main():
     symbol = command_parser.get_generic_from_prompts(prompts, "-symbol")
     ## Handles where the user wants to download their files. 
     # Default folder path is relevant to the author only. 
-    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
     ## Handles collection of the start and end dates for trading
     start_date = command_parser.get_generic_from_prompts(prompts, query="-startDate")
     end_date = command_parser.get_generic_from_prompts(prompts, query="-endDate")
