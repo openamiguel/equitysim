@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.0.2
+## Version: 2.0.3
 
 import logging
 import pandas as pd
@@ -126,7 +126,7 @@ def main():
     tickerverse, name = command_parser.get_tickerverse_from_prompts(prompts)
     ## Handles where the user wants to download their files. 
     # Default folder path is relevant to the author only. 
-    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="C:/Users/Miguel/Documents/EQUITIES/stockDaily", req=False)
+    folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
     ## Handles the user's API key. 
     api_key = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
     ## Handles the desired time series function. 
