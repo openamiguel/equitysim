@@ -1,17 +1,24 @@
 ## General program to add metadata to the Financials JSON files.
 ## Author: Miguel Opeña
-## Version: 1.0.1
+## Version: 1.0.2
 
+import logging
 import pandas as pd
 
-def date_transform(date):
+import io_support
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def date_transform(date, delim='/'):
 	""" Transforms a date string into another format.
         Inputs: date string, desired format (default: AlphaVantage format "YYYY-MM-DD")
         Outputs: reformatted date
 	"""
-	return date + "X"
+	date_split = date.split(delim)
+	return '-'.join([date_split[2], date_split[0], date_split[1]])
 
-def stock_split(link="http://eoddata.com/splits.aspx", datasource="EOD_Data"):
+def stock_split(folderpath, link="http://eoddata.com/splits.aspx", datasource="EOD_Data"):
 	# Reads data from link
 	data = pd.read_html(link)
 	# Hardcoded for the default link (no other choice?)
@@ -20,14 +27,19 @@ def stock_split(link="http://eoddata.com/splits.aspx", datasource="EOD_Data"):
 	table.drop(labels=0, axis=0, inplace=True)
 	# Keeps the large-cap stocks (these are the only ones I have as of Jul 15, 2018)
 	table = table[(table.exchange == "NASDAQ") | (table.exchange == "NYSE")]
-	# Transforms the date
+	# Transforms the date and ratio columns
 	table.date = table.date.apply(date_transform)
+	table.ratio = table.ratio.apply(lambda x: " to ".join(z for z in x.split('-')) if '-' in x else x)
+	# Gets current symbols in given folder
+	current_symbols = io_support.get_current_symbols(folderpath, keyword="DAILY", datatype="csv")
 	# Iterates through table and adds metadata if needed
 	for idx in table.index:
 		this_symbol = table.symbol[idx]
-		
-		print(this_symbol)
+		if this_symbol not in current_symbols: continue
+		this_date = table.date[idx]
+		this_ratio = table.ratio[idx]
+		json_row = "{{\"stock_split\":{{\"date\":\"{}\",\"ratio\":\"{}\",\"data_source\":\"{}\"}}}}".format(this_date, this_ratio, datasource)
+		## TODO: insert code to add json_row to file
 	return table
 
-tab = stock_split()
-print(tab.head())
+tab = stock_split("/Users/openamiguel/Documents/EQUITIES/stockDaily")
