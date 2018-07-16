@@ -1,6 +1,6 @@
 ## General program to add metadata to the Financials JSON files.
 ## Author: Miguel Opeña
-## Version: 1.0.2
+## Version: 1.0.3
 
 import logging
 import pandas as pd
@@ -39,6 +39,7 @@ def stock_split(folderpath, link="http://eoddata.com/splits.aspx", datasource="E
 		this_date = table.date[idx]
 		this_ratio = table.ratio[idx]
 		json_row = "{{\"stock_split\":{{\"date\":\"{}\",\"ratio\":\"{}\",\"data_source\":\"{}\"}}}}".format(this_date, this_ratio, datasource)
+		logger.info("Row to be added to stock symbol %s file: %s", this_symbol, json_row)
 		## TODO: insert code to add json_row to file
 	return table
 
