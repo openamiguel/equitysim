@@ -2,10 +2,12 @@
 ## which are then compiled into a report about the company's performance.
 ## Part of the fundamental analysis.
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import logging
 import pandas as pd
+
+import download
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -72,13 +74,17 @@ def get_data_this_tag(filepath, tags, quarters=1, datatype="monetary", to_write=
 
 def main():
 	symbol = "AAPL"
+	stockpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
+	tick_data = download.load_single_drive(symbol, folderpath=stockpath)
+	stock_price = pd.DataFrame(tick_data.close)
 	inpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily/Financials/{}_Financials.json".format(symbol)
-	print(get_unique_tags(inpath))
+	# print(get_unique_tags(inpath))
 	net_sales = get_data_this_tag(inpath, "SalesRevenueNet")
 	operating_expenses = get_data_this_tag(inpath, "OperatingExpenses")
 	interest = get_data_this_tag(inpath, "InterestPaid")
-	tax = get_data_this_tag(inpath, "IncomeTaxesPaidNet", quarters=4)
-	assets = get_data_this_tag(inpath, "Assets", quarters=4)
+	dividend = get_data_this_tag(inpath, "Dividend", datatype="perShare")
+	tax = get_data_this_tag(inpath, "IncomeTaxesPaidNet")
+	assets = get_data_this_tag(inpath, "Assets")
 	gross_profit = get_data_this_tag(inpath, "GrossProfit")
 	cogs = get_data_this_tag(inpath, ["CostOfGoodsSold", "CostOfGoodsAndServicesSold"])
 	eps_basic = get_data_this_tag(inpath, "EarningsPerShareBasic", datatype="perShare")
@@ -87,7 +93,11 @@ def main():
 	gross_income = net_sales - cogs
 	net_income = gross_income - interest - tax
 	gross_sales = net_sales + cogs + operating_expenses + tax
-	print(assets)
+	payout_ratio = dividend / eps_basic
+	price_earnings = pd.concat([stock_price, eps_diluted], axis=1)
+	# price_earnings.value = price_earnings.value.fillna(method='ffill')
+	price_earnings.dropna(how='any', axis=0, inplace=True)
+	print(price_earnings)
 
 if __name__ == "__main__":
 	main()
