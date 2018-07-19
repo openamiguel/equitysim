@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.5
+## Version: 1.0.6
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = chaikin_ad_osc(tick_data)
+	ad = chaikin_volatility(tick_data, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'chaikin AD']
+	price_with_trends.columns = ['price', 'chaikin volatility']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 
@@ -225,6 +225,20 @@ def chaikin_ad_osc(tick_data):
 	component1 = exponential_moving_average(ad.ad_line, num_periods=3)
 	component2 = exponential_moving_average(ad.ad_line, num_periods=10)
 	return component1 - component2
+
+def chaikin_volatility(tick_data, num_periods):
+	""" Computes the Chaikin volatility over given timespan.
+		Related in principle to the other Chaikin indicators.
+		Inputs: dataframe with low and high price; number of periods
+		Outputs: Chaikin volatility over given timespan
+	"""
+	emahl = exponential_moving_average(tick_data.high - tick_data.low, num_periods=num_periods)
+	cv = pd.DataFrame(index=tick_data.index, columns=['ChkVol'])
+	for i in range(0, len(tick_data.index) - num_periods):
+		start_date = tick_data.index[i]
+		end_date = tick_data.index[i + num_periods]
+		cv.ChkVol[end_date] = 0.01 * (emahl[end_date] - emahl[start_date]) / emahl[start_date]
+	return cv
 
 def dema(input_values, num_periods=30):
 	""" Computes the so-called double exponential moving average (DEMA) of a time series over certain timespan.
