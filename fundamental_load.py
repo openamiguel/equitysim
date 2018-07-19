@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.10
+## Version: 2.0.11
 
 import logging
 import os
@@ -13,8 +13,8 @@ import urllib.error
 import zipfile
 
 import command_parser
-import edgar_parse
 import io_support
+import fundamental_support
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,13 +64,13 @@ def proc_in_directory(folderpath, stock_folderpath):
             io_support.memory_check(path)
             logger.info("Processing {}".format(path))
             if "sub" in file:
-                edgar_parse.edgar_sub(path, folderpath + "SUB_INTERMEDIATE.txt")
+                fundamental_support.edgar_sub(path, folderpath + "SUB_INTERMEDIATE.txt")
             elif "num" in file:
-                edgar_parse.edgar_num(path, folderpath + "NUM_INTERMEDIATE.txt")
+                fundamental_support.edgar_num(path, folderpath + "NUM_INTERMEDIATE.txt")
             elif "pre" in file:
-                edgar_parse.edgar_pre(path, folderpath + "PRE_INTERMEDIATE.txt")
+                fundamental_support.edgar_pre(path, folderpath + "PRE_INTERMEDIATE.txt")
             elif "tag" in file:
-                edgar_parse.edgar_tag(path, folderpath + "TAG_INTERMEDIATE.txt")
+                fundamental_support.edgar_tag(path, folderpath + "TAG_INTERMEDIATE.txt")
     ## Loads all stock data downloaded to given folder
     symbols = io_support.get_current_symbols(stock_folderpath)
     #########################################################
@@ -171,7 +171,7 @@ def edgar_load(inpath, outpath):
         symbol_json = symbol_sub.drop_duplicates(subset=['accession_num'])[1:]
         # Harvests SUB records as JSON and cleans up file
         json_rows = json_rows + symbol_json.to_json(orient='records')
-        json_rows = edgar_parse.json_clean(json_rows, newline=True)
+        json_rows = fundamental_support.json_clean(json_rows, newline=True)
         json_rows = json_rows.replace('xml\"},\n', 'xml\",\n')
         json_rows = json_rows.replace('[{\"accession', '{\"accession')
         # Saves JSON rows to split on newline
@@ -193,7 +193,7 @@ def edgar_load(inpath, outpath):
             this_pre = pd.concat([this_pre.line, this_pre.tag_name, this_pre.tag_version, 
                                   this_pre.statement_report, this_pre.nciks, this_pre.aciks], axis=1)
             # Builds presentation data into JSON object
-            pre_json = edgar_parse.json_clean(this_pre.to_json(orient='records'), newline=True)
+            pre_json = fundamental_support.json_clean(this_pre.to_json(orient='records'), newline=True)
             json_split[idx] = json_split[idx] + "\"presentation\":\n[[" + pre_json + "},"
         # Drops unnecessary columns
         symbol_sub_pre.drop(labels=['source', 'form', 'line', 'statement_report'], axis=1, inplace=True)
@@ -224,13 +224,13 @@ def edgar_load(inpath, outpath):
             # Retrives data on TAG only
             tag_cols = ['is_numeric', 'datatype', 'point_or_duration', 'debit_or_credit']
             this_tag = pd.concat([this_tag_num[col] for col in tag_cols], axis=1)
-            tag_json = edgar_parse.json_clean(this_tag.to_json(orient='records'))
+            tag_json = fundamental_support.json_clean(this_tag.to_json(orient='records'))
             tag_json = '[ ]' if tag_json == '[]' else tag_json
             tag_json = tag_json.split('},')[0][2:].strip() if '},' in tag_json else tag_json[2:-2].strip()
             tag_json = tag_json + ',' if tag_json != '' else tag_json
             # Retrieves data on NUM only
             this_num = this_tag_num.drop(labels=[col for col in tag_cols], axis=1)
-            num_json = edgar_parse.json_clean(this_num.to_json(orient='records'))
+            num_json = fundamental_support.json_clean(this_num.to_json(orient='records'))
             # Removes entries with blank num (i.e. non-numerical rows)
             if num_json == "[]":
                 json_split.pop(idx)
