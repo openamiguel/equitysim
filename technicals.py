@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.3
+## Version: 1.0.4
 
 import numpy as np
 import pandas as pd
@@ -9,13 +9,27 @@ import pandas as pd
 import download
 import plotter
 
+def test_technical():
+	""" Hardcoded test of technical indicator """
+	symbol = "AAPL"
+	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
+	start_date = "2015-03-01"
+	end_date = "2018-06-01"
+	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
+	tick_data = tick_data[start_date:end_date]
+	ad = chaikin(tick_data, num_periods=12)
+	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
+	price_with_trends.columns = ['price', 'chaikin']
+	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
+
+
 def ad_line(tick_data):
 	""" Plots the accumulation-distribution line ("AD" or "AD line") as a measure of volume
 		Inputs: dataframe with closing price, low price, high price, and volume over given timespan
 		Outputs: dataframe with AD over time
 	"""
 	# Assumes that input is dataframe
-	# Gets the close-location volume index
+	# Gets the close-location value index
 	clv = ((tick_data.close - tick_data.low) - (tick_data.high - tick_data.close)) / (tick_data.high - tick_data.low)
 	clv = clv * tick_data.volume
 	ad_series = clv.cumsum()
@@ -48,7 +62,7 @@ def adxr(tick_data, num_periods):
 	# Walks through the data and computes ADXR
 	for i in range(0, len(tick_data.index) - num_periods):
 		start_date = adx_df.index[i]
-		end_date = adx_df.index[i]
+		end_date = adx_df.index[i+1]
 		adxr.ADXR[end_date] = 0.5 * (adx_df.ADX[start_date] + adx_df.ADX[end_date])
 	return adxr
 
@@ -185,6 +199,22 @@ def chande_momentum_oscillator(price, num_periods):
 		cmo.CMO[end_date] = 100 * (ups - downs) / (ups + downs)
 	return cmo
 
+def chaikin(tick_data, num_periods):
+	""" Computes the Chaikin money flow (volume indicator) of a stock over time.
+		Inputs: dataframe with closing price, low price, high price, volume; number of periods
+		Outputs: Chaikin money flow over given timespan
+	"""
+	# Builds the closing location value index and multiplies by volume
+	clv = ((tick_data.close - tick_data.low) - (tick_data.high - tick_data.close)) / (tick_data.high - tick_data.low)
+	clv_vol = clv * tick_data.volume
+	chk = pd.DataFrame(index=tick_data.index, columns=['chaikin'])
+	# Iterates through the prices using given window
+	for i in range(0, len(tick_data.index) - num_periods):
+		start_date = tick_data.index[i]
+		end_date = tick_data.index[i + num_periods]
+		chk.chaikin[end_date] = clv_vol[start_date:end_date].sum() / tick_data.volume[start_date:end_date].sum()
+	return chk
+
 def dema(input_values, num_periods=30):
 	""" Computes the so-called double exponential moving average (DEMA) of a time series over certain timespan.
 		Inputs: input values, number of periods in DEMA
@@ -251,19 +281,6 @@ def directional_movt_index(tick_data, num_periods):
 	di_positive.columns = ['DX']
 	di_negative.columns = ['DX']
 	return (di_positive - di_negative) / (di_positive + di_negative)
-
-def test_technical():
-	""" Hardcoded test of technical indicator """
-	symbol = "AAPL"
-	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2015-03-01"
-	end_date = "2018-06-01"
-	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
-	tick_data = tick_data[start_date:end_date]
-	ad = dynamic_momentum_index(tick_data.close)
-	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'adxr']
-	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def dynamic_momentum_index(price):
 	""" Computes the dynamic momentum index, the DSI, of a price over time.
