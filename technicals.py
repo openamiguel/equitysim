@@ -1,26 +1,13 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.2
+## Version: 1.0.3
 
 import numpy as np
 import pandas as pd
 
 import download
 import plotter
-
-def test_technical():
-	""" Hardcoded test of technical indicator """
-	symbol = "AAPL"
-	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2015-03-01"
-	end_date = "2018-06-01"
-	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
-	tick_data = tick_data[start_date:end_date]
-	ad = adxr(tick_data, num_periods=10)
-	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'adxr']
-	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
 	""" Plots the accumulation-distribution line ("AD" or "AD line") as a measure of volume
@@ -264,6 +251,28 @@ def directional_movt_index(tick_data, num_periods):
 	di_positive.columns = ['DX']
 	di_negative.columns = ['DX']
 	return (di_positive - di_negative) / (di_positive + di_negative)
+
+def test_technical():
+	""" Hardcoded test of technical indicator """
+	symbol = "AAPL"
+	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
+	start_date = "2015-03-01"
+	end_date = "2018-06-01"
+	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
+	tick_data = tick_data[start_date:end_date]
+	ad = dynamic_momentum_index(tick_data.close)
+	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
+	price_with_trends.columns = ['price', 'adxr']
+	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
+
+def dynamic_momentum_index(price):
+	""" Computes the dynamic momentum index, the DSI, of a price over time.
+		Inputs: price Series over time (typically close)
+		Outputs: DSI dataframe over time
+	"""
+	stdev_5 = price.rolling(5).std()
+	numerator = 14 * simple_moving_average(stdev_5, num_periods=10)
+	return numerator  / stdev_5
 
 def ease_of_movt(tick_data, constant=1000000000):
 	""" Computes the ease of movement indicator (EMV). The constant is set to 1e+9 for plotting purposes. 
