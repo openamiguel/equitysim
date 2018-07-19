@@ -2,7 +2,7 @@
 ## which are then compiled into a report about the company's performance.
 ## Part of the fundamental analysis.
 ## Author: Miguel Opeña
-## Version: 1.1.1
+## Version: 1.1.2
 
 import logging
 import pandas as pd
@@ -12,7 +12,7 @@ import download
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_unique_tags(filepath):
+def get_tags_in_file(filepath):
 	""" Fetches a list of all unique tags in a given JSON file of EDGAR data.
 		Inputs: file path of JSON file
 		Outputs: list of unique tags in said file
@@ -33,7 +33,7 @@ def get_unique_tags(filepath):
 	tag_uniques.sort()
 	return tag_uniques
 
-def get_data_this_tag(filepath, tags, quarters=1, datatype="monetary", to_write=False, to_print=False):
+def get_tag_data(filepath, tags, quarters=1, datatype="monetary", to_write=False, to_print=False):
 	""" Fetches a list of all data from EDGAR JSON, relevant to a specific tag.
 		Inputs: file path of JSON file, chosen tag
 		Outputs: data on the chosen tag
@@ -78,17 +78,17 @@ def main():
 	tick_data = download.load_single_drive(symbol, folderpath=stockpath)
 	stock_price = pd.DataFrame(tick_data.close)
 	inpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily/Financials/{}_Financials.json".format(symbol)
-	# print(get_unique_tags(inpath))
-	net_sales = get_data_this_tag(inpath, "SalesRevenueNet")
-	operating_expenses = get_data_this_tag(inpath, "OperatingExpenses")
-	interest = get_data_this_tag(inpath, "InterestPaid")
-	dividend = get_data_this_tag(inpath, "Dividend", datatype="perShare")
-	tax = get_data_this_tag(inpath, "IncomeTaxesPaidNet")
-	assets = get_data_this_tag(inpath, "Assets")
-	gross_profit = get_data_this_tag(inpath, "GrossProfit")
-	cogs = get_data_this_tag(inpath, ["CostOfGoodsSold", "CostOfGoodsAndServicesSold"])
-	eps_basic = get_data_this_tag(inpath, "EarningsPerShareBasic", datatype="perShare")
-	eps_diluted = get_data_this_tag(inpath, "EarningsPerShareDiluted", datatype="perShare")
+	# print(get_tags_in_file(inpath))
+	net_sales = get_tag_data(inpath, "SalesRevenueNet")
+	operating_expenses = get_tag_data(inpath, "OperatingExpenses")
+	interest = get_tag_data(inpath, "InterestPaid")
+	dividend = get_tag_data(inpath, "Dividend", datatype="perShare")
+	tax = get_tag_data(inpath, "IncomeTaxesPaidNet")
+	assets = get_tag_data(inpath, "Assets")
+	gross_profit = get_tag_data(inpath, "GrossProfit")
+	cogs = get_tag_data(inpath, ["CostOfGoodsSold", "CostOfGoodsAndServicesSold"])
+	eps_basic = get_tag_data(inpath, "EarningsPerShareBasic", datatype="perShare")
+	eps_diluted = get_tag_data(inpath, "EarningsPerShareDiluted", datatype="perShare")
 	operating_income = net_sales - operating_expenses
 	gross_income = net_sales - cogs
 	net_income = gross_income - interest - tax
