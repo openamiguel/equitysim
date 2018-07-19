@@ -1,7 +1,7 @@
 ## This code gets company data from the SEC's Financial Statement Datasets.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 2.0.8
+## Version: 2.0.9
 
 import logging
 import os
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 csize = 1000000
 
-def download_unzip(folderpath, startyear=2013, endyear=2018):
+def edgar_extract(folderpath, startyear=2013, endyear=2018):
     """ Downloads and unzips all the data from SEC EDGAR on financial statements.
         Inputs: folder path to write files to, start year of downloaded data, 
             end year of downloaded data
@@ -53,9 +53,9 @@ def download_unzip(folderpath, startyear=2013, endyear=2018):
             os.remove(folderpath + file_name)
     return
 
-def proc_in_directory(folderpath):
-    """ Parses the data on all files in a directory.
-        Inputs: path of target directory
+def proc_in_directory(folderpath, stock_folderpath):
+    """ Parses the data on all files in a directory. Also does post-processing. 
+        Inputs: path of target directory, path of folder on stock data
         Outputs: True if everything works
     """
     for cur_path, directories, files in os.walk(folderpath, topdown=True):
@@ -71,13 +71,6 @@ def proc_in_directory(folderpath):
                 edgar_parse.presentation_parse(path, folderpath + "PRE_INTERMEDIATE.txt")
             elif "tag" in file:
                 edgar_parse.tag_parse(path, folderpath + "TAG_INTERMEDIATE.txt")
-    return True
-
-def post_proc(folderpath, stock_folderpath):
-    """ Post-processing on the four combined files from EDGAR.
-        Inputs: path of tag file, path of stock data folder
-        Outputs: True if everything works
-    """
     ## Loads all stock data downloaded to given folder
     symbols = io_support.get_current_symbols(stock_folderpath)
     #########################################################
@@ -130,7 +123,7 @@ def post_proc(folderpath, stock_folderpath):
     prefinalfile.close()
     return True
 
-def json_build(inpath, outpath):
+def edgar_load(inpath, outpath):
     """ Processes data into one JSON file for each company.
         Inputs: path of input folder, path of output folder
         Outputs: True if everything works
@@ -294,11 +287,10 @@ def main():
     suppress = ["-suppressDownload" in prompts, "-suppressProcess" in prompts]
     ## Does all the legwork
     if not suppress[0]:
-        download_unzip(folder_path, startyear=startyear, endyear=endyear)
+        edgar_extract(folder_path, startyear=startyear, endyear=endyear)
     if not suppress[1]:
-        proc_in_directory(folder_path)
-        post_proc(folder_path, stock_folder_path)
-    json_build(folder_path, financial_folder_path)
+        proc_in_directory(folder_path, stock_folder_path)
+    edgar_load(folder_path, financial_folder_path)
     logger.info("All tasks completed. Have a nice day!")
     return True
 
