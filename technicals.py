@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.1
+## Version: 1.0.2
 
 import numpy as np
 import pandas as pd
@@ -13,13 +13,13 @@ def test_technical():
 	""" Hardcoded test of technical indicator """
 	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2015-01-01"
+	start_date = "2015-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = ad_line(tick_data)
+	ad = adxr(tick_data, num_periods=10)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'ad_line']
+	price_with_trends.columns = ['price', 'adxr']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -34,6 +34,36 @@ def ad_line(tick_data):
 	ad_series = clv.cumsum()
 	ad = pd.DataFrame(ad_series, columns=['ad_line'])
 	return ad
+
+def adx(tick_data, num_periods):
+	""" Computes the average directional (movement) index (ADX), based on DX.
+		Inputs: dataframe of data fed into the DX function
+		Outputs: dataframe of ADX over time
+	"""
+	dx = directional_movt_index(tick_data, num_periods)
+	adx = pd.DataFrame(index=dx.index, columns=['ADX'])
+	# Sets the seed value to be zero
+	adx.ADX[adx.index[0]] = 0
+	# Walks through the data and computes ADX
+	for i in range(1, len(adx.index)):
+		this_date = adx.index[i]
+		last_date = adx.index[i-1]
+		adx.ADX[this_date] = (adx.ADX[last_date] * (num_periods - 1) + dx.DX[this_date]) / num_periods
+	return adx
+
+def adxr(tick_data, num_periods):
+	""" Computes the ADX rating of a stock over time, based on ADX.
+		Inputs: dataframe of data fed into the ADX function
+		Outputs: dataframe of ADXR over time
+	"""
+	adx_df = adx(tick_data, num_periods)
+	adxr = pd.DataFrame(index=adx_df.index, columns=['ADXR'])
+	# Walks through the data and computes ADXR
+	for i in range(0, len(tick_data.index) - num_periods):
+		start_date = adx_df.index[i]
+		end_date = adx_df.index[i]
+		adxr.ADXR[end_date] = 0.5 * (adx_df.ADX[start_date] + adx_df.ADX[end_date])
+	return adxr
 
 def aroon(tick_data, num_periods=25):
 	""" Computes the Aroon indicator of an asset over time. 
