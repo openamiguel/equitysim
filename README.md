@@ -65,15 +65,22 @@ This code also downloads and analyzes data from the [United States SEC's Financi
 
 ## technical analysis
 - **technicals.py**
+  - `ad_line` returns the accumulation-distribution line of asset data
+  - `adx` returns the average directional (movement) index of asset data
+  - `adxr` returns the average directional (movement) index rating of asset data
   - `aroon` returns the Aroon indicator of asset data
   - `aroon_oscillator` returns the Aroon oscillator of asset data
   - `average_price` returns the average price of asset data
   - `average_true_range` returns the average true range of asset data
   - `bollinger` returns the Bollinger bands and width thereof, for asset data
+  - `chaikin` returns the Chaikin money flow of price data
+  - `chaikin_ad_osc` returns the Chaikin accumulation-distribution oscillator of asset data
+  - `chaikin_volatility` returns the Chaikin volatility of asset data
   - `chande_momentum_oscillator` returns the Chande momentum oscillator of a price input
   - `dema` returns the "double" exponential moving average of input
   - `directional_index` returns the directional indices (+DI and -DI) of asset data
   - `directional_movt_index` returns the directional movement index (based directly on +DI and -DI) of asset data
+  - `dynamic_momentum_index` returns the DSI of price data
   - `ease_of_movt` returns the ease of movement of asset data
   - `exponential_moving_average` returns the exponential moving average of input
   - `general_stochastic` returns the general Stochastic indicator of a price input
