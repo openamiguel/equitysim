@@ -98,6 +98,10 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
 
 ## machine learning suite
+- **stats.py**
+  - `adf` computes the augmented Dickey-Fuller test for mean reversion properties
+  - command prompt options: 
+    - none (for now!)
 - **feature_build.py**
   - `get_features` returns a dataframe of features, with one column for each indicator listed above
   - command prompt options:
