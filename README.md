@@ -78,6 +78,7 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `chaikin_volatility` returns the Chaikin volatility of asset data
   - `chande_momentum_oscillator` returns the Chande momentum oscillator of a price input
   - `dema` returns the "double" exponential moving average of input
+  - `detrended_price_osc` returns the de-trended price oscillator of a price input
   - `directional_index` returns the directional indices (+DI and -DI) of asset data
   - `directional_movt_index` returns the directional movement index (based directly on +DI and -DI) of asset data
   - `dynamic_momentum_index` returns the DSI of price data
@@ -92,12 +93,16 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
+  - `price_volume_index` returns the price-volume index of asset data
+  - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
   - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
   - `rel_strength_index` returns the one-day relative momentum index of a price input
   - `simple_moving_average` returns the simple moving average of input
   - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
+  - `tee_three` and `tee_four` return T3 and T4, generalizations of DEMA, of input, respectively
   - `triangular_moving_average` returns the triangular moving average of input
+  - `triple_ema` returns the triple exponential moving average of input
   - `true_range` returns the true range of asset data
   - `typical_price` returns the typical price of asset data
   - `variable_moving_average` returns the variable moving average of a price input
