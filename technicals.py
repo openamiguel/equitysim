@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.6
+## Version: 1.0.7
 
 import numpy as np
 import pandas as pd
@@ -17,11 +17,10 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = chaikin_volatility(tick_data, num_periods=30)
+	ad = detrended_price_osc(tick_data.close, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'chaikin volatility']
+	price_with_trends.columns = ['price', 'DPO']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
-
 
 def ad_line(tick_data):
 	""" Plots the accumulation-distribution line ("AD" or "AD line") as a measure of volume
@@ -264,6 +263,23 @@ def dema(input_values, num_periods=30):
 	else:
 		raise ValueError("Unsupported data type given as input to dema in technicals_calculator.py")
 		return None
+
+def detrended_price_osc(price, num_periods):
+	""" Computes the detrended price oscillator (DPO). 
+		Related to detrended price in principle only; actual method is dissimilar. 
+		Inputs: price Series over time; number of periods in DPO
+		Outputs: DPO over given timespan
+	"""
+	dpo = pd.DataFrame(index=price.index, columns=['DPO'])
+	for i in range(1, len(dpo.index) - num_periods):
+		start_date = dpo.index[i]
+		last_price = price[dpo.index[i + num_periods - 1]]
+		end_date = dpo.index[i + num_periods]
+		# Subtracts the previous price in the window by the moving avg of price
+		sma = simple_moving_average(price[start_date:end_date], 
+						num_periods=num_periods)
+		dpo.DPO[end_date] = last_price - sma[sma.index[-1]] / num_periods
+	return dpo
 
 def directional_index(tick_data, num_periods):
 	""" Computes the directional indices (+DI and -DI).
