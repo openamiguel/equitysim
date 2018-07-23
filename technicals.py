@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.7
+## Version: 1.0.8
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = detrended_price_osc(tick_data.close, num_periods=30)
+	ad = price_volume_trend(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'DPO']
+	price_with_trends.columns = ['price', 'PVT']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -531,6 +531,21 @@ def price_oscillator(price, moving_avg, num_periods_slow, num_periods_fast):
 	price_osc = moving_avg(price, num_periods_slow) - moving_avg(price, num_periods_fast)
 	price_osc_percent = 100 * price_osc / moving_avg(price, num_periods_fast)
 	return price_osc, price_osc_percent
+
+def price_volume_trend(tick_data):
+	""" Computes the price-volume trend (PVT), which directly depends on price and volume data.
+		Related closely to on-balance volume (OBV)
+		Inputs: volume and closing price
+		Outputs: PVT indicator over given timespan
+	"""
+	pvt = pd.DataFrame(index=tick_data.index, columns=['PVT'])
+	pvt.PVT[pvt.index[0]] = 0
+	for i in range(1, len(tick_data.index) - 1):
+		start_date = pvt.index[i - 1]
+		end_date = pvt.index[i]
+		# Indicator accounts for volume and closing price
+		pvt.PVT[end_date] = pvt.PVT[start_date] + tick_data.volume[end_date] * (tick_data.close[end_date] - tick_data.close[start_date]) / tick_data.close[start_date]
+	return pvt
 
 def qstick(tick_data, moving_avg, num_periods):
 	""" Computes the Q-stick indicator of asset data over certain timespan, which depends on a choice of moving average function.
