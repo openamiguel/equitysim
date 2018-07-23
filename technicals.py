@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.8
+## Version: 1.0.9
 
 import numpy as np
 import pandas as pd
@@ -11,15 +11,15 @@ import plotter
 
 def test_technical():
 	""" Hardcoded test of technical indicator """
-	symbol = "AAPL"
+	symbol = "F"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
 	start_date = "2015-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = price_volume_trend(tick_data)
+	ad = price_volume_index(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'PVT']
+	price_with_trends.columns = ['price', 'PVI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -531,6 +531,22 @@ def price_oscillator(price, moving_avg, num_periods_slow, num_periods_fast):
 	price_osc = moving_avg(price, num_periods_slow) - moving_avg(price, num_periods_fast)
 	price_osc_percent = 100 * price_osc / moving_avg(price, num_periods_fast)
 	return price_osc, price_osc_percent
+
+def price_volume_index(tick_data):
+	""" Computes a coefficient on close price, with increments only if volume is increasing
+		Closely related to the NVI indicator
+		Inputs: volume and closing price
+		Outputs: PVI indicator over given timespan
+	"""
+	pvi = pd.DataFrame(index=tick_data.index, columns=['PVI'])
+	pvi.PVI[pvi.index[0]] = 0
+	for i in range(1, len(tick_data.index) - 1):
+		start_date = pvi.index[i - 1]
+		end_date = pvi.index[i]
+		# Indicator increments if volume has increased
+		increment = (tick_data.close[end_date] - tick_data.close[start_date]) / tick_data.close[start_date] if tick_data.volume[end_date] > tick_data.volume[start_date] else 0
+		pvi.PVI[end_date] = pvi.PVI[start_date] + increment
+	return pvi
 
 def price_volume_trend(tick_data):
 	""" Computes the price-volume trend (PVT), which directly depends on price and volume data.
