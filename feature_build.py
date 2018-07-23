@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.4
+## Version: 1.0.5
 
 import logging
 import sys
@@ -44,6 +44,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['DIPLUS_30'] = di_positive
 	price_with_trends['DIMINUS_30'] = di_negative
 	logger.debug(list(price_with_trends.columns.values))
+	price_with_trends['DPO30'] = ti.detrended_price_osc(tick_data.close, num_periods=30)
 	price_with_trends['DX30'] = ti.directional_movt_index(tick_data, num_periods=30)
 	price_with_trends['DSI'] = ti.dynamic_momentum_index(tick_data.close)
 	price_with_trends['ease_of_movt'] = ti.ease_of_movt(tick_data, constant=10000000)
@@ -77,6 +78,8 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
 	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
 	logger.debug(list(price_with_trends.columns.values))
+	price_with_trends['PVI'] = ti.price_volume_index(tick_data)
+	price_with_trends['PVT'] = ti.price_volume_trend(tick_data)
 	price_with_trends['QstickVMA_30'] = ti.qstick(tick_data, ti.variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = ti.qstick(tick_data, ti.simple_moving_average, num_periods=30)
 	price_with_trends['QstickEMA_30'] = ti.qstick(tick_data, ti.exponential_moving_average, num_periods=30)
@@ -103,7 +106,10 @@ def get_features(tick_data, price, baseline):
 	fastDTMA, slowDTMA = ti.stochastic_oscillator(price, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
 	price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
+	price_with_trends['T3'] = ti.tee_three(tick_data.close, num_periods=30)
+	price_with_trends['T4'] = ti.tee_four(tick_data.close, num_periods=30)
 	price_with_trends['TMA30'] = ti.triangular_moving_average(price)
+	price_with_trends['TEMA30'] = ti.triple_ema(price)
 	price_with_trends['TR'] = ti.true_range(tick_data)
 	price_with_trends['TypicalPrice'] = ti.typical_price(tick_data)
 	price_with_trends['VMA30'] = ti.variable_moving_average(price, num_periods=30)
