@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.10
+## Version: 1.0.11
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = tee_four(tick_data.close)
+	ad = triple_ema(tick_data.close, num_periods=14)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'T4']
+	price_with_trends.columns = ['price', 'TEMA-14']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -632,24 +632,26 @@ def stochastic_rsi(price):
 	srsi = general_stochastic(rsi, num_periods=14)
 	return srsi
 
-def tee_three(input_values, vfactor=0.7):
-	""" Computes the triple EMA of an input value. Formally called T3, but
+def tee_three(input_values, num_periods, vfactor=0.7):
+	""" Computes the third generalized DEMA  of an input value. Formally called T3, but
 		that would have been an unstylish function name.
 		Inputs: input values, factor weight of double ema in the "GD" function
 		Outputs: T3 averaging method of input over time
 	"""
+	# GD is the generalized DEMA function
 	def gd(in_val, vfactor=vfactor):
-		return exponential_moving_average(in_val) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val)) * vfactor
+		return exponential_moving_average(in_val, num_periods=num_periods) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val, num_periods=num_periods), num_periods=num_periods) * vfactor
 	return gd(gd(gd(input_values)))
 
-def tee_four(input_values, vfactor=0.7):
-	""" Computes the quadruple EMA of an input value. Formally called T4, but
+def tee_four(input_values, num_periods, vfactor=0.7):
+	""" Computes the fourth generalized DEMA of an input value. Formally called T4, but
 		that would have been an unstylish function name.
 		Inputs: input values, factor weight of double ema in the "GD" function
 		Outputs: T4 averaging method of input over time
 	"""
+	# GD is the generalized DEMA function
 	def gd(in_val, vfactor=vfactor):
-		return exponential_moving_average(in_val) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val)) * vfactor
+		return exponential_moving_average(in_val, num_periods=num_periods) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val, num_periods=num_periods), num_periods=num_periods) * vfactor
 	return gd(gd(gd(gd(input_values))))
 
 def triangular_moving_average(input_values, num_periods=30):
@@ -663,6 +665,16 @@ def triangular_moving_average(input_values, num_periods=30):
 	per2 = per1 - 1
 	tma = simple_moving_average(tma, num_periods=per2)
 	return tma
+
+def triple_ema(input_values, num_periods=30):
+	""" Computes the triple exponential moving average (TEMA) of a time series over certain timespan, which weighs the middle values more.
+		Inputs: input values, number of periods in TEMA
+		Outputs: TEMA over given timespan
+	"""
+	term1 = 3 * exponential_moving_average(input_values, num_periods=num_periods)
+	term2 = 3 * exponential_moving_average(exponential_moving_average(input_values, num_periods=num_periods), num_periods=num_periods)
+	term3 = exponential_moving_average(exponential_moving_average(exponential_moving_average(input_values, num_periods=num_periods), num_periods=num_periods), num_periods=num_periods)
+	return term1 - term2 + term3
 
 def true_range(tick_data):
 	""" Computes the true range of an asset over time.
