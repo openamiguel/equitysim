@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.9
+## Version: 1.0.10
 
 import numpy as np
 import pandas as pd
@@ -11,15 +11,15 @@ import plotter
 
 def test_technical():
 	""" Hardcoded test of technical indicator """
-	symbol = "F"
+	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
 	start_date = "2015-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = price_volume_index(tick_data)
+	ad = tee_four(tick_data.close)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'PVI']
+	price_with_trends.columns = ['price', 'T4']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -622,6 +622,35 @@ def stochastic_oscillator(tick_data, moving_avg, num_periods):
 	fast_d = moving_avg(percent_k.PctK, num_periods)
 	slow_d = moving_avg(percent_k_smoothed, num_periods)
 	return fast_d, slow_d
+
+def stochastic_rsi(price):
+	""" Computes the general Stochastic of the RSI.
+		Inputs: price data
+		Outputs: stochastic RSI over given timespan
+	"""
+	rsi = rel_strength_index(price)
+	srsi = general_stochastic(rsi, num_periods=14)
+	return srsi
+
+def tee_three(input_values, vfactor=0.7):
+	""" Computes the triple EMA of an input value. Formally called T3, but
+		that would have been an unstylish function name.
+		Inputs: input values, factor weight of double ema in the "GD" function
+		Outputs: T3 averaging method of input over time
+	"""
+	def gd(in_val, vfactor=vfactor):
+		return exponential_moving_average(in_val) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val)) * vfactor
+	return gd(gd(gd(input_values)))
+
+def tee_four(input_values, vfactor=0.7):
+	""" Computes the quadruple EMA of an input value. Formally called T4, but
+		that would have been an unstylish function name.
+		Inputs: input values, factor weight of double ema in the "GD" function
+		Outputs: T4 averaging method of input over time
+	"""
+	def gd(in_val, vfactor=vfactor):
+		return exponential_moving_average(in_val) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val)) * vfactor
+	return gd(gd(gd(gd(input_values))))
 
 def triangular_moving_average(input_values, num_periods=30):
 	""" Computes the triangular moving average (TMA) of a time series over certain timespan, which weighs the middle values more.
