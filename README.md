@@ -93,7 +93,7 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
-  - `price_volume_index` returns the price-volume index of asset data
+  - `positive_volume_index` returns the price-volume index of asset data
   - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
   - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
