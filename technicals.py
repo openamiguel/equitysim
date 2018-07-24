@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.12
+## Version: 1.0.13
 
 import numpy as np
 import pandas as pd
@@ -532,7 +532,7 @@ def price_oscillator(price, moving_avg, num_periods_slow, num_periods_fast):
 	price_osc_percent = 100 * price_osc / moving_avg(price, num_periods_fast)
 	return price_osc, price_osc_percent
 
-def price_volume_index(tick_data):
+def positive_volume_index(tick_data):
 	""" Computes a coefficient on close price, with increments only if volume is increasing
 		Closely related to the NVI indicator
 		Inputs: volume and closing price
@@ -548,7 +548,7 @@ def price_volume_index(tick_data):
 		pvi.PVI[end_date] = pvi.PVI[start_date] + increment
 	return pvi
 
-def positive_volume_trend(tick_data):
+def price_volume_trend(tick_data):
 	""" Computes the price-volume trend (PVT), which directly depends on price and volume data.
 		Related closely to on-balance volume (OBV)
 		Inputs: volume and closing price
