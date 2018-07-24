@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.16
+## Version: 1.0.17
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = rel_vol_index(tick_data.close, num_periods=30)
+	ad = stochastic_momentum_index(tick_data, num_periods=14)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'RVI']
+	price_with_trends.columns = ['price', 'SMI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -671,6 +671,16 @@ def simple_moving_average(input_values, num_periods=30):
 	sma = input_values.rolling(num_periods).mean()
 	sma.columns = ['SMA' + str(num_periods)]
 	return sma
+
+def stochastic_momentum_index(tick_data, num_periods=14):
+	smi = pd.DataFrame(index=tick_data.index, columns=['SMI'])
+	for i in range(0, len(smi.index) - num_periods - 1):
+		start_date = smi.index[i]
+		end_date = smi.index[i + num_periods]
+		cm = tick_data.close[end_date] - (max(tick_data.high[start_date:end_date]) + min(tick_data.low[start_date:end_date])) / 2
+		hl = max(tick_data.high[start_date:end_date]) - min(tick_data.low[start_date:end_date])
+		smi.SMI[end_date] = 200 * cm / hl
+	return smi
 
 def stochastic_oscillator(tick_data, moving_avg, num_periods):
 	""" Computes the Stochastic oscillator of an asset over time. 
