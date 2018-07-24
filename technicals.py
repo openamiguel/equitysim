@@ -1,8 +1,9 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.14
+## Version: 1.0.15
 
+import math
 import numpy as np
 import pandas as pd
 
@@ -17,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = negative_volume_index(tick_data)
+	ad = random_walk_index(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'NVI']
+	price_with_trends.columns = ['price', 'RWI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -585,6 +586,22 @@ def qstick(tick_data, moving_avg, num_periods):
 		Outputs: price oscillator over given timespan
 	"""
 	return moving_avg(tick_data.close - tick_data.open, num_periods)
+
+def random_walk_index(tick_data, num_periods=7):
+	rwi = pd.DataFrame(index=tick_data.index, columns=['RWI'])
+	atr = average_true_range(tick_data, num_periods=num_periods)
+	for i in range(0, len(rwi.index) - num_periods - 1):
+		start_date = rwi.index[i]
+		# Gets the maximum RWI across lookback from 2 to maximum
+		rwi_maxes = []
+		for lookback in range(2, num_periods + 1):
+			end_date = rwi.index[i + lookback + 1]
+			# Save the max of each RWI high and RWI low pair
+			rwi_low = (tick_data.high[start_date] - tick_data.low[end_date]) / (atr.ATR[end_date] * math.sqrt(lookback))
+			rwi_high = (tick_data.high[end_date] - tick_data.low[start_date]) / (atr.ATR[end_date] * math.sqrt(lookback))
+			rwi_maxes.append(max(rwi_high, rwi_low))
+		rwi.RWI[end_date] = max(rwi_maxes)
+	return rwi
 
 def rel_momentum_index(price, num_periods):
 	""" Computes the relative momentum index of a (closing) price dataset given the number of periods.
