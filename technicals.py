@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.13
+## Version: 1.0.14
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = triple_ema(tick_data.close, num_periods=14)
+	ad = negative_volume_index(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'TEMA-14']
+	price_with_trends.columns = ['price', 'NVI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -411,6 +411,22 @@ def median_price(tick_data):
 	# Divides by two
 	med_price = med_price.divide(2)
 	return med_price
+
+def negative_volume_index(tick_data):
+	""" Computes a coefficient on close price, with increments only if volume is increasing
+		Closely related to the PVI indicator
+		Inputs: volume and closing price
+		Outputs: NVI indicator over given timespan
+	"""
+	nvi = pd.DataFrame(index=tick_data.index, columns=['NVI'])
+	nvi.NVI[nvi.index[0]] = 0
+	for i in range(1, len(tick_data.index) - 1):
+		start_date = nvi.index[i - 1]
+		end_date = nvi.index[i]
+		# Indicator increments if volume has increased
+		increment = (tick_data.close[end_date] - tick_data.close[start_date]) / tick_data.close[start_date] if tick_data.volume[end_date] < tick_data.volume[start_date] else 0
+		nvi.NVI[end_date] = nvi.NVI[start_date] + increment
+	return nvi
 
 def normalized_price(price, baseline):
 	""" Computes the normalized price (aka performance indicator) against a baseline.
