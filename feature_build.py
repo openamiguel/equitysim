@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.5
+## Version: 1.0.6
 
 import logging
 import sys
@@ -54,6 +54,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['MACD'] = mcd
 	price_with_trends['MACDPct'] = macdPct
 	price_with_trends['medianPrice'] = ti.median_price(tick_data)
+	price_with_trends['NVI'] = ti.negative_volume_index(tick_data)
 	price_with_trends['normalizedPrice'] = ti.normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = ti.on_balance_volume(tick_data)
 	price_with_trends['PSAR'] = ti.parabolic_sar(tick_data)
@@ -78,7 +79,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
 	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
 	logger.debug(list(price_with_trends.columns.values))
-	price_with_trends['PVI'] = ti.price_volume_index(tick_data)
+	price_with_trends['PVI'] = ti.positive_volume_index(tick_data)
 	price_with_trends['PVT'] = ti.price_volume_trend(tick_data)
 	price_with_trends['QstickVMA_30'] = ti.qstick(tick_data, ti.variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = ti.qstick(tick_data, ti.simple_moving_average, num_periods=30)
@@ -87,8 +88,11 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['QstickTMA_30'] = ti.qstick(tick_data, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['RMI30'] = ti.rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = ti.rel_strength_index(price)
+	price_with_trends['RVI14'] = ti.rel_vol_index(tick_data.close, num_periods=14)
+	price_with_trends['RVI30'] = ti.rel_vol_index(tick_data.close, num_periods=30)
 	price_with_trends['SMA30'] = ti.simple_moving_average(price)
 	logger.debug(list(price_with_trends.columns.values))
+	price_with_trends['SMI14'] = ti.stochastic_momentum_index(tick_data, num_periods=14)
 	"""
 	fastDVMA, slowDVMA = ti.stochastic_oscillator(price, ti.variable_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscVMA_30'] = fastDVMA
@@ -111,6 +115,10 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['TMA30'] = ti.triangular_moving_average(price)
 	price_with_trends['TEMA30'] = ti.triple_ema(price)
 	price_with_trends['TR'] = ti.true_range(tick_data)
+	price_with_trends['TRIX14'] = ti.trix(tick_data.close, num_periods=14)
+	price_with_trends['TRIX30'] = ti.trix(tick_data.close, num_periods=30)
+	price_with_trends['TSI14'] = ti.true_strength_index(tick_data.close, num_periods=14)
+	price_with_trends['TSI30'] = ti.true_strength_index(tick_data.close, num_periods=30)
 	price_with_trends['TypicalPrice'] = ti.typical_price(tick_data)
 	price_with_trends['VMA30'] = ti.variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = ti.weighted_close(tick_data)
