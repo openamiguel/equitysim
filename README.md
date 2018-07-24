@@ -87,23 +87,29 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `general_stochastic` returns the general Stochastic indicator of a price input
   - `macd` returns the MACD of a price input (same as price oscillator with 26-period slow EMA and 12-period fast EMA)
   - `median_price` returns the median price of asset data
+  - `negative_volume_index` returns the negative volume index of asset data
   - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
   - `on_balance_volume` returns the on balance volume of asset data
   - `parabolic_sar` returns the parabolic SAR of asset data
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
-  - `positive_volume_index` returns the price-volume index of asset data
+  - `positive_volume_index` returns the positive volume index of asset data
   - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
+  - `random_walk_index` returns the random walk index of asset data
   - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
-  - `rel_strength_index` returns the one-day relative momentum index of a price input
+  - `rel_strength_index` returns the 14-day relative momentum index of a price input
+  - `rel_vol_index` returns the relative volatility index of a price input
   - `simple_moving_average` returns the simple moving average of input
+  - `stochastic_momentum_index` returns the stochastic momentum index of tick data
   - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
   - `tee_three` and `tee_four` return T3 and T4, generalizations of DEMA, of input, respectively
   - `triangular_moving_average` returns the triangular moving average of input
   - `triple_ema` returns the triple exponential moving average of input
+  - `trix` returns the TRIX indicator of a price input
   - `true_range` returns the true range of asset data
+  - `true_strength_index` returns the true strength index of a price input
   - `typical_price` returns the typical price of asset data
   - `variable_moving_average` returns the variable moving average of a price input
   - `weighted_close` returns the weighted close of asset data
