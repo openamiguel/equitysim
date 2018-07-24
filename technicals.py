@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.15
+## Version: 1.0.16
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = random_walk_index(tick_data)
+	ad = rel_vol_index(tick_data.close, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'RWI']
+	price_with_trends.columns = ['price', 'RVI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -633,6 +633,34 @@ def rel_momentum_index(price, num_periods):
 
 def rel_strength_index(price):
 	return rel_momentum_index(price, num_periods=14)
+
+def rel_vol_index(price, num_periods):
+	""" Computes the relative volatility index of a (closing) price dataset given the number of periods.
+		Inputs: price Series (close), number of periods
+		Outputs: RMI of closing price
+	"""
+	# Assume that input is dataframe/Series
+	rvi = pd.DataFrame(index=price.index, columns=['RVI'])
+	# Gets the variables used in computing at all time points
+	upavg = 0
+	dnavg = 0
+	for i in range(0, len(price.index) - num_periods):
+		# Gets the proper tick date window
+		start_date = price.index[i]
+		end_date = price.index[i + num_periods]
+		# Gets some more variables
+		up = 0
+		dn = 0
+		if price[end_date] > price[start_date]: 
+			up = price[start_date:end_date].std()
+		else: 
+			dn = price[start_date:end_date].std()
+		# Updates upavg and dnavg
+		upavg = (upavg * (num_periods - 1) + up) / num_periods
+		dnavg = (dnavg * (num_periods - 1) + dn) / num_periods
+		# Computes the RMI
+		rvi.RVI[end_date] = 100 * upavg / (upavg + dnavg)
+	return rvi
 
 def simple_moving_average(input_values, num_periods=30):
 	""" Computes the simple moving average (SMA) of a time series over certain timespan.
