@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.11
+## Version: 1.0.12
 
 import numpy as np
 import pandas as pd
@@ -548,7 +548,7 @@ def price_volume_index(tick_data):
 		pvi.PVI[end_date] = pvi.PVI[start_date] + increment
 	return pvi
 
-def price_volume_trend(tick_data):
+def positive_volume_trend(tick_data):
 	""" Computes the price-volume trend (PVT), which directly depends on price and volume data.
 		Related closely to on-balance volume (OBV)
 		Inputs: volume and closing price
