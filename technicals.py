@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.18
+## Version: 1.0.19
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = trix(tick_data.close, num_periods=14)
+	ad = true_strength_index(tick_data.close, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'TRIX30']
+	price_with_trends.columns = ['price', 'TSI30']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -773,6 +773,16 @@ def true_range(tick_data):
 		# Filters based on which is largest
 		trange.true_range[this_date] = max(option1,option2,option3)
 	return trange
+
+def true_strength_index(price, num_periods=14):
+	""" Computes the true strength index (double EMA) of price.
+		Inputs: price Series; number of periods
+		Outputs: true strength index
+	"""
+	price_shift = price - price.shift(-1)
+	num = exponential_moving_average(exponential_moving_average(price_shift, num_periods=num_periods), num_periods=num_periods)
+	denom = exponential_moving_average(exponential_moving_average(abs(price_shift), num_periods=num_periods), num_periods=num_periods)
+	return num / denom
 
 def typical_price(tick_data):
 	""" Computes the typical price of an asset over time. 
