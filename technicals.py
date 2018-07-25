@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.20
+## Version: 1.0.21
 
 import math
 import numpy as np
@@ -18,8 +18,8 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	mf, mfi, mfr = money_flow_index(tick_data, num_periods=14)
-	price_with_trends = pd.concat([tick_data.close, mfr], axis=1)
+	ko = klinger_osc(tick_data)
+	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
 	price_with_trends.columns = ['price', 'MonFlowRatio']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
@@ -393,6 +393,33 @@ def general_stochastic(price, num_periods):
 		general_stoch.general_stochastic[end_date] = (price[end_date] - min_price) / (max_price - min_price)
 	return general_stoch
 
+def klinger_osc(tick_data):
+	""" Compues the Klinger oscillator for asset data.
+		Inputs: high price, low price, closing price, and volume
+		Outputs: Klinger oscillator over given timespan
+	"""
+	# Computes the trend
+	trend = (tick_data.high - tick_data.low - tick_data.close)
+	trend = trend - trend.shift(-1)
+	trend = trend.fillna(0)
+	trend = trend.apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+	# Computes the daily measurement
+	dm = tick_data.high - tick_data.low
+	# Computes the cumulative measurement
+	trend_comp = trend == trend.shift(-1)
+	cm = pd.DataFrame(index=tick_data.index)
+	cm['CM'] = 0
+	# Builds the cm dataframe
+	for i in range(0, len(cm.index) - 1):
+		start_date = cm.index[i]
+		end_date = cm.index[i + 1]
+		cm.CM[end_date] = cm.CM[start_date] + dm[end_date] if trend_comp[end_date] else dm[start_date] + dm[end_date]
+	# Builds the volume force dataframe
+	vf = tick_data.volume * abs(2 * dm / cm.CM - 2) * trend * 100
+	vf = vf.replace([np.inf, -np.inf], np.nan)
+	vf = vf.dropna()
+	return exponential_moving_average(vf, num_periods=34) - exponential_moving_average(vf, num_periods=50)
+
 def macd(price):
 	""" Computes the MACD of a time series over certain timespan, which is essentially price oscillator for 26 and 12 periods, with EMA. 
 		Inputs: price input
@@ -414,6 +441,11 @@ def median_price(tick_data):
 	return med_price
 
 def money_flow_index(tick_data, num_periods=None):
+	"""
+		Computes three closely-related metrics pertaining to price and volume
+		Inputs: dataframe with high, low, closing, and volume
+		Outputs: money flow, money flow index, and money (flow) ratio
+	"""
 	# Calculates the typical price
 	tp = typical_price(tick_data)
 	tp.columns = ['TP']
