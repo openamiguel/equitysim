@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.19
+## Version: 1.0.20
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ad = true_strength_index(tick_data.close, num_periods=30)
-	price_with_trends = pd.concat([tick_data.close, ad], axis=1)
-	price_with_trends.columns = ['price', 'TSI30']
+	mf, mfi, mfr = money_flow_index(tick_data, num_periods=14)
+	price_with_trends = pd.concat([tick_data.close, mfr], axis=1)
+	price_with_trends.columns = ['price', 'MonFlowRatio']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -412,6 +412,36 @@ def median_price(tick_data):
 	# Divides by two
 	med_price = med_price.divide(2)
 	return med_price
+
+def money_flow_index(tick_data, num_periods=None):
+	# Calculates the typical price
+	tp = typical_price(tick_data)
+	tp.columns = ['TP']
+	# Money flow is simply typical price times tick data
+	mf = tp.TP * tick_data.volume
+	# Money flow index is a simple transformation of money flow
+	mfi = 100 - (100 / (1 + mf))
+	# Money flow ratio relates to upsums and downsums along positive/negative money flow
+	tp_compare = tp - tp.shift(-1)
+	# Retrieves dataframe of upsums and downsums from money flow
+	pos_neg_mf = pd.DataFrame(index=tick_data.index)
+	pos_neg_mf['pmf'] = mf[tp_compare.TP > 0]
+	pos_neg_mf['nmf'] = mf[tp_compare.TP < 0]
+	pos_neg_mf = pos_neg_mf.fillna(0)
+	pos_neg_mf['pmf_cum'] = pos_neg_mf['pmf'].cumsum()
+	pos_neg_mf['nmf_cum'] = pos_neg_mf['nmf'].cumsum()
+	# Checks if num_periods given
+	if not num_periods:
+		return mf, mfi
+	# Gets money flow ratio itself
+	mr = pd.DataFrame(index=tick_data.index)
+	mr['MonRatio'] = 0
+	for i in range(0, len(tick_data.index) - num_periods):
+		# Gets the proper tick date window
+		start_date = tick_data.index[i]
+		end_date = tick_data.index[i + num_periods]
+		mr.MonRatio[end_date] = pos_neg_mf['pmf_cum'][start_date:end_date].sum() / pos_neg_mf['nmf_cum'][start_date:end_date].sum()
+	return mf, mfi, mr
 
 def negative_volume_index(tick_data):
 	""" Computes a coefficient on close price, with increments only if volume is increasing
