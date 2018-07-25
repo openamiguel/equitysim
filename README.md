@@ -85,16 +85,22 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `ease_of_movt` returns the ease of movement of asset data
   - `exponential_moving_average` returns the exponential moving average of input
   - `general_stochastic` returns the general Stochastic indicator of a price input
+  - `klinger_osc` returns the Klinger oscillator of asset data
   - `macd` returns the MACD of a price input (same as price oscillator with 26-period slow EMA and 12-period fast EMA)
+  - `market_fac_index` returns the market facilitation index of asset data
   - `median_price` returns the median price of asset data
+  - `money_flow_index` returns the money flow index of asset data
   - `negative_volume_index` returns the negative volume index of asset data
   - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
   - `on_balance_volume` returns the on balance volume of asset data
   - `parabolic_sar` returns the parabolic SAR of asset data
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
+  - `polarized_fractal_efficiency` returns the polarized fractal efficiency of asset data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
+  - `price_rate_of_change` returns the price rate of change of a price input
   - `positive_volume_index` returns the positive volume index of asset data
+  - `price_volume_rank` returns the price-volume rank of asset data (with user choice for which price)
   - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
   - `random_walk_index` returns the random walk index of asset data
@@ -105,13 +111,16 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `stochastic_momentum_index` returns the stochastic momentum index of tick data
   - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
   - `tee_three` and `tee_four` return T3 and T4, generalizations of DEMA, of input, respectively
+  - `trend_score` returns the trend score of a price input
   - `triangular_moving_average` returns the triangular moving average of input
   - `triple_ema` returns the triple exponential moving average of input
   - `trix` returns the TRIX indicator of a price input
   - `true_range` returns the true range of asset data
   - `true_strength_index` returns the true strength index of a price input
   - `typical_price` returns the typical price of asset data
+  - `ultimate_oscillator` returns the ultimate oscillator of asset data
   - `variable_moving_average` returns the variable moving average of a price input
+  - `vol_adj_moving_average` returns the volume-adjusted moving average of asset data
   - `weighted_close` returns the weighted close of asset data
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
 
