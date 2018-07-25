@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.26
+## Version: 1.0.27
 
 import math
 import numpy as np
@@ -18,7 +18,7 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = ultimate_oscillator(tick_data)
+	ko = polarized_fractal_efficiency(tick_data, num_periods=14)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
 	price_with_trends.columns = ['price', 'UO']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
@@ -626,6 +626,22 @@ def price_rate_of_change(price, factor=100):
 		Outputs: price rate of change over given timespan
 	"""
 	return factor * price / price.shift(-1)
+
+def polarized_fractal_efficiency(tick_data, num_periods, price_col='close'):
+	""" Computes the polarized fractal efficiency of stock price.
+		Background lies in fractal math.
+		Inputs: price Series, number of periods, column to use as price
+		Outputs: polarized fractal efficiency over given timespan
+	"""
+	# Computes PFE before transformation
+	price = tick_data[price_col]
+	num = (price - price.shift(-num_periods - 1)) ** 2 + num_periods ** 2
+	num = num.apply(lambda x: math.sqrt(x) if not pd.isnull(x) else x)
+	pfe = 100 * num / price
+	# Transforms PFE based on closing price; takes EMA
+	close_comp = tick_data.close < tick_data.close.shift(-1)
+	pfe[close_comp] = pfe[close_comp].apply(lambda x: -x if not pd.isnull(x) else x)
+	return exponential_moving_average(pfe, num_periods=num_periods)
 
 def positive_volume_index(tick_data):
 	""" Computes a coefficient on close price, with increments only if volume is increasing
