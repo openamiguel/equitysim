@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.27
+## Version: 1.0.28
 
 import math
 import numpy as np
@@ -14,13 +14,13 @@ def test_technical():
 	""" Hardcoded test of technical indicator """
 	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2015-03-01"
+	start_date = "2018-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = polarized_fractal_efficiency(tick_data, num_periods=14)
+	ko = price_volume_rank(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'UO']
+	price_with_trends.columns = ['price', 'PVrank']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -588,6 +588,38 @@ def percent_volume_oscillator(volume, num_periods_slow, num_periods_fast):
 	pct_vol_osc = 100 * (fast_ema - slow_ema) / fast_ema
 	return pct_vol_osc
 
+def polarized_fractal_efficiency(tick_data, num_periods, price_col='close'):
+	""" Computes the polarized fractal efficiency of stock price.
+		Background lies in fractal math.
+		Inputs: price Series, number of periods, column to use as price
+		Outputs: polarized fractal efficiency over given timespan
+	"""
+	# Computes PFE before transformation
+	price = tick_data[price_col]
+	num = (price - price.shift(-num_periods - 1)) ** 2 + num_periods ** 2
+	num = num.apply(lambda x: math.sqrt(x) if not pd.isnull(x) else x)
+	pfe = 100 * num / price
+	# Transforms PFE based on closing price; takes EMA
+	close_comp = tick_data.close < tick_data.close.shift(-1)
+	pfe[close_comp] = pfe[close_comp].apply(lambda x: -x if not pd.isnull(x) else x)
+	return exponential_moving_average(pfe, num_periods=num_periods)
+
+def positive_volume_index(tick_data):
+	""" Computes a coefficient on close price, with increments only if volume is increasing
+		Closely related to the NVI indicator
+		Inputs: volume and closing price
+		Outputs: PVI indicator over given timespan
+	"""
+	pvi = pd.DataFrame(index=tick_data.index, columns=['PVI'])
+	pvi.PVI[pvi.index[0]] = 0
+	for i in range(1, len(tick_data.index) - 1):
+		start_date = pvi.index[i - 1]
+		end_date = pvi.index[i]
+		# Indicator increments if volume has increased
+		increment = (tick_data.close[end_date] - tick_data.close[start_date]) / tick_data.close[start_date] if tick_data.volume[end_date] > tick_data.volume[start_date] else 0
+		pvi.PVI[end_date] = pvi.PVI[start_date] + increment
+	return pvi
+
 def price_channel(price, num_periods):
 	""" Computes the price channels (recent maximum and minimum) of an asset over time.
 		Inputs: Series of price over given timespan
@@ -627,37 +659,29 @@ def price_rate_of_change(price, factor=100):
 	"""
 	return factor * price / price.shift(-1)
 
-def polarized_fractal_efficiency(tick_data, num_periods, price_col='close'):
-	""" Computes the polarized fractal efficiency of stock price.
-		Background lies in fractal math.
-		Inputs: price Series, number of periods, column to use as price
-		Outputs: polarized fractal efficiency over given timespan
+def price_volume_rank(tick_data, price_col='close'):
+	""" Computes a simple indicator based on ranking price and volume changes.
+		Inputs: data on closing price, volume, and possibly one other price; 
+			choice of column for said price.
+		Outputs: price volume ranking
 	"""
-	# Computes PFE before transformation
 	price = tick_data[price_col]
-	num = (price - price.shift(-num_periods - 1)) ** 2 + num_periods ** 2
-	num = num.apply(lambda x: math.sqrt(x) if not pd.isnull(x) else x)
-	pfe = 100 * num / price
-	# Transforms PFE based on closing price; takes EMA
-	close_comp = tick_data.close < tick_data.close.shift(-1)
-	pfe[close_comp] = pfe[close_comp].apply(lambda x: -x if not pd.isnull(x) else x)
-	return exponential_moving_average(pfe, num_periods=num_periods)
-
-def positive_volume_index(tick_data):
-	""" Computes a coefficient on close price, with increments only if volume is increasing
-		Closely related to the NVI indicator
-		Inputs: volume and closing price
-		Outputs: PVI indicator over given timespan
-	"""
-	pvi = pd.DataFrame(index=tick_data.index, columns=['PVI'])
-	pvi.PVI[pvi.index[0]] = 0
-	for i in range(1, len(tick_data.index) - 1):
-		start_date = pvi.index[i - 1]
-		end_date = pvi.index[i]
-		# Indicator increments if volume has increased
-		increment = (tick_data.close[end_date] - tick_data.close[start_date]) / tick_data.close[start_date] if tick_data.volume[end_date] > tick_data.volume[start_date] else 0
-		pvi.PVI[end_date] = pvi.PVI[start_date] + increment
-	return pvi
+	# Gets and combines two boolean comparisons
+	comp1 = price > tick_data.close.shift(-1)
+	comp2 = tick_data.volume > tick_data.volume.shift(-1)
+	# Gets the actual ranking
+	pv_rank = pd.Series(index=tick_data.index)
+	for ind in pv_rank.index:
+		if comp1[ind] and comp2[ind]:
+			this_rank = 1
+		elif comp1[ind] and not comp2[ind]:
+			this_rank = 2
+		elif not comp1[ind] and not comp2[ind]:
+			this_rank = 3
+		else:
+			this_rank = 4
+		pv_rank[ind] = this_rank
+	return pv_rank
 
 def price_volume_trend(tick_data):
 	""" Computes the price-volume trend (PVT), which directly depends on price and volume data.
