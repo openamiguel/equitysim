@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.25
+## Version: 1.0.26
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = price_rate_of_change(tick_data.close)
+	ko = ultimate_oscillator(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'PROC']
+	price_with_trends.columns = ['price', 'UO']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -887,6 +887,22 @@ def typical_price(tick_data):
 	# Divides by three
 	typ_price = typ_price.divide(3)
 	return typ_price
+
+def ultimate_oscillator(tick_data, periods=(7,14,28)):
+	""" Computes the ultimate oscillator, a triple weighted sum of price info
+		Inputs: data on close, low, and high of stock; periods for the moving average
+		Outputs: ultimate oscillator over given timespan
+	"""
+	truelow = pd.concat([tick_data.close.shift(-1), tick_data.low], axis=1).min(axis=1)
+	input1 = tick_data.close - truelow
+	truerange = true_range(tick_data)['true_range']
+	terms = [0, 0, 0]
+	for i, period in zip(range(0, 3), periods):
+		a1 = simple_moving_average(input1, num_periods=period) * period
+		b1 = simple_moving_average(truerange, num_periods=period) * period
+		terms[i] = a1.divide(b1)
+		break
+	return (terms[0] * 4 + terms[1] * 2 + terms[2]) / 7
 
 def variable_moving_average(price, num_periods=30):
 	""" Computes the variable moving average, weights based on volatility, in this case CMO
