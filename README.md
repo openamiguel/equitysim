@@ -96,10 +96,10 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `parabolic_sar` returns the parabolic SAR of asset data
   - `percent_volume_oscillator` returns the percent volume oscillator of volume data
   - `polarized_fractal_efficiency` returns the polarized fractal efficiency of asset data
+  - `positive_volume_index` returns the positive volume index of asset data
   - `price_channel` returns the high and low price channels of a price input
   - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
   - `price_rate_of_change` returns the price rate of change of a price input
-  - `positive_volume_index` returns the positive volume index of asset data
   - `price_volume_rank` returns the price-volume rank of asset data (with user choice for which price)
   - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
