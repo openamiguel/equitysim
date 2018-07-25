@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.23
+## Version: 1.0.24
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = trend_score(tick_data.close, num_periods=14)
+	ko = vol_adj_moving_average(tick_data, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'TS14']
+	price_with_trends.columns = ['price', 'VAMA30']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -898,6 +898,16 @@ def variable_moving_average(price, num_periods=30):
 		vma.VMA[now_date] = smoothing_constant * cmo.CMO[now_date] * price[now_date] + (1 - smoothing_constant * cmo.CMO[now_date]) * price[last_date]
 	# Returns output dataframe
 	return vma
+
+def vol_adj_moving_average(tick_data, num_periods, price_col='close'):
+	"""
+		Computes a moving average adjusted for volume.
+		Inputs: dataframe with at least one price and volume; number of periods; 
+		choice of price column (default: closing price)
+		Outputs: moving average adjusted for volume over given timespan
+	"""
+	price_vol = tick_data[price_col] * tick_data.volume
+	return price_vol.rolling(num_periods).sum() / tick_data.volume.rolling(num_periods).sum()
 
 def weighted_close(tick_data):
 	""" Computes the weighted closing price of an asset over time. 
