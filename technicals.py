@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.22
+## Version: 1.0.23
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = market_fac_index(tick_data)
+	ko = trend_score(tick_data.close, num_periods=14)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'MFI']
+	price_with_trends.columns = ['price', 'TS14']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -794,6 +794,19 @@ def tee_four(input_values, num_periods, vfactor=0.7):
 	def gd(in_val, vfactor=vfactor):
 		return exponential_moving_average(in_val, num_periods=num_periods) * (1 + vfactor) - exponential_moving_average(exponential_moving_average(in_val, num_periods=num_periods), num_periods=num_periods) * vfactor
 	return gd(gd(gd(gd(input_values))))
+
+def trend_score(price, num_periods):
+	""" Computes the trend score, a rolling sum of binary price movements.
+		Inputs: price series
+		Outputs: trend score over time
+	"""
+	# Computes trend increments (same as Klinger's trend variable)
+	trend = price - price.shift(-1)
+	trend = trend.fillna(0)
+	trend = trend.apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+	# Computes rolling sum across window
+	trend_roll = trend.rolling(num_periods).sum()
+	return trend_roll
 
 def triangular_moving_average(input_values, num_periods=30):
 	""" Computes the triangular moving average (TMA) of a time series over certain timespan, which weighs the middle values more.
