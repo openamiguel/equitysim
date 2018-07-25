@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.24
+## Version: 1.0.25
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = vol_adj_moving_average(tick_data, num_periods=30)
+	ko = price_rate_of_change(tick_data.close)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'VAMA30']
+	price_with_trends.columns = ['price', 'PROC']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -618,6 +618,14 @@ def price_oscillator(price, moving_avg, num_periods_slow, num_periods_fast):
 	price_osc = moving_avg(price, num_periods_slow) - moving_avg(price, num_periods_fast)
 	price_osc_percent = 100 * price_osc / moving_avg(price, num_periods_fast)
 	return price_osc, price_osc_percent
+
+def price_rate_of_change(price, factor=100):
+	""" Computes the rate of change of a price, weighted with given factor
+		More specific version of general rate of change (not given in this code)
+		Inputs: price Series, factor to weigh data
+		Outputs: price rate of change over given timespan
+	"""
+	return factor * price / price.shift(-1)
 
 def positive_volume_index(tick_data):
 	""" Computes a coefficient on close price, with increments only if volume is increasing
