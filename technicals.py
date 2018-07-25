@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.21
+## Version: 1.0.22
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = klinger_osc(tick_data)
+	ko = market_fac_index(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'MonFlowRatio']
+	price_with_trends.columns = ['price', 'MFI']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def ad_line(tick_data):
@@ -426,6 +426,14 @@ def macd(price):
 		Outputs: MACD over given timespan
 	"""
 	return price_oscillator(price, exponential_moving_average, num_periods_slow=26, num_periods_fast=12)
+
+def market_fac_index(tick_data):
+	""" Computes a very straightforward indicator.
+		Best compared with volume trends, in order to derive conclusions.
+		Inputs: dataframe with high, low, and volume
+		Outputs: market facilitation index over given timespan
+	"""
+	return (tick_data.high - tick_data.low) / tick_data.volume
 
 def median_price(tick_data):
 	""" Computes the median price of an asset over time. 
