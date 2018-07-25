@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.6
+## Version: 1.0.7
 
 import logging
 import sys
@@ -44,19 +44,27 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['DIPLUS_30'] = di_positive
 	price_with_trends['DIMINUS_30'] = di_negative
 	logger.debug(list(price_with_trends.columns.values))
-	price_with_trends['DPO30'] = ti.detrended_price_osc(tick_data.close, num_periods=30)
+	price_with_trends['DPO30'] = ti.detrended_price_osc(price, num_periods=30)
 	price_with_trends['DX30'] = ti.directional_movt_index(tick_data, num_periods=30)
-	price_with_trends['DSI'] = ti.dynamic_momentum_index(tick_data.close)
+	price_with_trends['DSI'] = ti.dynamic_momentum_index(price)
 	price_with_trends['ease_of_movt'] = ti.ease_of_movt(tick_data, constant=10000000)
 	price_with_trends['EMA30'] = ti.exponential_moving_average(price)
 	price_with_trends['generalStoch30'] = ti.general_stochastic(price, num_periods=30)
 	mcd, macdPct = ti.macd(price)
+	price_with_trends['KO'] = ti.klinger_osc(tick_data)
 	price_with_trends['MACD'] = mcd
 	price_with_trends['MACDPct'] = macdPct
+	price_with_trends['MarketFacIndex'] = ti.market_fac_index(tick_data)
 	price_with_trends['medianPrice'] = ti.median_price(tick_data)
+	mf, mfi, mfr = ti.money_flow_index(tick_data, num_periods=14)
+	price_with_trends['MoneyFlow'] = mf
+	price_with_trends['MoneyFlowIndex'] = mfi
+	price_with_trends['MoneyFlowRatio_14'] = mfr
 	price_with_trends['NVI'] = ti.negative_volume_index(tick_data)
 	price_with_trends['normalizedPrice'] = ti.normalized_price(price, baseline.close)
 	price_with_trends['OBV'] = ti.on_balance_volume(tick_data)
+	price_with_trends['PFE14'] = ti.polarized_fractal_efficiency(tick_data, num_periods=14)
+	price_with_trends['PFE30'] = ti.polarized_fractal_efficiency(tick_data, num_periods=30)
 	price_with_trends['PSAR'] = ti.parabolic_sar(tick_data)
 	price_with_trends['PVO_30_14'] = ti.percent_volume_oscillator(tick_data.volume, num_periods_slow=30, num_periods_fast=14)
 	hichannel, lochannel = ti.price_channel(price, num_periods=30)
@@ -79,7 +87,9 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['PriceOscZLEMA_30_14'] = priceOscZLEMA
 	price_with_trends['PriceOscZLEMAPct_30_14'] = priceOscZLEMAPct
 	logger.debug(list(price_with_trends.columns.values))
+	price_with_trends['PROC'] = ti.price_rate_of_change(price)
 	price_with_trends['PVI'] = ti.positive_volume_index(tick_data)
+	price_with_trends['PV_rank'] = ti.price_volume_rank(tick_data)
 	price_with_trends['PVT'] = ti.price_volume_trend(tick_data)
 	price_with_trends['QstickVMA_30'] = ti.qstick(tick_data, ti.variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = ti.qstick(tick_data, ti.simple_moving_average, num_periods=30)
@@ -88,8 +98,8 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['QstickTMA_30'] = ti.qstick(tick_data, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['RMI30'] = ti.rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = ti.rel_strength_index(price)
-	price_with_trends['RVI14'] = ti.rel_vol_index(tick_data.close, num_periods=14)
-	price_with_trends['RVI30'] = ti.rel_vol_index(tick_data.close, num_periods=30)
+	price_with_trends['RVI14'] = ti.rel_vol_index(price, num_periods=14)
+	price_with_trends['RVI30'] = ti.rel_vol_index(price, num_periods=30)
 	price_with_trends['SMA30'] = ti.simple_moving_average(price)
 	logger.debug(list(price_with_trends.columns.values))
 	price_with_trends['SMI14'] = ti.stochastic_momentum_index(tick_data, num_periods=14)
@@ -110,16 +120,20 @@ def get_features(tick_data, price, baseline):
 	fastDTMA, slowDTMA = ti.stochastic_oscillator(price, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
 	price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
-	price_with_trends['T3'] = ti.tee_three(tick_data.close, num_periods=30)
-	price_with_trends['T4'] = ti.tee_four(tick_data.close, num_periods=30)
+	price_with_trends['T3'] = ti.tee_three(price, num_periods=30)
+	price_with_trends['T4'] = ti.tee_four(price, num_periods=30)
 	price_with_trends['TMA30'] = ti.triangular_moving_average(price)
 	price_with_trends['TEMA30'] = ti.triple_ema(price)
 	price_with_trends['TR'] = ti.true_range(tick_data)
-	price_with_trends['TRIX14'] = ti.trix(tick_data.close, num_periods=14)
-	price_with_trends['TRIX30'] = ti.trix(tick_data.close, num_periods=30)
-	price_with_trends['TSI14'] = ti.true_strength_index(tick_data.close, num_periods=14)
-	price_with_trends['TSI30'] = ti.true_strength_index(tick_data.close, num_periods=30)
+	price_with_trends['TRIX14'] = ti.trix(price, num_periods=14)
+	price_with_trends['TRIX30'] = ti.trix(price, num_periods=30)
+	price_with_trends['TS14'] = ti.trend_score(price, num_periods=14)
+	price_with_trends['TS30'] = ti.trend_score(price, num_periods=30)
+	price_with_trends['TSI14'] = ti.true_strength_index(price, num_periods=14)
+	price_with_trends['TSI30'] = ti.true_strength_index(price, num_periods=30)
 	price_with_trends['TypicalPrice'] = ti.typical_price(tick_data)
+	price_with_trends['UO'] = ti.ultimate_oscillator(tick_data)
+	price_with_trends['VAMA30'] = ti.vol_adj_moving_average(tick_data, num_periods=30)
 	price_with_trends['VMA30'] = ti.variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = ti.weighted_close(tick_data)
 	price_with_trends['ZLEMA30'] = ti.zero_lag_ema(price, num_periods=30)
