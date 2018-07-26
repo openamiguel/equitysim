@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.7
+## Version: 1.0.8
 
 import logging
 import sys
@@ -21,6 +21,7 @@ def get_features(tick_data, price, baseline):
 		Outputs: dataframe of features
 	"""
 	price_with_trends = tick_data
+	price_with_trends['AccumSwing1000'] = ti.accum_swing(tick_data, limit=1000)
 	price_with_trends['AD_line'] = ti.ad_line(tick_data)
 	price_with_trends['ADX30'] = ti.adx(tick_data, num_periods=30)
 	price_with_trends['ADXR30'] = ti.adxr(tick_data, num_periods=30)
@@ -55,7 +56,9 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['MACD'] = mcd
 	price_with_trends['MACDPct'] = macdPct
 	price_with_trends['MarketFacIndex'] = ti.market_fac_index(tick_data)
+	price_with_trends['MassIndex30'] = ti.mass_index(tick_data, num_periods=30)
 	price_with_trends['medianPrice'] = ti.median_price(tick_data)
+	price_with_trends['momentum'] = ti.momentum(price)
 	mf, mfi, mfr = ti.money_flow_index(tick_data, num_periods=14)
 	price_with_trends['MoneyFlow'] = mf
 	price_with_trends['MoneyFlowIndex'] = mfi
@@ -96,6 +99,7 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['QstickEMA_30'] = ti.qstick(tick_data, ti.exponential_moving_average, num_periods=30)
 	price_with_trends['QstickZLEMA_30'] = ti.qstick(tick_data, ti.zero_lag_ema, num_periods=30)
 	price_with_trends['QstickTMA_30'] = ti.qstick(tick_data, ti.triangular_moving_average, num_periods=30)
+	price_with_trends['RI30'] = ti.range_indicator(tick_data, num_periods=30)
 	price_with_trends['RMI30'] = ti.rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = ti.rel_strength_index(price)
 	price_with_trends['RVI14'] = ti.rel_vol_index(price, num_periods=14)
@@ -120,6 +124,7 @@ def get_features(tick_data, price, baseline):
 	fastDTMA, slowDTMA = ti.stochastic_oscillator(price, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
 	price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
+	price_with_trends['Swing1000'] = ti.swing_index(tick_data, limit=1000)
 	price_with_trends['T3'] = ti.tee_three(price, num_periods=30)
 	price_with_trends['T4'] = ti.tee_four(price, num_periods=30)
 	price_with_trends['TMA30'] = ti.triangular_moving_average(price)
@@ -134,8 +139,10 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['TypicalPrice'] = ti.typical_price(tick_data)
 	price_with_trends['UO'] = ti.ultimate_oscillator(tick_data)
 	price_with_trends['VAMA30'] = ti.vol_adj_moving_average(tick_data, num_periods=30)
+	price_with_trends['VHF30'] = ti.vertical_horizontal_filter(tick_data, num_periods=30)
 	price_with_trends['VMA30'] = ti.variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = ti.weighted_close(tick_data)
+	price_with_trends['WMA30'] = ti.weighted_moving_average(tick_data.close, num_periods=30)
 	price_with_trends['ZLEMA30'] = ti.zero_lag_ema(price, num_periods=30)
 	return price_with_trends
 
