@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.31
+## Version: 1.0.32
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = mass_index(tick_data, num_periods=30)
+	ko = range_indicator(tick_data, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'MassInd30']
+	price_with_trends.columns = ['price', 'RI30']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def accum_swing(tick_data, limit):
@@ -737,6 +737,27 @@ def random_walk_index(tick_data, num_periods=7):
 			rwi_maxes.append(max(rwi_high, rwi_low))
 		rwi.RWI[end_date] = max(rwi_maxes)
 	return rwi
+
+def range_indicator(tick_data, num_periods):
+	""" Computes the range indicator (RI).
+		Its use requires comparing interday RI with intraday RI.
+		Inputs: dataframe with high, low, and close data
+		Outputs: RI over given timespan
+	"""
+	# Saves the true range as a Series
+	tr_df = true_range(tick_data)
+	tr = tr_df.true_range
+	# Computes the w-term as intermediate
+	w = pd.DataFrame(index=tick_data.index, columns=['W_term'])
+	close_comp = tick_data.close > tick_data.close.shift(-1)
+	w.W_term[close_comp] = tr[close_comp] / (tick_data.close[close_comp] - tick_data.close.shift(-1)[close_comp])
+	close_comp_not = tick_data.close <= tick_data.close.shift(-1)
+	w.W_term[close_comp_not] = tr[close_comp_not]
+	# Computes the stochastic range
+	stoch_range = pd.DataFrame(index=tick_data.index, columns=['SR'])
+	stoch_range.SR = (w.W_term - w.W_term.rolling(num_periods).min()) / (w.W_term.rolling(num_periods).max() - w.W_term.rolling(num_periods).min())
+	# RI is an EMA of stochastic range
+	return exponential_moving_average(stoch_range.SR, num_periods=num_periods)
 
 def rel_momentum_index(price, num_periods):
 	""" Computes the relative momentum index of a (closing) price dataset given the number of periods.
