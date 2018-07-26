@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.32
+## Version: 1.0.33
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = range_indicator(tick_data, num_periods=30)
+	ko = momentum(tick_data.close)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'RI30']
+	price_with_trends.columns = ['price', 'momentum']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def accum_swing(tick_data, limit):
@@ -464,6 +464,13 @@ def median_price(tick_data):
 	# Divides by two
 	med_price = med_price.divide(2)
 	return med_price
+
+def momentum(price):
+	""" Computes the price momentum, to measure the acceleration of prices.
+		Inputs: price
+		Outputs: price momentum over given timespan
+	"""
+	return price - price.shift(-1)
 
 def money_flow_index(tick_data, num_periods=None):
 	"""
