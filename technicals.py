@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.28
+## Version: 1.0.29
 
 import math
 import numpy as np
@@ -14,11 +14,11 @@ def test_technical():
 	""" Hardcoded test of technical indicator """
 	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2018-03-01"
+	start_date = "2017-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = price_volume_rank(tick_data)
+	ko = swing_index(tick_data, limit=1000)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
 	price_with_trends.columns = ['price', 'PVrank']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
@@ -820,6 +820,37 @@ def stochastic_rsi(price):
 	rsi = rel_strength_index(price)
 	srsi = general_stochastic(rsi, num_periods=14)
 	return srsi
+
+def swing_index(tick_data, limit):
+	""" Computes the (unnecessarily?) complicated swing index.
+		Inputs: data on high, low, open, and close price
+		Outputs: swing index over given timespan
+	"""
+	# Gets the numerator of swing index
+	num = tick_data.close - tick_data.close.shift(-1) + 0.5 * (tick_data.close - tick_data.open) + 0.25 * (tick_data.close.shift(-1) - tick_data.open.shift(-1))
+	# Gets the K term, a maximum of two differences
+	K = pd.concat([tick_data.high - tick_data.close.shift(-1), 
+			 tick_data.low - tick_data.close.shift(-1)], axis=1)
+	K_max = K.max(axis=1)
+	# Gets the R term, which varies at each timestamp based on differences
+	R_comp = pd.concat([tick_data.high - tick_data.close.shift(-1), 
+				 tick_data.low - tick_data.close.shift(-1), 
+				 tick_data.high - tick_data.close], axis=1)
+	# Builds dataframe that compares values of aforementioned differences
+	R_col_df = pd.DataFrame(index=R_comp.index, columns=['R_term'])
+	for ind in R_comp.index:
+		R_col_df.R_term[ind] = R_comp.loc[ind, :].idxmax(axis=0)
+	# Converts said dataframe to series
+	R_col = R_col_df.R_term
+	# Builds the R term itself
+	R = pd.DataFrame(index=R_col.index, columns=['R_val'])
+	R.R_val[R_col == 0] = 0.25 * (tick_data.close.shift(-1)[R_col == 0] - tick_data.open.shift(-1)[R_col == 0]) + 0.5 * (tick_data.low[R_col == 0] - tick_data.close.shift(-1)[R_col == 0]) + (tick_data.high[R_col == 0] - tick_data.close.shift(-1)[R_col == 0])
+	R.R_val[R_col == 1] = 0.25 * (tick_data.close.shift(-1)[R_col == 1] - tick_data.open.shift(-1)[R_col == 1]) + 0.5 * (tick_data.high[R_col == 1] - tick_data.close.shift(-1)[R_col == 1]) + (tick_data.low[R_col == 1] - tick_data.close.shift(-1)[R_col == 1])
+	R.R_val[R_col == 2] = 0.25 * (tick_data.close.shift(-1)[R_col == 2] - tick_data.open.shift(-1)[R_col == 2]) + (tick_data.high[R_col == 2] - tick_data.low[R_col == 2])
+	# Puts the terms together
+	term1 = num / R.R_val
+	term2 = 50 * K_max / limit
+	return term1 * term2
 
 def tee_three(input_values, num_periods, vfactor=0.7):
 	""" Computes the third generalized DEMA  of an input value. Formally called T3, but
