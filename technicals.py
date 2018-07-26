@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.34
+## Version: 1.0.35
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = vertical_horizontal_filter(tick_data, num_periods=30)
+	ko = weighted_moving_average(tick_data.close, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'VHF30']
+	price_with_trends.columns = ['price', 'WMA30']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def accum_swing(tick_data, limit):
@@ -1078,6 +1078,25 @@ def weighted_close(tick_data):
 	# Divides by four
 	weighted_close_price = weighted_close_price.divide(4)
 	return weighted_close_price
+
+def weighted_moving_average(price, num_periods):
+	""" Computes the weighted moving average, which weighs recent data more.
+		Inputs: price Series; number of periods
+		Outputs: weighted moving average over given timespan
+	"""
+	wma = pd.Series(index=price.index)
+	for i in range(0, len(price.index) - num_periods - 2):
+		start_date = wma.index[i]
+		end_date = wma.index[i + num_periods + 1]
+		price_int = price[start_date:end_date]
+		price_int_sum = 0
+		count = 1
+		for row in price_int:
+			price_int_sum += row * (num_periods - count)
+			count = count + 1
+		wma[i] = price_int_sum
+	wma = wma / (num_periods * (num_periods - 1) / 2)
+	return wma
 
 def zero_lag_ema(price, num_periods):
 	""" Computes the so-called zero lag exponential moving average, which substracts older data to minimize cumulative effect.
