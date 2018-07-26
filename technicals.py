@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.29
+## Version: 1.0.30
 
 import math
 import numpy as np
@@ -14,14 +14,22 @@ def test_technical():
 	""" Hardcoded test of technical indicator """
 	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2017-03-01"
+	start_date = "2015-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = swing_index(tick_data, limit=1000)
+	ko = accum_swing(tick_data, limit=1000)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'PVrank']
+	price_with_trends.columns = ['price', 'accumswing']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
+
+def accum_swing(tick_data, limit):
+	""" Plots the cumulative sum (running total) of swing index, aka accumulation swing index.
+		Inputs: exact same as swing_index function
+		Outputs: running total of swing index
+	"""
+	si = swing_index(tick_data, limit=limit)
+	return si.cumsum()
 
 def ad_line(tick_data):
 	""" Plots the accumulation-distribution line ("AD" or "AD line") as a measure of volume
