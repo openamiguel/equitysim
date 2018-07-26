@@ -65,6 +65,7 @@ This code also downloads and analyzes data from the [United States SEC's Financi
 
 ## technical analysis
 - **technicals.py**
+  - `accum_swing` computes the accumulation (running total) of the swing index, which depends on asset data
   - `ad_line` returns the accumulation-distribution line of asset data
   - `adx` returns the average directional (movement) index of asset data
   - `adxr` returns the average directional (movement) index rating of asset data
@@ -88,7 +89,9 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `klinger_osc` returns the Klinger oscillator of asset data
   - `macd` returns the MACD of a price input (same as price oscillator with 26-period slow EMA and 12-period fast EMA)
   - `market_fac_index` returns the market facilitation index of asset data
+  - `mass_index` returns the mass index of asset data
   - `median_price` returns the median price of asset data
+  - `momentum` returns the momentum of a price input
   - `money_flow_index` returns the money flow index of asset data
   - `negative_volume_index` returns the negative volume index of asset data
   - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
@@ -104,12 +107,15 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `price_volume_trend` returns the price-volume trend of asset data
   - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
   - `random_walk_index` returns the random walk index of asset data
+  - `range_indicator` returns the range indicator of asset data
   - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
   - `rel_strength_index` returns the 14-day relative momentum index of a price input
   - `rel_vol_index` returns the relative volatility index of a price input
   - `simple_moving_average` returns the simple moving average of input
-  - `stochastic_momentum_index` returns the stochastic momentum index of tick data
+  - `stochastic_momentum_index` returns the stochastic momentum index of asset data
   - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
+  - `stochastic_rsi` returns the general stochastic of the RSI (dependent on a price input)
+  - `swing_index` returns the swing index of asset data
   - `tee_three` and `tee_four` return T3 and T4, generalizations of DEMA, of input, respectively
   - `trend_score` returns the trend score of a price input
   - `triangular_moving_average` returns the triangular moving average of input
@@ -120,8 +126,10 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `typical_price` returns the typical price of asset data
   - `ultimate_oscillator` returns the ultimate oscillator of asset data
   - `variable_moving_average` returns the variable moving average of a price input
+  - `vertical_horizontal_filter` returns the vertical-horizontal filter (VHF) of asset data
   - `vol_adj_moving_average` returns the volume-adjusted moving average of asset data
   - `weighted_close` returns the weighted close of asset data
+  - `weighted_moving_average` returns the weighted moving average of a price input
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
 
 ## machine learning suite
