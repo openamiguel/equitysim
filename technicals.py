@@ -1,14 +1,18 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.38
+## Version: 1.1.0
 
+import logging
 import math
 import numpy as np
 import pandas as pd
 
 import download
 import plotter
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def test_technical():
 	""" Hardcoded test of technical indicator """
@@ -920,6 +924,11 @@ def swing_index(tick_data, limit):
 	R.R_val[R_col == 0] = 0.25 * (tick_data.close.shift(-1)[R_col == 0] - tick_data.open.shift(-1)[R_col == 0]) + 0.5 * (tick_data.low[R_col == 0] - tick_data.close.shift(-1)[R_col == 0]) + (tick_data.high[R_col == 0] - tick_data.close.shift(-1)[R_col == 0])
 	R.R_val[R_col == 1] = 0.25 * (tick_data.close.shift(-1)[R_col == 1] - tick_data.open.shift(-1)[R_col == 1]) + 0.5 * (tick_data.high[R_col == 1] - tick_data.close.shift(-1)[R_col == 1]) + (tick_data.low[R_col == 1] - tick_data.close.shift(-1)[R_col == 1])
 	R.R_val[R_col == 2] = 0.25 * (tick_data.close.shift(-1)[R_col == 2] - tick_data.open.shift(-1)[R_col == 2]) + (tick_data.high[R_col == 2] - tick_data.low[R_col == 2])
+	# Checks for divide-by-zero errors
+	R_zero = R[R.R_val == 0]
+	if len(R_zero) > 0:
+		logger.warning("Divide by zero error indicated in the following fields: {}".format(R_zero))
+		R[R.R_val == 0] = 1
 	# Puts the terms together
 	term1 = num / R.R_val
 	term2 = 50 * K_max / limit
@@ -1177,4 +1186,5 @@ def zero_lag_ema(price, num_periods):
 	zlema.name = 'ZLEMA'
 	return zlema
 
-test_technical()
+if __name__ == "__main__":
+	test_technical()
