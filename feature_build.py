@@ -1,11 +1,12 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.1.3
+## Version: 1.1.4
 
 import logging
 import os
 import sys
 import time
+import traceback
 
 import command_parser as cmd
 import download
@@ -191,6 +192,8 @@ def main():
 	interval = cmd.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
 	## Checks if user wants to plot only, not to process features data
 	plot_only = "-plotOnly" in prompts
+	## Checks if the user wants to ignore errors
+	error_ignore = "-errorIgnore" in prompts
 	# Gets the baseline data
 	baseline = download.load_single_drive(baseline_symbol, function=function, interval=interval, folderpath=folder_path)
 	# Gets symbols already processed
@@ -201,18 +204,26 @@ def main():
 			plotter.feature_plot(symbol, folderpath=folder_path, savePlot=True, showPlot=True)
 		elif symbol not in current_symbols:
 			# Download data on this symbol
-			tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
-			tick_data = tick_data[start_date:end_date]
-			# Gets features and times the process
-			logger.info("Processing {0} features...".format(symbol))
-			time0 = time.time()
-			price_with_trends = get_features(tick_data, tick_data.close, baseline)
-			time1 = time.time()
-			time_tot = time1 - time0
-			logger.info("Time elapsed for %s was %4.2f seconds", symbol, time_tot)
-			# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
-			price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
-			price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
+			try:
+				tick_data = download.load_single_drive(symbol, function=function, interval=interval, folderpath=folder_path)
+				tick_data = tick_data[start_date:end_date]
+				# Gets features and times the process
+				logger.info("Processing {0} features...".format(symbol))
+				time0 = time.time()
+				price_with_trends = get_features(tick_data, tick_data.close, baseline)
+				time1 = time.time()
+				time_tot = time1 - time0
+				logger.info("Time elapsed for %s was %4.2f seconds", symbol, time_tot)
+				# This is because close is extremely correlated to open, high, and low, making them highly correlated to everything else
+				price_with_trends.drop(labels=['open','high','low'], axis=1, inplace=True)
+				price_with_trends.to_csv(folder_path + "/features/" + symbol + "_Features.csv")
+			except Exception as e:
+				logger.exception("EXCEPTION EXCEPTION EXCEPTION: %s", str(e))
+				logger.exception(traceback.format_exc())
+				if error_ignore: 
+					continue
+				else:
+					return
 
 if __name__ == "__main__":
 	main()
