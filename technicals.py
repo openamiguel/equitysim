@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.36
+## Version: 1.0.37
 
 import math
 import numpy as np
@@ -18,7 +18,7 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = williams_ad(tick_data)
+	ko = williams_percent(tick_data, num_periods=30)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
 	price_with_trends.columns = ['price', 'WilliamsAD']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
@@ -1116,6 +1116,20 @@ def williams_ad(tick_data):
 		else:
 			ad[this_date] = ad[last_date]
 	return ad
+
+def williams_percent(tick_data, num_periods):
+	""" Computes the Williams %R indicator, denoted `williams_percent` or `pct_r` in the code.
+		Inputs: dataframe of high, low, and closing price
+		Outputs: Williams %R indicator over given timespan
+	"""
+	pct_r = pd.Series(index=tick_data.index)
+	# Iterates through rolling data window
+	for i in range(0, len(pct_r.index) - num_periods):
+		start_date = pct_r.index[i]
+		end_date = pct_r.index[i + num_periods]
+		# Computation relies on highest high and lowest low
+		pct_r[end_date] = 100 * (max(tick_data.high[start_date:end_date]) - tick_data.close[end_date]) / (max(tick_data.high[start_date:end_date]) - min(tick_data.low[start_date:end_date]))
+	return pct_r
 
 def zero_lag_ema(price, num_periods):
 	""" Computes the so-called zero lag exponential moving average, which substracts older data to minimize cumulative effect.
