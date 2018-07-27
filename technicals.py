@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.35
+## Version: 1.0.36
 
 import math
 import numpy as np
@@ -18,9 +18,9 @@ def test_technical():
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = weighted_moving_average(tick_data.close, num_periods=30)
+	ko = williams_ad(tick_data)
 	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'WMA30']
+	price_with_trends.columns = ['price', 'WilliamsAD']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def accum_swing(tick_data, limit):
@@ -1097,6 +1097,25 @@ def weighted_moving_average(price, num_periods):
 		wma[i] = price_int_sum
 	wma = wma / (num_periods * (num_periods - 1) / 2)
 	return wma
+
+def williams_ad(tick_data):
+	""" Computes the Williams accumulation-distribution indicator (cumulative).
+		Closely related to the accumulation-distribution line.
+		Inputs: dataframe of high, low, and closing price
+		Outputs: Williams AD over given timespan
+	"""
+	ad = pd.Series(index=tick_data.index)
+	ad[ad.index[0]] = 0
+	for i in range(1, len(ad.index)):
+		this_date = ad.index[i]
+		last_date = ad.index[i - 1]
+		if tick_data.close[this_date] > tick_data.close[last_date]:
+			ad[this_date] = ad[last_date] + tick_data.close[this_date] - min(tick_data.low[this_date], tick_data.close[last_date])
+		elif tick_data.close[this_date] < tick_data.close[last_date]:
+			ad[this_date] = ad[last_date] + max(tick_data.high[this_date], tick_data.close[last_date]) - tick_data.close[this_date]
+		else:
+			ad[this_date] = ad[last_date]
+	return ad
 
 def zero_lag_ema(price, num_periods):
 	""" Computes the so-called zero lag exponential moving average, which substracts older data to minimize cumulative effect.
