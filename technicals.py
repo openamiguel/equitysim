@@ -1,7 +1,7 @@
 ## This code computes a good number of technical indicators.
 ## Unless otherwise stated, the source for formulas is FMlabs.com.
 ## Author: Miguel Opeña
-## Version: 1.0.37
+## Version: 1.0.38
 
 import math
 import numpy as np
@@ -14,13 +14,13 @@ def test_technical():
 	""" Hardcoded test of technical indicator """
 	symbol = "AAPL"
 	folderpath = "/Users/openamiguel/Documents/EQUITIES/stockDaily"
-	start_date = "2017-03-01"
+	start_date = "2015-03-01"
 	end_date = "2018-06-01"
 	tick_data = download.load_single_drive(symbol, folderpath=folderpath)
 	tick_data = tick_data[start_date:end_date]
-	ko = williams_percent(tick_data, num_periods=30)
-	price_with_trends = pd.concat([tick_data.close, ko], axis=1)
-	price_with_trends.columns = ['price', 'WilliamsAD']
+	sine, leadsine = mesa_sine_wave(tick_data, num_periods=30)
+	price_with_trends = pd.concat([tick_data.close, sine], axis=1)
+	price_with_trends.columns = ['price', 'MESA30']
 	plotter.price_plot(price_with_trends, symbol, subplot=[False,True,True], returns=[False,False,False], folderpath=folderpath, showPlot=True)
 
 def accum_swing(tick_data, limit):
@@ -464,6 +464,34 @@ def median_price(tick_data):
 	# Divides by two
 	med_price = med_price.divide(2)
 	return med_price
+
+def mesa_sine_wave(tick_data, num_periods, threshold=0.001):
+	""" Computes the MESA sine wave indicator.
+		Part of the iffy sine-wave indicator family.
+		Inputs: closing price; number of periods; threshold value
+		Outputs: MESA sine wave over given timespan
+	"""
+	# Builds the real and imaginary part coefficients
+	real_coeff = sum([math.sin(360 * j) / num_periods for j in range(0, num_periods + 1)])
+	imag_coeff = sum([math.cos(360 * j) / num_periods for j in range(0, num_periods + 1)])
+	# Builds the real and imaginary parts
+	real_part = real_coeff * tick_data.close
+	imag_part = imag_coeff * tick_data.close
+	## Builds the DC phase
+	# Compares imaginary part to the threshold value
+	imag_comp = imag_part > threshold
+	imag_comp_not = imag_part <= threshold
+	dc_phase = pd.Series(index=tick_data.index)
+	dc_phase[imag_comp] = real_part.divide(imag_part)
+	dc_phase[imag_comp] = dc_phase[imag_comp].apply(lambda x: math.atan(x) + 90)
+	dc_phase[imag_comp_not] = 90
+	# Modifies the DC phase based on given requirements
+	dc_phase[imag_part < 0] = dc_phase[imag_part < 0] + 180
+	dc_phase[dc_phase > 270] = dc_phase[dc_phase > 270] - 360
+	# Returns the actual indicator
+	sine = dc_phase.apply(lambda x: math.sin(x))
+	leadsine = dc_phase.apply(lambda x: math.sin(x) + 45)
+	return sine, leadsine
 
 def momentum(price):
 	""" Computes the price momentum, to measure the acceleration of prices.
