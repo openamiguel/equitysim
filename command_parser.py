@@ -1,14 +1,30 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.3.1
+## Version: 1.3.2
 
 import logging
+import os
 
 import io_support
 import ticker_universe
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def get_generic_from_prompts(prompts, query, default="", req=True):
 	"""	Parses command prompt for a selection of ticker universe (tickerverse).

@@ -1,9 +1,10 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.0.3
+## Version: 2.0.4
 
 import logging
+import os
 import pandas as pd
 import time
 import sys
@@ -11,8 +12,23 @@ import sys
 import command_parser
 import io_support
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 # Start of the URL for AlphaVantage queries
 MAIN_URL = "https://www.alphavantage.co/query?"
@@ -20,9 +36,9 @@ MAIN_URL = "https://www.alphavantage.co/query?"
 DELAY = 15
 
 def load_single(symbol, api_key, function="DAILY", interval="", output_size="full", writefile=False, folderpath="", datatype="csv"):
-    """ Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file.
-        See the AlphaVantage documentation for more details.
-        Inputs: symbol, API key (user-specific), time series function (default: daily), time interval (for intraday data only),
+    """ Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
+        See the AlphaVantage documentation for more details. 
+        Inputs: symbol, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
             output size (default: full), order to write file (default: no), folder path to write files to (default: empty),
             output type (default: CSV)
         Outputs: dataframe with all available data on symbol
@@ -47,7 +63,7 @@ def load_single(symbol, api_key, function="DAILY", interval="", output_size="ful
     if writefile:
         logger.info("Saving data on " + symbol + "...")
         write_path = folderpath + "/" + symbol + "_" + function
-        if interval != "":
+        if interval != "": 
             write_path = write_path + "&" + interval
         tick_data.to_csv(write_path + "." + datatype)
         logger.info("Data on " + symbol + " successfully saved!")
@@ -55,9 +71,9 @@ def load_single(symbol, api_key, function="DAILY", interval="", output_size="ful
     return tick_data
 
 def load_single_drive(symbol, function="DAILY", interval="", folderpath="", datatype="csv"):
-    """ Downloads data on a single symbol from local drive according to user parameters, as a dataframe.
+    """ Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
 
-        Inputs: symbol, time series function (default: daily), time interval (for intraday data only),
+        Inputs: symbol, time series function (default: daily), time interval (for intraday data only), 
             folder path to look for file (default: empty), data type (default: csv)
         Outputs: dataframe with all available data on symbol
     """
@@ -79,7 +95,7 @@ def load_single_drive(symbol, function="DAILY", interval="", folderpath="", data
 
 def load_separate(tickerverse, api_key, function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
     """ Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
-        Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only),
+        Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
             output size (default: full), folder path to write files to (default: empty), output type (default: CSV)
         Outputs: True if everything works
     """
@@ -91,11 +107,11 @@ def load_separate(tickerverse, api_key, function="DAILY", interval="", output_si
 		# Delay prevents HTTP 503 errors
     time.sleep(DELAY)
     return True
-
+    
 def load_combined_drive(tickerverse, column_choice="close", function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
     """ Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
-        Inputs: ticker universe, choice of column to write, time series function (default: daily),
-            time interval (for intraday data only), output size (default: full),
+        Inputs: ticker universe, choice of column to write, time series function (default: daily), 
+            time interval (for intraday data only), output size (default: full), 
             folder path to write files to (default: empty), output type (default: CSV)
         Outputs: combined output
     """
@@ -109,8 +125,8 @@ def load_combined_drive(tickerverse, column_choice="close", function="DAILY", in
     return combined_output
 
 def main():
-    """ User interacts with interface through command prompt, which obtains several "input" data.
-        Here are some examples of how to run this program:
+    """ User interacts with interface through command prompt, which obtains several "input" data. 
+        Here are some examples of how to run this program: 
 
         python download.py -tickerUniverse SNP500 -folderPath C:/Users/Miguel/Documents/EQUITIES/stockDaily -apiKey <INSERT KEY> -function DAILY
             This will download files of daily data on S&P 500 tickers to the desired folder path.
@@ -124,14 +140,14 @@ def main():
     prompts = sys.argv
     ## Handles which symbol the user wants to download.
     tickerverse, name = command_parser.get_tickerverse_from_prompts(prompts)
-    ## Handles where the user wants to download their files.
-    # Default folder path is relevant to the author only.
+    ## Handles where the user wants to download their files. 
+    # Default folder path is relevant to the author only. 
     folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
-    ## Handles the user's API key.
+    ## Handles the user's API key. 
     api_key = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
-    ## Handles the desired time series function.
+    ## Handles the desired time series function. 
     function = command_parser.get_generic_from_prompts(prompts, query="-function")
-    ## Handles the special case: if INTRADAY selected.
+    ## Handles the special case: if INTRADAY selected. 
     interval = command_parser.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
     ## Handles user choice of separate or combined
     load_separate(tickerverse, api_key, function=function, interval=interval, folderpath=folder_path)

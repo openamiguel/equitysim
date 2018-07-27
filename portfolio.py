@@ -1,9 +1,10 @@
 ## This code uses trading signals from strategy.py to model a portfolio across one or many stocks.
 ## Author: Miguel Opeña
-## Version: 1.5.7
+## Version: 1.5.8
 
 import logging
 from math import floor
+import os
 import pandas as pd
 
 import download
@@ -13,8 +14,23 @@ import return_calculator
 import strategy
 import ticker_universe
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def asset_ranker(prices, ranking_method, lowquant=0.2, highquant=0.8, switch=False):
 	"""	Applies a ranking methodology to a set of asset data, selecting quantiles of data to go long or short on.
