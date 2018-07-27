@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.0.8
+## Version: 1.0.9
 
 import logging
 import sys
@@ -142,6 +142,8 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['VHF30'] = ti.vertical_horizontal_filter(tick_data, num_periods=30)
 	price_with_trends['VMA30'] = ti.variable_moving_average(price, num_periods=30)
 	price_with_trends['WeightedClose'] = ti.weighted_close(tick_data)
+	price_with_trends['WilliamsAD'] = ti.williams_ad(tick_data)
+	price_with_trends['WilliamsR30'] = ti.williams_percent(tick_data, num_periods=30)
 	price_with_trends['WMA30'] = ti.weighted_moving_average(tick_data.close, num_periods=30)
 	price_with_trends['ZLEMA30'] = ti.zero_lag_ema(price, num_periods=30)
 	return price_with_trends
