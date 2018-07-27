@@ -130,6 +130,8 @@ This code also downloads and analyzes data from the [United States SEC's Financi
   - `vol_adj_moving_average` returns the volume-adjusted moving average of asset data
   - `weighted_close` returns the weighted close of asset data
   - `weighted_moving_average` returns the weighted moving average of a price input
+  - `williams_ad` returns the Williams accumulation-distribution indicator of asset data
+  - `williams_percent` returns the Williams %R indicator of asset data
   - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
 
 ## machine learning suite
