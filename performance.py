@@ -1,6 +1,6 @@
 ## This code assesses portfolios from portfolio.py using risk metrics and return plots. 
 ## Author: Miguel Opeña
-## Version: 1.4.3
+## Version: 1.4.4
 
 import logging
 import numpy as np
@@ -13,8 +13,10 @@ import return_calculator
 import strategy
 import technicals as ti
 
-logging.basicConfig(level=logging.INFO)
+FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
+logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
 
 def beta(price, baseline):
     """ Calculates the Sharpe ratio of the given asset/portfolio against baseline.

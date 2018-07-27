@@ -1,14 +1,16 @@
 ## Contains support functions for file I/O. 
 ## Author: Miguel Opeña
-## Version: 1.1.2
+## Version: 1.1.3
 
 import logging
 import os
 import pandas as pd
 from psutil import virtual_memory
 
-logging.basicConfig(level=logging.DEBUG)
+FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
+logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
+logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
 
 def get_current_symbols(folderpath, keyword="DAILY", datatype="csv"):
     """ Returns list of all symbols downloaded to given folder. 

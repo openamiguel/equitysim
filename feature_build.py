@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.1.1
+## Version: 1.1.2
 
 import logging
 import sys
@@ -12,8 +12,10 @@ import io_support as io
 import plotter
 import technicals as ti
 
-logging.basicConfig(level=logging.INFO)
+FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
+logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
 
 def get_features(tick_data, price, baseline):
 	""" Compiled function with all possible features added to it.

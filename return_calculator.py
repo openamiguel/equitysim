@@ -1,13 +1,14 @@
 ## This code computes a few basic metrics of returns. 
 ## Author: Miguel Opeña
-## Version: 3.4.3
+## Version: 3.4.4
 
 import logging
-import numpy as np
 import pandas as pd
 
-logging.basicConfig(level=logging.INFO)
+FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
+logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
 
 def get_rolling_returns(prices):
 	"""	Computes the rolling return (return at each timepoint relative to start) of price. 

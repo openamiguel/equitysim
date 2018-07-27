@@ -4,7 +4,7 @@
 ## Code for the augmented Dickey-Fuller mean reversion test. 
 ## Source: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing
 ## Author: Miguel Opeña
-## Version: 1.0.0
+## Version: 1.0.1
 
 import logging
 # Import the time series library
@@ -12,8 +12,10 @@ import statsmodels.tsa.stattools as ts
 
 import download as dl
 
-logging.basicConfig(level=logging.INFO)
+FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
+logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
 
 def adf(tick_data, column='close', lag_order=1, verbose=False):
 	""" Computes the augmented Dickey-Fuller mean reversion test.
