@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.1.2
+## Version: 1.1.3
 
 import logging
 import os
@@ -194,7 +194,7 @@ def main():
 	# Gets the baseline data
 	baseline = download.load_single_drive(baseline_symbol, function=function, interval=interval, folderpath=folder_path)
 	# Gets symbols already processed
-	current_symbols = io.get_current_symbols(folder_path + "/features")
+	current_symbols = io.get_current_symbols(folder_path + "/features", keyword="Features")
 	# Gets the feature data for each one
 	for symbol in tickerverse:
 		if plot_only:
