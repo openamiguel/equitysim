@@ -1,6 +1,6 @@
 ## This code builds files of ML features on equity data.
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import logging
 import sys
@@ -74,15 +74,15 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['PriceChannelHigh'] = hichannel
 	price_with_trends['PriceChannelLow'] = lochannel
 	logger.debug(list(price_with_trends.columns.values))
-	priceOscVMA, priceOscVMAPct = ti.price_oscillator(price, ti.variable_moving_average, num_periods_slow=30, num_periods_fast=14)
-	price_with_trends['PriceOscVMA_30_14'] = priceOscVMA
-	price_with_trends['PriceOscVMAPct_30_14'] = priceOscVMAPct
+	# priceOscVMA, priceOscVMAPct = ti.price_oscillator(price, ti.variable_moving_average, num_periods_slow=30, num_periods_fast=14)
+	# price_with_trends['PriceOscVMA_30_14'] = priceOscVMA
+	# price_with_trends['PriceOscVMAPct_30_14'] = priceOscVMAPct
 	priceOscSMA, priceOscSMAPct = ti.price_oscillator(price, ti.simple_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscSMA_30_14'] = priceOscSMA
 	price_with_trends['PriceOscSMAPct_30_14'] = priceOscSMAPct
-	priceOscTMA, priceOscTMAPct = ti.price_oscillator(price, ti.triangular_moving_average, num_periods_slow=30, num_periods_fast=14)
-	price_with_trends['PriceOscTMA_30_14'] = priceOscTMA
-	price_with_trends['PriceOscTMAPct_30_14'] = priceOscTMAPct
+	# priceOscTMA, priceOscTMAPct = ti.price_oscillator(price, ti.triangular_moving_average, num_periods_slow=30, num_periods_fast=14)
+	# price_with_trends['PriceOscTMA_30_14'] = priceOscTMA
+	# price_with_trends['PriceOscTMAPct_30_14'] = priceOscTMAPct
 	priceOscEMA, priceOscEMAPct = ti.price_oscillator(price, ti.exponential_moving_average, num_periods_slow=30, num_periods_fast=14)
 	price_with_trends['PriceOscEMA_30_14'] = priceOscEMA
 	price_with_trends['PriceOscEMAPct_30_14'] = priceOscEMAPct
@@ -94,11 +94,11 @@ def get_features(tick_data, price, baseline):
 	price_with_trends['PVI'] = ti.positive_volume_index(tick_data)
 	price_with_trends['PV_rank'] = ti.price_volume_rank(tick_data)
 	price_with_trends['PVT'] = ti.price_volume_trend(tick_data)
-	price_with_trends['QstickVMA_30'] = ti.qstick(tick_data, ti.variable_moving_average, num_periods=30)
+	# price_with_trends['QstickVMA_30'] = ti.qstick(tick_data, ti.variable_moving_average, num_periods=30)
 	price_with_trends['QstickSMA_30'] = ti.qstick(tick_data, ti.simple_moving_average, num_periods=30)
 	price_with_trends['QstickEMA_30'] = ti.qstick(tick_data, ti.exponential_moving_average, num_periods=30)
 	price_with_trends['QstickZLEMA_30'] = ti.qstick(tick_data, ti.zero_lag_ema, num_periods=30)
-	price_with_trends['QstickTMA_30'] = ti.qstick(tick_data, ti.triangular_moving_average, num_periods=30)
+	# price_with_trends['QstickTMA_30'] = ti.qstick(tick_data, ti.triangular_moving_average, num_periods=30)
 	price_with_trends['RI30'] = ti.range_indicator(tick_data, num_periods=30)
 	price_with_trends['RMI30'] = ti.rel_momentum_index(price, num_periods=30)
 	price_with_trends['RSI'] = ti.rel_strength_index(price)
@@ -121,9 +121,9 @@ def get_features(tick_data, price, baseline):
 	fastDZLEMA, slowDZLEMA = ti.stochastic_oscillator(price, ti.zero_lag_ema, num_periods=30)
 	price_with_trends['FastDStochasticOscZLEMA_30'] = fastDZLEMA
 	price_with_trends['FastDStochasticOscZLEMA_30'] = slowDZLEMA
-	fastDTMA, slowDTMA = ti.stochastic_oscillator(price, ti.triangular_moving_average, num_periods=30)
-	price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
-	price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
+	# fastDTMA, slowDTMA = ti.stochastic_oscillator(price, ti.triangular_moving_average, num_periods=30)
+	# price_with_trends['FastDStochasticOscTMA_30'] = fastDTMA
+	# price_with_trends['FastDStochasticOscTMA_30'] = slowDTMA
 	price_with_trends['Swing1000'] = ti.swing_index(tick_data, limit=1000)
 	price_with_trends['T3'] = ti.tee_three(price, num_periods=30)
 	price_with_trends['T4'] = ti.tee_four(price, num_periods=30)
@@ -158,11 +158,11 @@ def main():
 		Outputs: 0 if everything works
 	"""
 	prompts = sys.argv
-	## Handles which symbol(s) the user wants to process.
-	tickerverse, name = cmd.get_tickerverse_from_prompts(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
 	folder_path = cmd.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
+	## Handles which symbol(s) the user wants to process.
+	tickerverse, name = cmd.get_tickerverse_from_prompts(prompts, folderpath=folder_path)
 	## Handles which index/asset should be the baseline 
 	baseline_symbol = cmd.get_generic_from_prompts(prompts, query="-baseline", default="^GSPC", req=False)
 	## Handles collection of the start and end dates for trading
