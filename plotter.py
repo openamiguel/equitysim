@@ -3,6 +3,7 @@
 ## Version: 4.3.7
 
 import logging
+import os
 import seaborn as sns
 import sys
 import numpy as np
@@ -19,10 +20,23 @@ MONTHS = mdates.MonthLocator()
 DATES = mdates.DayLocator()
 HOURS = mdates.HourLocator()
 
-FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
-logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def feature_plot(symbol, folderpath="", savePlot=True, showPlot=False):
 	""" Given a dataframe of features (downloaded from a file), this code plots the correlations of said features as a heatmap.

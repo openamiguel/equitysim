@@ -7,15 +7,29 @@
 ## Version: 1.0.1
 
 import logging
+import os
 # Import the time series library
 import statsmodels.tsa.stattools as ts
 
 import download as dl
 
-FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
-logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
-logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def adf(tick_data, column='close', lag_order=1, verbose=False):
 	""" Computes the augmented Dickey-Fuller mean reversion test.

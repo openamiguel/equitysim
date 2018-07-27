@@ -3,6 +3,7 @@
 ## Version: 1.1.2
 
 import logging
+import os
 import sys
 import time
 
@@ -12,10 +13,24 @@ import io_support as io
 import plotter
 import technicals as ti
 
-FORMAT = '%(asctime)-15s %(user)-8s %(levelname)s:%(message)s'
-logging.basicConfig(filename='/Users/openamiguel/Desktop/LOG/example.log', level=logging.INFO, format=FORMAT)
+
 logger = logging.getLogger(__name__)
-logger.info("----------INITIALIZING NEW RUN OF {}----------".format(__name__))
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def get_features(tick_data, price, baseline):
 	""" Compiled function with all possible features added to it.
