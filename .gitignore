@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# PyCharm
+equitysim.iml
+misc.xml
+modules.xml
+vcs.xml
