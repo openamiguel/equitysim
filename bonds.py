@@ -9,7 +9,7 @@ import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+# purely a test edit sorry
 # Initializes frequencies for bond calculations
 ANNUM = 1.0
 SEMI_ANNUM = 2.0
