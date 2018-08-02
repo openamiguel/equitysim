@@ -1,13 +1,30 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.3.0
+## Version: 1.3.2
 
 import logging
+import os
 
+import io_support
 import ticker_universe
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def get_generic_from_prompts(prompts, query, default="", req=True):
 	"""	Parses command prompt for a selection of ticker universe (tickerverse).
@@ -24,7 +41,7 @@ def get_generic_from_prompts(prompts, query, default="", req=True):
 	else:
 		return prompts[prompts.index(query) + 1]
 
-def get_tickerverse_from_prompts(prompts, query="-tickerUniverse"):
+def get_tickerverse_from_prompts(prompts, query="-tickerUniverse", folderpath=None):
 	"""	Parses command prompt for a selection of ticker universe (tickerverse).
 		Inputs: command prompts, name of query in prompts
 		Outputs: ticker universe and name
@@ -53,6 +70,13 @@ def get_tickerverse_from_prompts(prompts, query="-tickerUniverse"):
 	elif "MF25" in prompts:
 		tickerverse = ticker_universe.obtain_parse_mutual_funds()
 		name = "MF25"
+	# Yields data on all tickers at a given filepath
+	elif "CURRENT" in prompts:
+		if not folderpath:
+			logger.error("You chose `CURRENT` as a command-line option for ticker universe, but failed to provide a filepath for this folder. Please try again.")
+			return None
+		tickerverse = io_support.get_current_symbols(folderpath)
+		name = "CURRENT SYMBOLS"
 	# Yields data on user-provided tickers
 	else:
 		tickerverse = prompts[prompts.index(query) + 1].split(",")

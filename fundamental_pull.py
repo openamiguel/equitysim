@@ -2,15 +2,26 @@
 ## which are then compiled into a report about the company's performance.
 ## Part of the fundamental analysis.
 ## Author: Miguel Opeña
-## Version: 1.1.2
+## Version: 1.1.3
 
 import logging
+import os
 import pandas as pd
 
 import download
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def get_tags_in_file(filepath):
 	""" Fetches a list of all unique tags in a given JSON file of EDGAR data.
