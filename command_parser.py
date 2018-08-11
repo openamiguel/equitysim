@@ -1,6 +1,6 @@
 ## This code consolidates all the parsing of command prompts. 
 ## Author: Miguel Opeña
-## Version: 1.3.2
+## Version: 1.3.3
 
 import logging
 import os
@@ -73,6 +73,10 @@ def get_tickerverse_from_prompts(prompts, query="-tickerUniverse", folderpath=No
 	elif "MF25" in prompts:
 		tickerverse = ticker_universe.obtain_parse_mutual_funds()
 		name = "MF25"
+	# Yields data on USD to XYZ forex tickers
+	elif "FOREX" in prompts:
+		tickerverse = ticker_universe.obtain_parse_forex()
+		name = "FOREX"
 	# Yields data on all tickers at a given filepath
 	elif "CURRENT" in prompts:
 		if not folderpath:
