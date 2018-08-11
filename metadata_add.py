@@ -1,15 +1,31 @@
 ## General program to add metadata to the Financials JSON files.
 ## Author: Miguel Opeña
-## Version: 1.0.5
+## Version: 1.0.6
 
 from datetime import datetime
 import logging
+import os
 import pandas as pd
 
 import io_support
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def date_transform(date, delim='/'):
 	""" Transforms a date string into another format. Warning: currently hardcoded.

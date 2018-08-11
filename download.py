@@ -1,9 +1,10 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.0.3
+## Version: 2.0.4
 
 import logging
+import os
 import pandas as pd
 import time
 import sys
@@ -11,8 +12,23 @@ import sys
 import command_parser
 import io_support
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 # Start of the URL for AlphaVantage queries
 MAIN_URL = "https://www.alphavantage.co/query?"

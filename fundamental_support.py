@@ -1,7 +1,7 @@
 ## Supporting parser code for each file in the EDGAR dataset.
 ## Link: https://www.sec.gov/dera/data/financial-statement-data-sets.html
 ## Author: Miguel Opeña
-## Version: 1.1.0
+## Version: 1.1.1
 
 import csv
 import pandas as pd
@@ -11,7 +11,7 @@ import io_support
 lambda_reg_case = lambda x: " ".join([w.lower().capitalize() for w in x.split(" ")])
 writeheader = [True, True, True, True]
 
-def json_parse(json_as_string, newline=False):
+def json_clean(json_as_string, newline=False):
     json_as_string = json_as_string.replace('\\/', '/')
     json_as_string = json_as_string.replace('\"nciks\":1,', '')
     json_as_string = json_as_string.replace('\"aciks\":null,', '')
@@ -43,7 +43,7 @@ def get_sic_names(target_url='https://www.sec.gov/info/edgar/siccodes.htm'):
     sic_names['industry_name'] = sic_names['industry_name'].apply(lambda_reg_case)
     return sic_names
 
-def submission_parse(filepath, outpath):
+def edgar_sub(filepath, outpath):
     """ Parses the data on submission files ONLY.
         Inputs: path of submission file, output path of processed file
         Outputs: True if everything works
@@ -94,7 +94,7 @@ def submission_parse(filepath, outpath):
     writeheader[0] = False
     return True
 
-def number_parse(filepath, outpath):
+def edgar_num(filepath, outpath):
     """ Parses the data on number files ONLY.
         Inputs: path of number file, output path of processed file
         Outputs: True if everything works
@@ -112,7 +112,7 @@ def number_parse(filepath, outpath):
     writeheader[1] = False
     return True
 
-def presentation_parse(filepath, outpath):
+def edgar_pre(filepath, outpath):
     """ Parses the data on presentation files ONLY.
         Inputs: path of presentation file, output path of processed file
         Outputs: True if everything works
@@ -131,7 +131,7 @@ def presentation_parse(filepath, outpath):
     writeheader[2] = False
     return True
 
-def tag_parse(filepath, outpath):
+def edgar_tag(filepath, outpath):
     """ Parses the data on tag files ONLY.
         Inputs: path of tag file, output path of processed file
         Outputs: True if everything works

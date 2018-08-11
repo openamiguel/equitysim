@@ -1,9 +1,13 @@
+#!/usr/bin/python
+# -*- coding: utf8 -*-
+
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.1.7
+## Version: 4.1.8
 
 import glob
 import logging
+import os
 import pandas as pd
 import sys
 import time
@@ -11,8 +15,23 @@ import time
 import command_parser
 import download
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
+handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 # Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
 DELAY = 15
