@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.1.2
+## Version: 2.1.3
 
 import logging
 import os
@@ -17,7 +17,7 @@ LOGDIR = "/Users/openamiguel/Desktop/LOG"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 # Set file path for logger
-handler = logging.FileHandler('{}/equitysim.log'.format(LOGDIR))
+handler = logging.FileHandler('{}/equitysim_download.log'.format(LOGDIR))
 handler.setLevel(logging.DEBUG)
 # Format the logger
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -79,6 +79,8 @@ class CDownloader:
 			symbol_str = symbol[0] if type(symbol) is not str else symbol
 			logger.info("Downloading the symbol {} from AlphaVantage".format(symbol_str))
 			read_path = self.url_format.format(self.main_url, self.function, symbol_str, self.api_key, self.datatype, self.output_size)
+		# Outputs the read path file
+		logger.debug("Attempting to scrape URL: %s", read_path)
 		# Checks if the function is intraday (regardless of the type of data)
 		if self.function == "INTRADAY":
 			read_path = read_path + "&interval=" + self.interval
@@ -87,19 +89,19 @@ class CDownloader:
 		try:
 			tick_data = pd.read_csv(read_path, index_col='timestamp')
 		except ValueError:
-			logger.error(symbol + " not found by AlphaVantage. Download unsuccessful.")
+			logger.error(symbol_str + " not found by AlphaVantage. Download unsuccessful.")
 			return tick_data
-		logger.info(symbol + " successfully downloaded!")
+		logger.info(symbol_str + " successfully downloaded!")
 		# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
 		tick_data = tick_data.reindex(index=tick_data.index[::-1])
 		# Saves ticker data to file, if requested
 		if writefile:
-			logger.info("Saving data on " + symbol + "...")
+			logger.info("Saving data on " + symbol_str + "...")
 			write_path = self.folderpath + "/" + symbol_str + "_" + self.function
 			if self.interval != "": 
 				write_path = write_path + "&" + self.interval
 			tick_data.to_csv(write_path + "." + self.datatype)
-			logger.info("Data on " + symbol + " successfully saved!")
+			logger.info("Data on " + symbol_str + " successfully saved!")
 		# Returns the data on symbol
 		return tick_data
 
@@ -114,7 +116,7 @@ class CDownloader:
 			# Read each symbol and write to file (hence writeFile=True)
 			self.load_single(symbol, writefile=True)
 			# Delay prevents HTTP 503 errors
-		time.sleep(self.delay)
+			time.sleep(self.delay)
 		return True
 
 class CLoader:
@@ -150,7 +152,7 @@ class CLoader:
 		if self.interval != "":
 			readpath = readpath + "&" + self.interval
 		readpath = readpath + "." + self.datatype
-		logger.info("Retrieving " + symbol + " from local drive...")
+		logger.info("Retrieving " + symbol_str + " from local drive...")
 		tick_data = None
 		try:
 			tick_data = pd.read_csv(readpath, index_col='timestamp')
@@ -159,7 +161,7 @@ class CLoader:
 			return tick_data
 		# De-duplicates the index
 		tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
-		logger.info("Data on " + symbol + " successfully retrieved!")
+		logger.info("Data on " + symbol_str + " successfully retrieved!")
 		return tick_data
 
 	def load_combined_drive(self, tickerverse, column_choice="close"):
@@ -213,9 +215,14 @@ def main():
 	function = command_parser.get_generic_from_prompts(prompts, query="-function")
 	## Handles the special case: if INTRADAY selected. 
 	interval = command_parser.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
-	## Handles user choice of separate or combined
-	downloader = CDownloader(folder_path, api_key, function, interval)
-	downloader.load_separate(tickerverse)
+	## Handles user choice of forex or equity (not forex)
+	if name == "FOREX":
+		fx_format = "{}function=FX_{}&from_symbol={}&to_symbol={}&apikey={}&datatype={}&outputsize={}"
+		downloader = CDownloader(folder_path, api_key, function, interval, url_format=fx_format)
+		downloader.load_separate(tickerverse)
+	else:
+		downloader = CDownloader(folder_path, api_key, function, interval)
+		downloader.load_separate(tickerverse)
 	## Closing output
 	logger.info("Download complete. Have a nice day!")
 
