@@ -72,13 +72,13 @@ class CDownloader:
 		# Forex case
 		if type(symbol) is tuple or type(symbol) is list and len(symbol) >= 2:
 			logger.info("Downloading the provided symbols: {} and {}".format(symbol[0], symbol[1]))
-			read_path = self.url_format.format(MAIN_URL, self.function, symbol[0], symbol[1], self.api_key, self.datatype, self.output_size)
+			read_path = self.url_format.format(self.main_url, self.function, symbol[0], symbol[1], self.api_key, self.datatype, self.output_size)
 			symbol_str = symbol[0] + "_" + symbol[1]
 		# Equity case
 		elif type(symbol) is str or len(symbol) == 1:
 			symbol_str = symbol[0] if type(symbol) is not str else symbol
 			logger.info("Downloading the symbol {} from AlphaVantage".format(symbol_str))
-			read_path = self.url_format.format(MAIN_URL, self.function, symbol_str, self.api_key, self.datatype, self.output_size)
+			read_path = self.url_format.format(self.main_url, self.function, symbol_str, self.api_key, self.datatype, self.output_size)
 		# Checks if the function is intraday (regardless of the type of data)
 		if self.function == "INTRADAY":
 			read_path = read_path + "&interval=" + self.interval
@@ -180,11 +180,13 @@ class CMacroDownloader:
 	""" A class to download macro data from handpicked sources. """
 	def __init__(self):
 		# Initialize variables
+		return
 	def get_world_bank():
 		# Gets data from the World Bank
 		# Download file from the World Bank link
 		# Parse it and clean if needed
 		# Save to folderpath
+		return
 
 def main():
 	""" User interacts with interface through command prompt, which obtains several "input" data. 
