@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.0.6
+## Version: 2.1.0
 
 import logging
 import os
@@ -38,40 +38,82 @@ MAIN_URL = "https://www.alphavantage.co/query?"
 # Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
 DELAY = 15
 
-def load_single(symbol, api_key, function="DAILY", interval="", output_size="full", writefile=False, folderpath="", datatype="csv"):
-	""" Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
-		See the AlphaVantage documentation for more details. 
-		Inputs: symbol, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
-			output size (default: full), order to write file (default: no), folder path to write files to (default: empty),
-			output type (default: CSV)
-		Outputs: dataframe with all available data on symbol
-	"""
-	# Sets up the link to read the symbol from
-	read_path = MAIN_URL + "function=TIME_SERIES_" + function + "&symbol=" + symbol + "&apikey=" + api_key + "&datatype=" + datatype + "&outputsize=" + output_size
-	if function == "INTRADAY":
-		read_path = read_path + "&interval=" + interval
-	# Gives a tidbit of verbose output
-	logger.info("Downloading " + symbol + " from AlphaVantage...")
-	tick_data = None
-	# Accounts for the fact that AlphaVantage lacks certain high-volume ETFs and mutual funds
-	try:
-		tick_data = pd.read_csv(read_path, index_col='timestamp')
-	except ValueError:
-		logger.error(symbol + " not found by AlphaVantage. Download unsuccessful.")
+# Sample format for stocks: "{}function=TIME_SERIES_{}&symbol={}&apikey={}&datatype={}&outputsize={}"
+# Sample format for forex: "{}function=FX_{}&from_symbol={}&to_symbol={}&apikey={}&datatype={}&outputsize={}"
+
+class CDownloader:
+	""" A class to download one, or many, symbols from AlphaVantage """
+	def __init__(self, folderpath, api_key, function="DAILY", interval="", 
+		    output_size="full", datatype="csv", 
+		    url_format="{}function=TIME_SERIES_{}&symbol={}&apikey={}&datatype={}&outputsize={}"):
+		self.folderpath = folderpath
+		self.api_key = api_key
+		self.function = function
+		self.interval = interval
+		# Checks if user has failed to account for the interval
+		if function == "INTRADAY" and interval == "":
+			logger.warning("Downloader class must take interval as a parameter if INTRADAY chosen as function")
+			logger.warning("Default value of interval set to 1 minute")
+			self.interval = "1min"
+		self.output_size = output_size
+		self.datatype = datatype
+		self.url_format = url_format
+
+	def load_single(self, symbol, writefile=False):
+		""" Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
+			See the AlphaVantage documentation for more details. 
+			Inputs: symbol (can be a tuple or list of two symbols)
+			Outputs: dataframe with all available data on symbol
+		"""
+		# Checks if the read path involves a stock or forex
+		read_path = ""
+		# Forex case
+		if type(symbol) is tuple or type(symbol) is list and len(symbol) >= 2:
+			logger.info("Downloading the provided symbols: {} and {}".format(symbol[0], symbol[1]))
+			read_path = self.url_format.format(MAIN_URL, self.function, symbol[0], symbol[1], self.api_key, self.datatype, self.output_size)
+		# Equity case
+		elif type(symbol) is str or len(symbol) == 1:
+			symbol_str = symbol[0] if type(symbol) is not str else symbol
+			logger.info("Downloading the symbol {} from AlphaVantage".format(symbol_str))
+			read_path = self.url_format.format(MAIN_URL, self.function, symbol_str, self.api_key, self.datatype, self.output_size)
+		# Checks if the function is intraday (regardless of the type of data)
+		if self.function == "INTRADAY":
+			read_path = read_path + "&interval=" + self.interval
+		tick_data = None
+		# Accounts for the fact that AlphaVantage lacks certain high-volume ETFs and mutual funds
+		try:
+			tick_data = pd.read_csv(read_path, index_col='timestamp')
+		except ValueError:
+			logger.error(symbol + " not found by AlphaVantage. Download unsuccessful.")
+			return tick_data
+		logger.info(symbol + " successfully downloaded!")
+		# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
+		tick_data = tick_data.reindex(index=tick_data.index[::-1])
+		# Saves ticker data to CSV, if requested
+		if writefile:
+			logger.info("Saving data on " + symbol + "...")
+			write_path = self.folderpath + "/" + symbol + "_" + self.function
+			if self.interval != "": 
+				write_path = write_path + "&" + self.interval
+			tick_data.to_csv(write_path + "." + self.datatype)
+			logger.info("Data on " + symbol + " successfully saved!")
+		# Returns the data on symbol
 		return tick_data
-	logger.info(symbol + " successfully downloaded!")
-	# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
-	tick_data = tick_data.reindex(index=tick_data.index[::-1])
-	# Saves ticker data to CSV, if requested
-	if writefile:
-		logger.info("Saving data on " + symbol + "...")
-		write_path = folderpath + "/" + symbol + "_" + function
-		if interval != "": 
-			write_path = write_path + "&" + interval
-		tick_data.to_csv(write_path + "." + datatype)
-		logger.info("Data on " + symbol + " successfully saved!")
-	# Returns the data on symbol
-	return tick_data
+
+	def load_separate(self, tickerverse):
+		""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
+			Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
+				output size (default: full), folder path to write files to (default: empty), output type (default: CSV)
+			Outputs: True if everything works
+		"""
+		current_symbols = io_support.get_current_symbols(self.folderpath)
+		for symbol in tickerverse:
+			if symbol in current_symbols: continue
+			# Read each symbol and write to file (hence writeFile=True)
+			self.load_single(self, symbol, writefile=True)
+			# Delay prevents HTTP 503 errors
+		time.sleep(DELAY)
+		return True
 
 def load_single_drive(symbol, function="DAILY", interval="", folderpath="", datatype="csv"):
 	""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
@@ -96,21 +138,6 @@ def load_single_drive(symbol, function="DAILY", interval="", folderpath="", data
 	logger.info("Data on " + symbol + " successfully retrieved!")
 	return tick_data
 
-def load_separate(tickerverse, api_key, function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
-	""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
-		Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
-			output size (default: full), folder path to write files to (default: empty), output type (default: CSV)
-		Outputs: True if everything works
-	"""
-	current_symbols = io_support.get_current_symbols(folderpath)
-	for symbol in tickerverse:
-		if symbol in current_symbols: continue
-		# Read each symbol and write to file (hence writeFile=True)
-		load_single(symbol, api_key, function=function, interval=interval, output_size=output_size, writefile=True, folderpath=folderpath, datatype=datatype)
-		# Delay prevents HTTP 503 errors
-	time.sleep(DELAY)
-	return True
-	
 def load_combined_drive(tickerverse, column_choice="close", function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
 	""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
 		Inputs: ticker universe, choice of column to write, time series function (default: daily), 
@@ -153,7 +180,8 @@ def main():
 	## Handles the special case: if INTRADAY selected. 
 	interval = command_parser.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
 	## Handles user choice of separate or combined
-	load_separate(tickerverse, api_key, function=function, interval=interval, folderpath=folder_path)
+	downloader = CDownloader(folder_path, api_key, function, interval)
+	downloader.load_separate(tickerverse)
 	## Closing output
 	logger.info("Download complete. Have a nice day!")
 
