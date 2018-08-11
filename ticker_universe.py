@@ -1,6 +1,6 @@
 ## This code gets lists of ticker symbols within one of three universes: S&P500, NASDAQ 100, and Dow 30. 
 ## Author: Miguel Opeña
-## Version: 3.2.1
+## Version: 3.3.0
 
 import pandas as pd
 
@@ -15,6 +15,7 @@ DOW_30_LINK = 'https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average'
 NASDAQ_100_LINK = 'https://www.stockmonitor.com/nasdaq-stocks/'
 MUTUAL_FUND_LINK = 'https://www.marketwatch.com/tools/mutual-fund/top25largest'
 ETF_LINK = 'http://etfdb.com/compare/volume/'
+FOREX_LINK = 'http://eoddata.com/stocklist/FOREX/U.htm'
 BLACKLIST = ['GOOGL', 'DISCA', 'NWSA', 'FOXA', 'UAA', 'LBTYA']
 
 def obtain_parse_nasdaq(seed="^NDX"):
@@ -91,3 +92,24 @@ def obtain_parse_etfs():
 	table = data[0]
 	allTickers = table.Symbol.values.tolist()
 	return allTickers
+
+def obtain_parse_forex():
+	""" Parses third-party website for the USD to other currency conversion tickers. 
+		Ex. "USD" to "EUR" corresponds to the monetary value of $1USD in euros. 
+		Website is read as dataframe.
+		
+		Inputs: none
+		Outputs: a list of forex ticker tuples at the given link
+	"""
+	data = pd.read_html(FOREX_LINK)
+	# Fifth table on page, column named "Code"
+	table = data[4]
+	table.columns = table.iloc[0]
+	codes = table.Code
+	allTickers = []
+	for code in codes:
+		if code[:3] == 'USD':
+			allTickers.append((code[:3], code[3:]))
+	return allTickers
+
+print(obtain_parse_forex())
