@@ -9,20 +9,23 @@ import pandas as pd
 
 import io_support
 
+LOGDIR = "/Users/openamiguel/Desktop/LOG"
+# Initialize logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
-handler.setLevel(logging.INFO)
-
+logger.setLevel(logging.DEBUG)
+# Set file path for logger
+handler = logging.FileHandler('{}/equitysim.log'.format(LOGDIR))
+handler.setLevel(logging.DEBUG)
+# Format the logger
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
-
+# Add the new format
 logger.addHandler(handler)
-
+# Format the console logger
 consoleHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.INFO)
 consoleHandler.setFormatter(formatter)
-
+# Add the new format to the logger file
 logger.addHandler(consoleHandler)
 
 logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
@@ -54,9 +57,10 @@ def stock_split(folderpath, link="http://eoddata.com/splits.aspx", datasource="E
 	# Gets current symbols in given folder
 	current_symbols = io_support.get_current_symbols(folderpath, keyword="DAILY", datatype="csv")
 	# Iterates through table and adds metadata if needed
+	logger.debug("List of symbols: %s", str(table.symbol))
 	for idx in table.index:
 		this_symbol = table.symbol[idx]
-		if this_symbol not in current_symbols: continue
+		if this_symbol not rrin current_symbols: continue
 		# Saves date effective and ratio
 		this_date_effective = table.date[idx]
 		this_ratio = table.ratio[idx]
@@ -64,7 +68,21 @@ def stock_split(folderpath, link="http://eoddata.com/splits.aspx", datasource="E
 		this_date_retrieved = datetime.now().strftime("%Y-%m-%d %H:%M")
 		json_row = "{{\"stock_split\":{{\"date_effective\":\"{}\",\"ratio\":\"{}\",\"datetime_retrieved\":\"{}\",\"data_source\":\"{}\"}}}}".format(this_date_effective, this_ratio, this_date_retrieved, datasource)
 		logger.info("Row to be added to stock symbol %s file: %s", this_symbol, json_row)
-		## TODO: insert code to add json_row to file
+		logger.debug("Current JSON row: %s", str(json_row))
+		# Look for the financials JSON file
+		outpath = folderpath + "/Financials/{}_Financials.json".format(this_symbol)
+		logger.info("Accessing Financal JSON file: %s", outpath)
+		# Opens the file to run it
+		outfile = open(outpath, 'r')
+		lines = outfile.readlines()
+		outfile.close()
+		outfile_write = open(outpath, 'w')
+		for rownum, line in enumerate(lines):
+			# Writes the additional metadata after the second line
+			if rownum == 1:
+				outfile_write.write(json_row)
+			outfile_write.write(line)
+		outfile_write.close()
 	return table
 
 tab = stock_split("/Users/openamiguel/Documents/EQUITIES/stockDaily")
