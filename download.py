@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.1.1
+## Version: 2.1.2
 
 import logging
 import os
@@ -33,11 +33,6 @@ logger.addHandler(consoleHandler)
 
 logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
-# Start of the URL for AlphaVantage queries
-MAIN_URL = "https://www.alphavantage.co/query?"
-# Delay prevents HTTP 503 errors (AlphaVantage recommends 10, but 15 works in practice)
-DELAY = 15
-
 # Sample format for stocks: "{}function=TIME_SERIES_{}&symbol={}&apikey={}&datatype={}&outputsize={}"
 # Sample format for forex: "{}function=FX_{}&from_symbol={}&to_symbol={}&apikey={}&datatype={}&outputsize={}"
 
@@ -58,6 +53,10 @@ class CDownloader:
 		self.output_size = output_size
 		self.datatype = datatype
 		self.url_format = url_format
+		# Number of seconds to delay between each downloader query
+		self.delay = 15
+		# Start of the URL for AlphaVantage queries
+		self.main_url = "https://www.alphavantage.co/query?"
 
 	def load_single(self, symbol, writefile=False):
 		""" Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
@@ -68,10 +67,13 @@ class CDownloader:
 		"""
 		# Checks if the read path involves a stock or forex
 		read_path = ""
+		# Symbol string will come up in the file name
+		symbol_str = ""
 		# Forex case
 		if type(symbol) is tuple or type(symbol) is list and len(symbol) >= 2:
 			logger.info("Downloading the provided symbols: {} and {}".format(symbol[0], symbol[1]))
 			read_path = self.url_format.format(MAIN_URL, self.function, symbol[0], symbol[1], self.api_key, self.datatype, self.output_size)
+			symbol_str = symbol[0] + "_" + symbol[1]
 		# Equity case
 		elif type(symbol) is str or len(symbol) == 1:
 			symbol_str = symbol[0] if type(symbol) is not str else symbol
@@ -90,10 +92,10 @@ class CDownloader:
 		logger.info(symbol + " successfully downloaded!")
 		# Flips the data around (AlphaVantage presents it in reverse chronological order, but I prefer regular chronological)
 		tick_data = tick_data.reindex(index=tick_data.index[::-1])
-		# Saves ticker data to CSV, if requested
+		# Saves ticker data to file, if requested
 		if writefile:
 			logger.info("Saving data on " + symbol + "...")
-			write_path = self.folderpath + "/" + symbol + "_" + self.function
+			write_path = self.folderpath + "/" + symbol_str + "_" + self.function
 			if self.interval != "": 
 				write_path = write_path + "&" + self.interval
 			tick_data.to_csv(write_path + "." + self.datatype)
@@ -112,7 +114,7 @@ class CDownloader:
 			# Read each symbol and write to file (hence writeFile=True)
 			self.load_single(symbol, writefile=True)
 			# Delay prevents HTTP 503 errors
-		time.sleep(DELAY)
+		time.sleep(self.delay)
 		return True
 
 class CLoader:
@@ -131,11 +133,20 @@ class CLoader:
 		self.datatype = datatype
 
 	def load_single_drive(self, symbol):
-		""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
-			Inputs: symbol to look for
+		""" Downloads data on a single file (equity or forex) from local drive. 
+			Inputs: symbol String or tuple object
 			Outputs: dataframe with all available data on symbol
 		"""
-		readpath = self.folderpath + "/" + symbol + "_" + self.function
+		# Checks if the symbol input is forex or equity
+		readpath = ""
+		symbol_str = ""
+		# Forex case
+		if type(symbol) is tuple or type(symbol) is list and len(symbol) >= 2:
+			symbol_str = symbol[0] + "_" + symbol[1]
+		# Equity case
+		elif type(symbol) is str or len(symbol) == 1:
+			symbol_str = symbol[0] if type(symbol) is not str else symbol
+		readpath = self.folderpath + "/" + symbol_str + "_" + self.function
 		if self.interval != "":
 			readpath = readpath + "&" + self.interval
 		readpath = readpath + "." + self.datatype
@@ -157,13 +168,23 @@ class CLoader:
 			Outputs: combined output as dataframe
 		"""
 		combined_output = pd.DataFrame()
-		for symbol in tickerverse:
+		form symbol in tickerverse:
 			# Read each symbol and concatenate with previous symbols
 			tick_data = self.load_single_drive(symbol)
 			combined_output = pd.concat([combined_output, tick_data[column_choice]], axis=1)
 		# Makes each column the symbol of asset (to avoid confusion)
 		combined_output.columns = tickerverse
 		return combined_output
+
+class CMacroDownloader:
+	""" A class to download macro data from handpicked sources. """
+	def __init__(self):
+		# Initialize variables
+	def get_world_bank():
+		# Gets data from the World Bank
+		# Download file from the World Bank link
+		# Parse it and clean if needed
+		# Save to folderpath
 
 def main():
 	""" User interacts with interface through command prompt, which obtains several "input" data. 
