@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.1.0
+## Version: 2.1.1
 
 import logging
 import os
@@ -52,7 +52,7 @@ class CDownloader:
 		self.interval = interval
 		# Checks if user has failed to account for the interval
 		if function == "INTRADAY" and interval == "":
-			logger.warning("Downloader class must take interval as a parameter if INTRADAY chosen as function")
+			logger.warning("Class CDownloader constructor must take interval as a parameter if INTRADAY chosen as function")
 			logger.warning("Default value of interval set to 1 minute")
 			self.interval = "1min"
 		self.output_size = output_size
@@ -62,7 +62,8 @@ class CDownloader:
 	def load_single(self, symbol, writefile=False):
 		""" Downloads data on a single symbol from AlphaVantage according to user parameters, as a dataframe and (if prompted) as a file. 
 			See the AlphaVantage documentation for more details. 
-			Inputs: symbol (can be a tuple or list of two symbols)
+			Inputs: symbol (can be a tuple or list of two symbols), order to
+				write file (default: No)
 			Outputs: dataframe with all available data on symbol
 		"""
 		# Checks if the read path involves a stock or forex
@@ -101,58 +102,68 @@ class CDownloader:
 		return tick_data
 
 	def load_separate(self, tickerverse):
-		""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
-			Inputs: ticker universe, API key (user-specific), time series function (default: daily), time interval (for intraday data only), 
-				output size (default: full), folder path to write files to (default: empty), output type (default: CSV)
+		""" Downloads OHCLV (open-high-close-low-volume) data on given tickers.
+			Inputs: ticker universe
 			Outputs: True if everything works
 		"""
 		current_symbols = io_support.get_current_symbols(self.folderpath)
 		for symbol in tickerverse:
 			if symbol in current_symbols: continue
 			# Read each symbol and write to file (hence writeFile=True)
-			self.load_single(self, symbol, writefile=True)
+			self.load_single(symbol, writefile=True)
 			# Delay prevents HTTP 503 errors
 		time.sleep(DELAY)
 		return True
 
-def load_single_drive(symbol, function="DAILY", interval="", folderpath="", datatype="csv"):
-	""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
+class CLoader:
+	""" A class to load one, or several, symbols from local hard drive """
+	def __init__(self, folderpath, function="DAILY", interval="", 
+		    output_size="full", datatype="csv"):
+		self.folderpath = folderpath
+		self.function = function
+		self.interval = interval
+		# Checks if user has failed to account for the interval
+		if function == "INTRADAY" and interval == "":
+			logger.warning("Class CLoader constructor must take interval as a parameter if INTRADAY chosen as function")
+			logger.warning("Default value of interval set to 1 minute")
+			self.interval = "1min"
+		self.output_size = output_size
+		self.datatype = datatype
 
-		Inputs: symbol, time series function (default: daily), time interval (for intraday data only), 
-			folder path to look for file (default: empty), data type (default: csv)
-		Outputs: dataframe with all available data on symbol
-	"""
-	readpath = folderpath + "/" + symbol + "_" + function
-	if interval != "":
-		readpath = readpath + "&" + interval
-	readpath = readpath + "." + datatype
-	logger.info("Retrieving " + symbol + " from local drive...")
-	tick_data = None
-	try:
-		tick_data = pd.read_csv(readpath, index_col='timestamp')
-	except FileNotFoundError:
-		logger.error("Retrieval unsuccessful. File not found at " + readpath)
+	def load_single_drive(self, symbol):
+		""" Downloads data on a single symbol from local drive according to user parameters, as a dataframe. 
+			Inputs: symbol to look for
+			Outputs: dataframe with all available data on symbol
+		"""
+		readpath = self.folderpath + "/" + symbol + "_" + self.function
+		if self.interval != "":
+			readpath = readpath + "&" + self.interval
+		readpath = readpath + "." + self.datatype
+		logger.info("Retrieving " + symbol + " from local drive...")
+		tick_data = None
+		try:
+			tick_data = pd.read_csv(readpath, index_col='timestamp')
+		except FileNotFoundError:
+			logger.error("Retrieval unsuccessful. File not found at " + readpath)
+			return tick_data
+		# De-duplicates the index
+		tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
+		logger.info("Data on " + symbol + " successfully retrieved!")
 		return tick_data
-	# De-duplicates the index
-	tick_data = tick_data[~tick_data.index.duplicated(keep='first')]
-	logger.info("Data on " + symbol + " successfully retrieved!")
-	return tick_data
 
-def load_combined_drive(tickerverse, column_choice="close", function="DAILY", interval="", output_size="full", folderpath="", datatype="csv"):
-	""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
-		Inputs: ticker universe, choice of column to write, time series function (default: daily), 
-			time interval (for intraday data only), output size (default: full), 
-			folder path to write files to (default: empty), output type (default: CSV)
-		Outputs: combined output
-	"""
-	combined_output = pd.DataFrame()
-	for symbol in tickerverse:
-		# Read each symbol and concatenate with previous symbols
-		tick_data = load_single_drive(symbol, function=function, interval=interval, folderpath=folderpath, datatype=datatype)
-		combined_output = pd.concat([combined_output, tick_data[column_choice]], axis=1)
-	# Makes each column the symbol of asset (to avoid confusion)
-	combined_output.columns = tickerverse
-	return combined_output
+	def load_combined_drive(self, tickerverse, column_choice="close"):
+		""" Downloads OHCLV (open-high-close-low-volume) data on given tickers in compact or full form.
+			Inputs: ticker universe, choice of column to write (default: close)
+			Outputs: combined output as dataframe
+		"""
+		combined_output = pd.DataFrame()
+		for symbol in tickerverse:
+			# Read each symbol and concatenate with previous symbols
+			tick_data = self.load_single_drive(symbol)
+			combined_output = pd.concat([combined_output, tick_data[column_choice]], axis=1)
+		# Makes each column the symbol of asset (to avoid confusion)
+		combined_output.columns = tickerverse
+		return combined_output
 
 def main():
 	""" User interacts with interface through command prompt, which obtains several "input" data. 
