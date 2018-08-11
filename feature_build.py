@@ -14,12 +14,14 @@ import io_support as io
 import plotter
 import technicals as ti
 
+
+LOGDIR = "/Users/openamiguel/Desktop/LOG"
 # Initialize logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 # Set file path for logger
-handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
-handler.setLevel(logging.INFO)
+handler = logging.FileHandler('{}/equitysim.log'.format(LOGDIR))
+handler.setLevel(logging.DEBUG)
 # Format the logger
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -27,10 +29,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 # Format the console logger
 consoleHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.INFO)
 consoleHandler.setFormatter(formatter)
 # Add the new format to the logger file
 logger.addHandler(consoleHandler)
-# Indicate which file is running
+
 logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
 
 def get_features(tick_data, price, baseline):

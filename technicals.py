@@ -12,20 +12,23 @@ import pandas as pd
 import download
 import plotter
 
+LOGDIR = "/Users/openamiguel/Desktop/LOG"
+# Initialize logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-handler = logging.FileHandler('/Users/openamiguel/Desktop/LOG/example.log')
-handler.setLevel(logging.INFO)
-
+logger.setLevel(logging.DEBUG)
+# Set file path for logger
+handler = logging.FileHandler('{}/equitysim.log'.format(LOGDIR))
+handler.setLevel(logging.DEBUG)
+# Format the logger
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
-
+# Add the new format
 logger.addHandler(handler)
-
+# Format the console logger
 consoleHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.INFO)
 consoleHandler.setFormatter(formatter)
-
+# Add the new format to the logger file
 logger.addHandler(consoleHandler)
 
 logger.info("----------INITIALIZING NEW RUN OF %s----------", os.path.basename(__file__))
