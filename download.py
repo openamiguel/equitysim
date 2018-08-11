@@ -168,7 +168,7 @@ class CLoader:
 			Outputs: combined output as dataframe
 		"""
 		combined_output = pd.DataFrame()
-		form symbol in tickerverse:
+		for symbol in tickerverse:
 			# Read each symbol and concatenate with previous symbols
 			tick_data = self.load_single_drive(symbol)
 			combined_output = pd.concat([combined_output, tick_data[column_choice]], axis=1)
