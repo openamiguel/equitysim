@@ -111,5 +111,3 @@ def obtain_parse_forex():
 		if code[:3] == 'USD':
 			allTickers.append((code[:3], code[3:]))
 	return allTickers
-
-print(obtain_parse_forex())
