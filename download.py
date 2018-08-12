@@ -1,7 +1,7 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.2.2
+## Version: 2.3.0
 
 import datetime
 import logging
@@ -12,7 +12,7 @@ import time
 import sys
 from urllib.request import urlopen
 
-import command_parser
+from command_parser import CCmdParser
 import io_support
 
 LOGDIR = "/Users/openamiguel/Desktop/LOG"
@@ -279,16 +279,17 @@ def main():
 	"""
 	prompts = sys.argv
 	## Handles which symbol the user wants to download.
-	tickerverse, name = command_parser.get_tickerverse_from_prompts(prompts)
+	cmdparser = CCmdParser(prompts)
+	tickerverse, name = cmdparser.get_tickerverse()
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
+	folder_path = cmdparser.get_generic(query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles the user's API key. 
-	api_key = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
+	api_key = cmdparser.get_generic(query="-apiKey")
 	## Handles the desired time series function. 
-	function = command_parser.get_generic_from_prompts(prompts, query="-function")
+	function = cmdparser.get_generic(query="-function")
 	## Handles the special case: if INTRADAY selected. 
-	interval = command_parser.get_generic_from_prompts(prompts, query="-interval") if function == "INTRADAY" else ""
+	interval = cmdparser.get_generic(query="-interval") if function == "INTRADAY" else ""
 	## Handles user choice of forex or equity (not forex)
 	if name == "FOREX":
 		fx_format = "{}function=FX_{}&from_symbol={}&to_symbol={}&apikey={}&datatype={}&outputsize={}"
