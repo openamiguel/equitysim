@@ -1,10 +1,11 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.2.1
+## Version: 2.2.2
 
 import datetime
 import logging
+import numpy as np
 import os
 import pandas as pd
 import time
@@ -184,30 +185,39 @@ class CMacroDownloader:
 	""" A class to download macro data from handpicked sources. """
 	def __init__(self):
 		# Initialize variables
+		now = datetime.datetime.now()
+		self.current_year = now.year
 		return
 
-	def yield_curve(self, year, maturity='10Y'):
+	def yield_curve_year(self, year, maturity='10Y'):
 		""" Scrapes the US Treasury's website for yield curve data stored in XML files. 
 			Note: the provided URL gets data from all years
-			Input: year to get data from, maturity of desired bond (defaul: 10-year T-Note)
+			Input: year to get data from, maturity of desired bond (default: 10-year T-Note)
 			Output: pandas Series of desired bond's yield curve since January 2, 1990
 		"""
 		# Builds a simple code to parse an XML line
 		def parse_line(line):
+			logger.debug("Currently reading line: %s", line)
+			# Checks if the line entry is null
+			# Interestingly, this happened in 2010 data, but not 1991-2009
+			if "null=\"true\"" in line:
+				return np.NaN
 			start_index = line.index('>') + 1
 			line = line[start_index:]
 			end_index = line.index('<')
 			line = line[:end_index]
 			return line
 		# Checks if the input year is valid
-		now = datetime.datetime.now()
-		if int(year) < 1991 and int(year) > now.year:
+		if int(year) < 1991 and int(year) > self.current_year:
 			logger.error("Invalid input year given to CMacroDownloader.yield_curve(...)")
-			logger.error("Please give CMacroDownloader.yield_curve(...) an input year between 1991 and %d", now.year)
+			logger.error("Please give CMacroDownloader.yield_curve(...) an input year between 1991 and %d", self.current_year)
 			return None
+		logger.info("Processing US Treasury yield curve data, year %d", year)
 		# Opens the current link to Treasury yield curve data
 		yield_curve_url = "http://data.treasury.gov/feed.svc/DailyTreasuryYieldCurveRateData?$filter=year(NEW_DATE)%20eq%20{}".format(year)
+		logger.debug("Opening US Treasury webpage...")
 		webpage = urlopen(yield_curve_url)
+		logger.debug("Webpage successfully opened!")
 		html_str = webpage.read()
 		webpage.close()
 		# Builds a String version of the maturity
@@ -226,10 +236,26 @@ class CMacroDownloader:
 			elif maturity_code in line and "DISPLAY" not in line:
 				value = parse_line(line)
 				new_row[maturity_code] = value
-				yield_curve_df = yield_curve_df.append(new_row, ignore_index=True)
+				logger.debug("Adding new row to the dataframe: %s", str(new_row))
+				yield_curve_df = yield_curve_df.append(new_row, ignore_index=True, sort=False)
 				new_row = {'timestamp':'', maturity_code:''}
 		# Returns the dataframe
+		yield_curve_df = yield_curve_df.set_index('timestamp')
+		yield_curve_df = yield_curve_df.sort_index()
 		return yield_curve_df
+
+	def yield_curve_multi(self, start_year=1991, end_year=2018, maturity='10Y'):
+		""" Employs the yield_curve_year to get multiple years of yield curve data, 
+			as a consolidated dataframe.
+			Inputs: start year (default: 1991), end year (default: 2018); 
+				maturity of desired bond (default: 10-year T-Note)
+			Outputs: dataframe with all the desired data
+		"""
+		multi_year_df = pd.DataFrame()
+		for year in range(start_year, end_year + 1):
+			year_df = self.yield_curve_year(year, maturity=maturity)
+			multi_year_df = pd.concat([multi_year_df, year_df], sort=False)
+		return multi_year_df
 
 	def get_world_bank(self):
 		# Gets data from the World Bank
@@ -275,4 +301,9 @@ def main():
 	logger.info("Download complete. Have a nice day!")
 
 if __name__ == "__main__":
+	"""
+	md = CMacroDownloader()
+	df = md.yield_curve_multi()
+	df.to_csv("/Users/openamiguel/Desktop/UST_10year.txt", sep='\t')
+	"""
 	main()
