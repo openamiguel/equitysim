@@ -1,13 +1,14 @@
 ## This code contains the re-consolidated download functions, and can perform any one of the following tasks:
 ## Download one stock (one-stock-one-file) from API, load one stock (one-stock-one-variable) from local drive, download many stocks (one-stock-one-file) from API, or load many stocks (many-stocks-one-variable) from local drive
 ## Author: Miguel Opeña
-## Version: 2.1.3
+## Version: 2.2.0
 
 import logging
 import os
 import pandas as pd
 import time
 import sys
+from urllib.request import urlopen
 
 import command_parser
 import io_support
@@ -183,7 +184,45 @@ class CMacroDownloader:
 	def __init__(self):
 		# Initialize variables
 		return
-	def get_world_bank():
+	def yield_curve(self, year, maturity='10Y'):
+		""" Scrapes the US Treasury's website for yield curve data stored in XML files. 
+			Note: the provided URL gets data from all years
+			Input: maturity of desired bond (defaul: 10-year T-Note)
+			Output: pandas Series of desired bond's yield curve since January 2, 1990
+		"""
+		# Builds a simple code to parse an XML line
+		def parse_line(line):
+			start_index = line.index('>') + 1
+			line = line[start_index:]
+			end_index = line.index('<')
+			line = line[:end_index]
+			return line
+		# Opens the current link to Treasury yield curve data
+		yield_curve_url = "http://data.treasury.gov/feed.svc/DailyTreasuryYieldCurveRateData?$filter=year(NEW_DATE)%20eq%20{}".format(year)
+		webpage = urlopen(yield_curve_url)
+		html_str = webpage.read()
+		webpage.close()
+		# Builds a String version of the maturity
+		maturity_code = maturity.replace('M', 'MONTH').replace('Y', 'YEAR')
+		# Builds dataframe of timestamped yield curve data
+		yield_curve_df = pd.DataFrame()
+		yield_curve_df.columns = ['timestamp', maturity_code]
+		# Builds new row for each data entry
+		new_row = {'timestamp':'', maturity_code:''}
+		for line in str(html_str).split('\\n'):
+			# Reads the date where provided
+			if "NEW_DATE" in line:
+				date = parse_line(line).split('T')[0]
+				new_row['timestamp'] = date
+			# Reads the value where provided
+			# Also writes to the folder
+			elif maturity_code in line and "DISPLAY" not in line:
+				value = parse_line(line)
+				new_row[maturity_code] = value
+				yield_curve_df = yield_curve_df.append(new_row)
+		# Returns the dataframe
+		
+	def get_world_bank(self):
 		# Gets data from the World Bank
 		# Download file from the World Bank link
 		# Parse it and clean if needed
