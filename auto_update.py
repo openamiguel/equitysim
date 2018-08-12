@@ -3,7 +3,7 @@
 
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.2.0
+## Version: 4.2.1
 
 import logging
 import os
@@ -11,7 +11,7 @@ import pandas as pd
 import sys
 import time
 
-import command_parser
+from command_parser import CCmdParser
 from download import CDownloader
 
 LOGDIR = "/Users/openamiguel/Desktop/LOG"
@@ -127,11 +127,12 @@ def main():
 		Outputs: True if everything works
 	"""
 	prompts = sys.argv
+	cmdparser = CCmdParser(prompts)
 	## Handles where the user wants to download their files. 
 	# Default folder path is relevant to the author only. 
-	folder_path = command_parser.get_generic_from_prompts(prompts, query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
+	folder_path = cmdparser.get_generic(query="-folderPath", default="/Users/openamiguel/Documents/EQUITIES/stockDaily", req=False)
 	## Handles the user's API key. 
-	api_key = command_parser.get_generic_from_prompts(prompts, query="-apiKey")
+	api_key = cmdparser.get_generic(query="-apiKey")
 	## Updates all files in folder
 	updater = CUpdater(api_key, folder_path)
 	downloader = updater.get_downloader_object()
