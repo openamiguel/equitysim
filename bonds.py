@@ -39,7 +39,7 @@ def periodic_compound(interest, freq, current_time):
 	"""
 	return (1 + interest / freq) ** (-freq * current_time)
 
-def continuous_compound(interest, current_time):
+def continuous_compound(interest, freq, current_time):
 	""" Continuous (exponential) compounding function.
 		Inputs: interest rate, frequency of payoff, current time
 		Outputs: compounding factor for given cash flow at specified time
