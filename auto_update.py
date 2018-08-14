@@ -13,13 +13,13 @@ import time
 
 from command_parser import CCmdParser
 from download import CDownloader
-
+DATATYPE = "csv"
 LOGDIR = "/Users/openamiguel/Desktop/LOG"
 # Initialize logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 # Set file path for logger
-handler = logging.FileHandler('{}/equitysim.log'.format(LOGDIR))
+handler = logging.FileHandler('{}/equitysim_update.log'.format(LOGDIR))
 handler.setLevel(logging.DEBUG)
 # Format the logger
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -51,7 +51,7 @@ class CUpdater:
 		"""
 		# Assumes that the first file will be of the same function and interval as all other data
 		file_name = os.listdir(self.folderpath)[0]
-		name_split = file_name.split(".csv")[0].split("_")
+		name_split = file_name.split(".{}".format(DATATYPE))[0].split("_")
 		# Gets the function (daily, intradaily, etc.) from the file name
 		filename_suffix = name_split[1] if len(name_split) == 2 else name_split[2]
 		function = filename_suffix
@@ -61,6 +61,8 @@ class CUpdater:
 			function_split = filename_suffix.split("&")
 			function = function_split[0]
 			interval = function_split[1]
+		# Save the function as a property of self
+		self.function = function
 		# Save the output size
 		# If the data is on a DAILY function, then compact is sufficient (100 days of data)
 		output_size = "full" if function == "INTRADAY" else "compact"
@@ -80,7 +82,11 @@ class CUpdater:
 		"""
 		for curpath, directories, files in os.walk(self.folderpath):
 			for file in files:
+				# Checks if file is relevant to the code
+				if self.function not in file or DATATYPE not in file:
+					continue
 				# Reads the old data from its file location
+				logger.info("Reading file " + str(file) + " from local memory...")
 				inpath = os.path.join(curpath, file)
 				old_data = pd.read_csv(inpath, header=0, index_col='timestamp', encoding="ISO-8859-1")
 				old_data.dropna(how='any',inplace=True)
@@ -90,7 +96,7 @@ class CUpdater:
 				last_date = old_data.index[-1]
 				# Parses the file name using the split function (assumes adherence to naming conventions from download.py)
 				file_name = inpath.split(self.folderpath)[1][1:]
-				name_split = file_name.split(".csv")[0].split("_")
+				name_split = file_name.split(".{}".format(DATATYPE))[0].split("_")
 				# Gets a string representing the symbol 
 				symbol = name_split[0] if len(name_split) == 2 else (name_split[0], name_split[1])
 				logger.info("Auto-updating " + str(symbol) + " from AlphaVantage...")
