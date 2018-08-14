@@ -1,5 +1,5 @@
 ## This code uses basic numerical inputs to model basic bonds over time.
-## Rule: the only possible inputs are those known at the initial transaction. 
+## Rule: the only possible inputs are those known at the initial transaction.
 ## Author: Miguel Opeña
 ## Version: 1.1.0
 
@@ -39,7 +39,7 @@ def periodic_compound(interest, freq, current_time):
 	"""
 	return (1 + interest / freq) ** (-freq * current_time)
 
-def continuous_compound(interest, freq, current_time):
+def continuous_compound(interest, current_time):
 	""" Continuous (exponential) compounding function.
 		Inputs: interest rate, frequency of payoff, current time
 		Outputs: compounding factor for given cash flow at specified time
@@ -48,7 +48,7 @@ def continuous_compound(interest, freq, current_time):
 
 def fixed_rate_bond(par, coupon, interest, maturity=5, freq=1.0, compound_function=periodic_compound):
 	""" Computes the initial price of a fixed-rate bond (including zero compound).
-		Inputs: par value, coupon value, interest rate, maturity (in years), 
+		Inputs: par value, coupon value, interest rate, maturity (in years),
 			frequency of samples (in Hertz), choice of compound function (default: periodic)
 		Outputs: fair initial price of bond
 	"""
@@ -67,6 +67,6 @@ def fixed_rate_bond(par, coupon, interest, maturity=5, freq=1.0, compound_functi
 		logger.debug("Increment at year %.2f: $%.2f", time, increment)
 	# Adds final payoff of par value
 	payoff += par * compound_function(interest, freq, maturity)
-	return payoff	 
+	return payoff
 
 print(fixed_rate_bond(1000, 40, 0.04, maturity=4))
