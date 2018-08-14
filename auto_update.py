@@ -3,7 +3,7 @@
 
 ## This code can update all stock files in a given folder directory. 
 ## Author: Miguel Opeña
-## Version: 4.2.1
+## Version: 4.2.2
 
 import logging
 import os
@@ -82,19 +82,19 @@ class CUpdater:
 			for file in files:
 				# Reads the old data from its file location
 				inpath = os.path.join(curpath, file)
-				old_data = pd.read_csv(inpath, index_col='timestamp')
+				old_data = pd.read_csv(inpath, header=0, index_col='timestamp', encoding="ISO-8859-1")
 				old_data.dropna(how='any',inplace=True)
 				# Removes duplicates
 				old_data = old_data[~old_data.index.duplicated(keep='first')]
 				# Gets the most recent date in the old ticker data
 				last_date = old_data.index[-1]
 				# Parses the file name using the split function (assumes adherence to naming conventions from download.py)
-				file_name = inpath.split(self.outpath)[1][1:]
+				file_name = inpath.split(self.folderpath)[1][1:]
 				name_split = file_name.split(".csv")[0].split("_")
 				# Gets a string representing the symbol 
 				symbol = name_split[0] if len(name_split) == 2 else (name_split[0], name_split[1])
 				logger.info("Auto-updating " + str(symbol) + " from AlphaVantage...")
-				new_data = downloader.load_single(symbol, writeFile=True)
+				new_data = downloader.load_single(symbol, writefile=True)
 				# If unavailable, don't download
 				if new_data is None:
 					# Delay prevents HTTP 503 errors
