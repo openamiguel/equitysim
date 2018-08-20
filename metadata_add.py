@@ -1,6 +1,6 @@
 ## General program to add metadata to the Financials JSON files.
 ## Author: Miguel Opeña
-## Version: 1.0.6
+## Version: 1.0.7
 
 from datetime import datetime
 import logging
