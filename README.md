@@ -37,34 +37,30 @@ This code also downloads and analyzes data from the [United States SEC's Financi
     - `-apiKey`: AlphaVantage API key (user-specific)
 - See [the AlphaVantage documentation](https://www.alphavantage.co/documentation/) for more details on their API calls. 
 
-## SEC EDGAR data download/update
-- **edgar_load.py**
-  - `download_unzip` downloads and unzips data directly from the SEC website
+## fundamental analysis
+- **fundamental_load.py**
+  - `edgar_extract` downloads and unzips data directly from the SEC website
   - `proc_in_directory` walks through download directory and parses each file
-  - `post_proc` performs post-processing on files, which makes them smaller
-  - `json_build` builds one JSON file for each company chosen
+  - `edgar_load` performs post-processing on files, which makes them smaller
   - command prompt options:
     - `-folderPath`: location of folder to download data
     - `-stockFolderPath`: location of folder to look for stock data
     - `-financialFolderPath`: location of folder to load financial data
     - `-suppressDownload`: order to suppress downloading data (i.e. already downloaded)
     - `-suppressProcess`: order to suppress processing data (i.e. already processed)
-- **edgar_parse.py**
-  - `json_parse` provides backup parsing code to clean up the JSON files in edgar_load.py
-  - `get_sic_names` scrapes SEC.gov for data on industry codes (SICs)
-  - `submission_parse` parses submission files
-  - `number_parse` parses number files
-  - `presentation_parse` parses presentation files
-  - `tag_parse` parses tag files
-  - command prompt options:
-    - *none* (does not need any)
-
-## fundamental analysis
-- **edgar_pull.py**
-  - `get_unique_tags` returns list of unique tags in a single company's JSON file
-  - `get_data_this_tag` writes data on one chosen tag to an output file
+- **fundamental_pull.py**
+  - `get_tags_in_file` returns list of unique tags in a single company's JSON file
+  - `get_tag_data` writes data on one chosen tag to an output file
   - command prompt options:
     - pending
+- **fundamental_support.py**
+  - `get_sic_names` scrapes SEC.gov for data on industry codes (SICs)
+  - `edgar_sub` parses submission files
+  - `edgar_num` parses number files
+  - `edgar_pre` parses presentation files
+  - `edgar_tag` parses tag files
+  - command prompt options:
+    - *none* (does not need any)
 - **return_calculator.py**
   - `get_rolling_returns` calculates a list of rolling returns on an asset or portfolio
   - `overall_returns` calculates the overall return from start to finish
