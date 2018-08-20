@@ -6,16 +6,22 @@ This code harnesses the AlphaVantage API to download and analyze equity data on 
 - the NASDAQ 100 stock index
 - the top 100 most-traded ETFs
 - the top 25 most-traded mutual funds
+- numerous forex tickers, converting from US dollar to another currency 
 These data are readily transformed using technical indicators and processed into features for machine learning. 
 
 This code also downloads and analyzes data from the [United States SEC's Financial Statements datasets](https://www.sec.gov/dera/data/financial-statement-data-sets.html), which supplies additional feature data from a fundamental analysis standpoint. 
 
 ## AlphaVantage data download/update
 - **download.py**
-  - `load_single` downloads and processes a single symbol from AlphaVantage API into a file
-  - `load_single_drive` downloads and processes a single symbol from local drive into a variable
-  - `load_separate` downloads and processes many symbols from AlphaVantage API into many files
-  - `load_combined_drive` downloads and processes many symbols from local drive into one variable
+  - class `CDownloader` downloads and processes symbols from AlphaVantage API into local drive
+    - `load_single` handles one symbol
+    - `load_separate` handles many symbols at once
+  - class `CLoader` downloads and processes symbols from local drive into variables
+    - `load_single_drive` handles one symbol
+    - `load_combined_drive` handles many symbols at once
+  - class `CMacroDownloader` downloads and processes data from varying macro data sources
+    - `yield_curve_year` gets yield curve data for one year (source: data.treasury.gov)
+    - `yield_curve_multi` gets yield curve data for many years
   - command prompt options:
     - `-tickerUniverse`: collection of tickers to download (can also be a CSV of ticker symbols) 
     - `-folderPath`: location of folder to store file
@@ -23,7 +29,9 @@ This code also downloads and analyzes data from the [United States SEC's Financi
     - `-function`: distinguishes between intraday, daily, weekly, etc. downloads
     - `-interval` specifies what kind of intraday (1min, 15min, etc.)
 - **auto_update.py**
-  - `update_in_folder` updates all equity files in a folder, using the latest data from AlphaVantage
+  - class `CUpdater` updates all files at a given folder position
+    - `get_downloader_object` builds a downloader object to load the data
+    - `update_files` performs the update in full
   - command prompt options:
     - `-folderPath`: location of folder to look for files
     - `-apiKey`: AlphaVantage API key (user-specific)
@@ -65,74 +73,7 @@ This code also downloads and analyzes data from the [United States SEC's Financi
 
 ## technical analysis
 - **technicals.py**
-  - `accum_swing` computes the accumulation (running total) of the swing index, which depends on asset data
-  - `ad_line` returns the accumulation-distribution line of asset data
-  - `adx` returns the average directional (movement) index of asset data
-  - `adxr` returns the average directional (movement) index rating of asset data
-  - `aroon` returns the Aroon indicator of asset data
-  - `aroon_oscillator` returns the Aroon oscillator of asset data
-  - `average_price` returns the average price of asset data
-  - `average_true_range` returns the average true range of asset data
-  - `bollinger` returns the Bollinger bands and width thereof, for asset data
-  - `chaikin` returns the Chaikin money flow of price data
-  - `chaikin_ad_osc` returns the Chaikin accumulation-distribution oscillator of asset data
-  - `chaikin_volatility` returns the Chaikin volatility of asset data
-  - `chande_momentum_oscillator` returns the Chande momentum oscillator of a price input
-  - `dema` returns the "double" exponential moving average of input
-  - `detrended_price_osc` returns the de-trended price oscillator of a price input
-  - `directional_index` returns the directional indices (+DI and -DI) of asset data
-  - `directional_movt_index` returns the directional movement index (based directly on +DI and -DI) of asset data
-  - `dynamic_momentum_index` returns the DSI of price data
-  - `ease_of_movt` returns the ease of movement of asset data
-  - `exponential_moving_average` returns the exponential moving average of input
-  - `general_stochastic` returns the general Stochastic indicator of a price input
-  - `klinger_osc` returns the Klinger oscillator of asset data
-  - `macd` returns the MACD of a price input (same as price oscillator with 26-period slow EMA and 12-period fast EMA)
-  - `market_fac_index` returns the market facilitation index of asset data
-  - `mass_index` returns the mass index of asset data
-  - `median_price` returns the median price of asset data
-  - `momentum` returns the momentum of a price input
-  - `money_flow_index` returns the money flow index of asset data
-  - `negative_volume_index` returns the negative volume index of asset data
-  - `normalized_price` returns the baseline-normalized price (a.k.a. performance indicator) of a price input
-  - `on_balance_volume` returns the on balance volume of asset data
-  - `parabolic_sar` returns the parabolic SAR of asset data
-  - `percent_volume_oscillator` returns the percent volume oscillator of volume data
-  - `polarized_fractal_efficiency` returns the polarized fractal efficiency of asset data
-  - `positive_volume_index` returns the positive volume index of asset data
-  - `price_channel` returns the high and low price channels of a price input
-  - `price_oscillator` returns the price oscillator of a price input, which depends on a choice of moving average function
-  - `price_rate_of_change` returns the price rate of change of a price input
-  - `price_volume_rank` returns the price-volume rank of asset data (with user choice for which price)
-  - `price_volume_trend` returns the price-volume trend of asset data
-  - `qstick` returns the Q-stick indicator of asset data, which depends on a choice of moving average function
-  - `random_walk_index` returns the random walk index of asset data
-  - `range_indicator` returns the range indicator of asset data
-  - `rel_momentum_index` returns the relative momentum index of a price input (typically closing price)
-  - `rel_strength_index` returns the 14-day relative momentum index of a price input
-  - `rel_vol_index` returns the relative volatility index of a price input
-  - `simple_moving_average` returns the simple moving average of input
-  - `stochastic_momentum_index` returns the stochastic momentum index of asset data
-  - `stochastic_oscillator` returns the stochastic oscillator of asset data, which depends on a choice of moving average function
-  - `stochastic_rsi` returns the general stochastic of the RSI (dependent on a price input)
-  - `swing_index` returns the swing index of asset data
-  - `tee_three` and `tee_four` return T3 and T4, generalizations of DEMA, of input, respectively
-  - `trend_score` returns the trend score of a price input
-  - `triangular_moving_average` returns the triangular moving average of input
-  - `triple_ema` returns the triple exponential moving average of input
-  - `trix` returns the TRIX indicator of a price input
-  - `true_range` returns the true range of asset data
-  - `true_strength_index` returns the true strength index of a price input
-  - `typical_price` returns the typical price of asset data
-  - `ultimate_oscillator` returns the ultimate oscillator of asset data
-  - `variable_moving_average` returns the variable moving average of a price input
-  - `vertical_horizontal_filter` returns the vertical-horizontal filter (VHF) of asset data
-  - `vol_adj_moving_average` returns the volume-adjusted moving average of asset data
-  - `weighted_close` returns the weighted close of asset data
-  - `weighted_moving_average` returns the weighted moving average of a price input
-  - `williams_ad` returns the Williams accumulation-distribution indicator of asset data
-  - `williams_percent` returns the Williams %R indicator of asset data
-  - `zero_lag_ema` returns the "zero-lag" exponential moving average of a price input
+  - see the code for additional descriptions (there are too many functions to list here)
 
 ## machine learning suite
 - **stats.py**
@@ -174,9 +115,17 @@ This code also downloads and analyzes data from the [United States SEC's Financi
     - *none* (does not need any)
 
 ## miscellaneous
+- **arxiv.py**
+  - class `CArxivParser` parses all papers in a given sub-category of Arxiv papers
+    - `get_feed` gets a feed object that represents the paper data
+    - `get_total_results` gets the number of results in given sub-category
+    - `parse_feed` parses the feed object for a particular set of data
+  - class `CArxivParserMulti` parses all papers across many sub-categories of Arxiv papers
+    - `parse_all` instantiates class `CArxivParser` for each sub-category
 - **command_parser.py**
-  - `get_generic_from_prompts` gets any non-tickerverse prompt from a list of command prompts
-  - `get_tickerverse_from prompts` returns a tickerverse and its name, from a list of command prompts
+  - class `CCmdParser` parses a list of command prompts
+    - `get_generic` gets any non-tickerverse prompt from prompts
+    - `get_tickerverse` returns a tickerverse and its name from prompts
   - command prompt options:
     - *none* (does not need any)
 - **io_support.py**
