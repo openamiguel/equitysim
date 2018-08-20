@@ -2,15 +2,13 @@
 """
 Created on Sat Apr  1 13:32:13 2017
 
-Discuessed in https://towardsdatascience.com/deep-learning-in-finance-9e088cb17c03.
+Discussed in https://towardsdatascience.com/deep-learning-in-finance-9e088cb17c03.
 
 @author: sonaam1234 on Github
 repo: sonaam1234/DeepLearningInFinance/ReturnPrediction/ReturnPrediction_LSTM.py
 
-Modified to take local equity files. 
-
+Extensively modified by author of this repository. 
 """
-
 import numpy as np
 import pandas as pd
 from keras.layers.core import Dense, Activation
